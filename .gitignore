@@ -30,4 +30,8 @@
 *.exe
 *.out
 *.app
+
+# Etc files and directories
+.DS_Store
 farewell_webserv
+
