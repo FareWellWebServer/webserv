@@ -1,4 +1,4 @@
-NAME = farewell_webserv
+NAME = testdebug
 # Compiler
 CC = c++
 
@@ -10,23 +10,24 @@ GREEN = \033[32m
 YELLOW = \033[33m
 RESET = \033[0m
 
-SERVER_SRC	=	$(wildcard ./src/*.cpp) $(wildcard ./src/*/*.cpp)
-SERVER_OBJ	=	$(SERVER_SRC:.cpp=.o)
+SRC	=	debugingtest.cpp
+OBJ	=	$(SRC:.cpp = .o)
+
+# Build the test executable
+.cpp.o: 
+	@$(CC) $(CFLAGS) -c -o $@ $<
 
 # Default target
-all: server
+all: $(NAME)
 
-# Build the server executable
-server: $(SERVER_OBJ)
-	@echo "$(YELLOW)Building $@...$(RESET)"
-	@$(CC) $(CFLAGS) $(SERVER_OBJ) -o $(NAME)
-	@echo "$(GREEN)Done.$(RESET)"
-
+$(NAME): $(OBJ)
+	@$(CC) $(CFLAGS) -o $(NAME) $(OBJ)
 
 # Clean up
 clean:
 	@echo "$(YELLOW)Cleaning up...$(RESET)"
-	@rm -rf $(SERVER_OBJ)
+	@rm -rf *.o
+	@rm -rf $(NAME).dSYM
 	@echo "$(GREEN)Done.$(RESET)"
 
 fclean:
@@ -36,6 +37,9 @@ fclean:
 re:
 	make fclean
 	make all
+
+debug:
+	$(CC) $(CFLAGS) -g3 -D DG=1 -o $(NAME) $(OBJ)
 
 # Phony targets
 .PHONY: all clean fclean re 
