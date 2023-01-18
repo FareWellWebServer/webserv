@@ -29,7 +29,9 @@
 # Executables
 *.exe
 *.out
-*.appi
+*.app
 
 # Etc files and directories
 .DS_Store
+farewell_webserv
+
