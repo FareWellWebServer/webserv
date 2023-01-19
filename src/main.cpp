@@ -1,7 +1,8 @@
 #include "../include/WebServ.hpp"
 
 /*
- * 에러 처리 부분은 바로 구현하기가 쉽지 않아 보여서 일단 runtime_error로 처리했습니다.
+ * 에러 처리 부분은 바로 구현하기가 쉽지 않아 보여서 일단 runtime_error로
+ * 처리했습니다.
  */
 
 void config_process(int ac, char** av);
