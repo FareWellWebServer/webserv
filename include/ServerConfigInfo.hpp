@@ -1,6 +1,7 @@
 #ifndef SERVERCONFIGINFO_HPP
 #define SERVERCONFIGINFO_HPP
 
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -32,7 +33,7 @@ class ServerConfigInfo {
   ~ServerConfigInfo(void);
 
  private:
-  const char* file_path_;
+  std::string content;
 
   struct server_data s_data_;
   std::vector<location> locations_;
