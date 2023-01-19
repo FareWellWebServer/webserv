@@ -6,21 +6,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FareWellWebServer</title>
     <style>
+     
+        body {
+            background-color: black;
+        }
+        .circle {
+            position: absolute;
+            top: 50vh;
+            left: 50vw;
+            width: 12vh;
+            height: 12vh;
+            border-radius: 100%;
+            background-color: lightyellow;
+            transform: translate(-50%, -50%);
+            box-shadow: rgba(253, 253, 254, 0.8) 0px 0px 50px 50px;
+            z-index: -1;
+        }
+
+        .page {
+            font-size: 4vw;
+            color: rgb(24, 24, 24, 0.9);
+        }
+
+        #page1 {
+            position: absolute;
+        }
+
+        #page2 {
+            position: absolute;
+        }
+
+        #page3 {
+            position: absolute;
+        }
+
+        #page4 {
+            position: absolute;
+        }
+
+        #page5 {
+            position: absolute;
+        }
 
     </style>
 </head>
 
 <body>
+    <div class="circle"></div>
     <a href="index.html">
         <h1>root</h1>
     </a>
-    <div class="wrapper">
-        <div class="page" onclick="">get pages</a>
-        <div class="page" onclick="">put pages</a>
-        <div class="page" onclick="">post pages</a>
-        <div class="page" onclick="">delete pages</a>
-        <div class="page" onclick="">error pages</a>
-    </div>
+    
+    <div class="page" id="page1" onclick="">get pages</div>
+    <div class="page" id="page2" onclick="">put pages</div>
+    <div class="page" id="page3" onclick="">post pages</div>
+    <div class="page" id="page4" onclick="">delete pages</div>
+    <div class="page" id="page5" onclick="">error pages</div>
+
+    <script>
+    const circle = document.querySelector(".circle");
+    document.addEventListener("mousemove", (e) => {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        circle.style.left = mouseX + 'px';
+        circle.style.top = mouseY + 'px';
+    })
+    const pagesNum = 5;
+    for (let i = 1; i <= pagesNum; i++) {
+        const tempPage = document.querySelector(`#page${i}`);
+        console.log(tempPage)
+        const tempX = (window.innerWidth* Math.random() - 42) + 'px';
+        const tempY =  window.innerHeight * Math.random() + 'px';
+        tempPage.style.left = tempX;
+        tempPage.style.top = tempY; 
+    }
+    </script>
 </body>
 
 </html>
