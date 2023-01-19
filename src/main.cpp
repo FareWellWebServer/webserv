@@ -23,7 +23,7 @@ int main(int ac, char** av) {
 
 void main_process(int ac, char** av) {
   // server run
-  std::cout << GREEN << "-----  main process running  -----" << std::endl;
+  std::cout << "-----  main process running  -----" << std::endl;
 
   config_process(ac, av);
 
@@ -31,10 +31,10 @@ void main_process(int ac, char** av) {
 }
 
 void config_process(int ac, char** av) {
-  std::cout << BLUE << "-----  config process running -----" << std::endl;
+  std::cout << "-----  config process running -----" << std::endl;
   if (ac > 2) throw std::runtime_error("[Config Error] few argument");
   const char* file_path = (ac == 1) ? "config/default.config" : av[1];
 
   ConfigParser configParser(file_path);
-  configParser.parse();
+  configParser.Parse();
 }
