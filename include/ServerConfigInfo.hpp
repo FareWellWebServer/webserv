@@ -27,14 +27,17 @@ struct location {
 };
 
 class ServerConfigInfo {
+  // private 가 없고 public인 이유!
+  // 값 저장하려면 변수 별로 setter 함수를 만들어야 되서 일단 public으로
+  // 진행했습니다
  public:
   ServerConfigInfo(void);
   ~ServerConfigInfo(void);
 
   void ClearInfo(void);
-  void PrintLocation(location &l);
-  void PrintLocations(void);
-  void PrintInfo(void);
+  void PrintLocation(const location &l) const;
+  void PrintLocations(void) const;
+  void PrintInfo(void) const;
 
   std::string name;
   std::string host;
@@ -59,7 +62,7 @@ class ServerConfigInfo {
 };
 
 template <typename T>
-void PrintVector(std::vector<T> &vec) {
+void PrintVector(const std::vector<T> &vec) {
   for (size_t i = 0; i < vec.size(); ++i) std::cout << " " << vec[i];
   std::cout << std::endl;
 }

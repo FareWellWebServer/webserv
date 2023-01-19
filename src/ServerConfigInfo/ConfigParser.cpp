@@ -42,11 +42,10 @@ void ConfigParser::Parse(void) {
       throw std::runtime_error("[Config Error] wrong config syntax");
 
     serverConfigInfos_.push_back(serverConfigInfo_);
-    std::cout << BOLDBLUE << "----- server parse finish -----" << std::endl;
-    std::cout << BOLDWHITE << std::endl;
+    std::cout << BOLDBLUE << "----- server parse finish -----" << RESET
+              << std::endl;
   }
-  std::cout << BOLDMAGENTA << "config parsing finish" << std::endl;
-  std::cout << std::endl;
+  std::cout << BOLDMAGENTA << "config parsing finish" << std::endl << std::endl;
 }
 
 int ConfigParser::ParseServer(std::istringstream& iss) {
@@ -61,7 +60,6 @@ int ConfigParser::ParseServer(std::istringstream& iss) {
     std::vector<std::string> vec = Split(line, " \t", 1);
     if (vec.size() == 1 && vec[0] == "}") break;
     if (vec.size() != 2) return 1;
-
     if (SetServerConfigInfo(iss, vec[0], vec[1])) return 1;
   }
   return 0;
@@ -113,7 +111,6 @@ int ConfigParser::ParseLocation(std::istringstream& iss, const std::string& key,
 
   location l;
   l.uri = vec[0];
-
   while (42) {
     std::getline(iss, line, '\n');
     if (line.find_first_not_of(" \t") == std::string::npos) continue;
@@ -121,19 +118,17 @@ int ConfigParser::ParseLocation(std::istringstream& iss, const std::string& key,
     std::vector<std::string> vec = Split(line, " \t", 1);
     if (vec.size() == 1 && vec[0] == "}") break;
     if (vec.size() != 2) return 1;
-
     if (SetServerLocation(l, vec[0], vec[1])) return 1;
   }
   serverConfigInfo_.locations.push_back(l);
-  std::cout << BOLDYELLOW << "----- location parse finish -----" << std::endl;
-  std::cout << BOLDWHITE;
+  std::cout << BOLDYELLOW << "----- location parse finish -----" << RESET
+            << std::endl;
   return 0;
 }
 
 int ConfigParser::SetServerLocation(location& l, const std::string& key,
                                     const std::string& val) {
   std::vector<std::string> vec = Split(val, " ");
-
   std::cout << "key: '" << key << "'" << std::endl;
   std::cout << "val: '" << val << "'" << std::endl << std::endl;
 
@@ -163,6 +158,16 @@ int ConfigParser::IsNumber(const std::string& str) {
   return 1;
 }
 
+void ConfigParser::PrintConfigInfo(void) {
+  for (size_t i = 0; i < serverConfigInfos_.size(); ++i) {
+    std::cout << BOLDGREEN << "--------- [server config info " << i
+              << "] ---------" << std::endl;
+    serverConfigInfos_[i].PrintInfo();
+    std::cout << "------------------------------------------" << RESET
+              << std::endl;
+  }
+}
+
 std::vector<std::string> ConfigParser::Split(const std::string& str,
                                              const std::string& charset,
                                              int once) {
@@ -184,14 +189,4 @@ std::vector<std::string> ConfigParser::Split(const std::string& str,
     res.push_back(str.substr(start, end - start));
   }
   return res;
-}
-
-void ConfigParser::PrintConfigInfo(void) {
-  for (size_t i = 0; i < serverConfigInfos_.size(); ++i) {
-    std::cout << BOLDGREEN << "--------- [server config info " << i
-              << "] ---------" << std::endl;
-    serverConfigInfos_[i].PrintInfo();
-    std::cout << "------------------------------------------" << std::endl;
-    std::cout << BOLDWHITE << std::endl;
-  }
 }

@@ -14,7 +14,7 @@ void ServerConfigInfo::ClearInfo(void) {
   locations.clear();
 }
 
-void ServerConfigInfo::PrintLocation(location &l) {
+void ServerConfigInfo::PrintLocation(const location &l) const {
   if (!l.cgi_pass.size()) {
     std::cout << "uri: " << l.uri << std::endl;
     std::cout << "status_code: " << l.status_code << std::endl;
@@ -34,7 +34,7 @@ void ServerConfigInfo::PrintLocation(location &l) {
   }
 }
 
-void ServerConfigInfo::PrintLocations(void) {
+void ServerConfigInfo::PrintLocations(void) const {
   for (size_t i = 0; i < locations.size(); ++i) {
     std::cout << std::endl;
     std::cout << "--- [locations " << i << " -> cgi ";
@@ -44,7 +44,7 @@ void ServerConfigInfo::PrintLocations(void) {
   }
 }
 
-void ServerConfigInfo::PrintInfo(void) {
+void ServerConfigInfo::PrintInfo(void) const {
   std::cout << "--- [server info] ---" << std::endl;
   std::cout << "name: " << name << std::endl;
   std::cout << "host: " << host << std::endl;
@@ -53,7 +53,7 @@ void ServerConfigInfo::PrintInfo(void) {
   std::cout << "methods:";
   PrintVector(methods);
   std::cout << "error_pages:";
-  std::map<int, std::string>::iterator it;
+  std::map<int, std::string>::const_iterator it;
   for (it = error_pages.begin(); it != error_pages.end(); ++it)
     std::cout << " [" << it->first << " -> " << it->second << "]";
   std::cout << std::endl;

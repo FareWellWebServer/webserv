@@ -21,15 +21,6 @@ class ConfigParser {
  public:
   ConfigParser(const char *file_path);
   ~ConfigParser(void);
-
-  int IsNumber(const std::string &str);
-  // split("a b,c", " ,") -> ["a", "b", "c"]
-  // once == 0(default) -> 싹다 split함
-  // once == 1 -> 한번만 split함
-  std::vector<std::string> Split(const std::string &line,
-                                 const std::string &charset, int once = 0);
-  void PrintConfigInfo(void);
-
   void Parse(void);
   int ParseServer(std::istringstream &iss);
   int SetServerConfigInfo(std::istringstream &iss, const std::string &key,
@@ -38,6 +29,14 @@ class ConfigParser {
                     const std::string &val);
   int SetServerLocation(location &l, const std::string &key,
                         const std::string &val);
+
+  int IsNumber(const std::string &str);
+  void PrintConfigInfo(void);
+  // split("a b,c", " ,") -> ["a", "b", "c"]
+  // once == 0(default) -> 싹다 split함
+  // once == 1 -> 한번만 split함
+  std::vector<std::string> Split(const std::string &line,
+                                 const std::string &charset, int once = 0);
 
  private:
   std::string content_;
