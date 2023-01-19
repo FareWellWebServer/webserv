@@ -23,11 +23,13 @@ class ConfigParser {
   ~ConfigParser(void);
 
   int IsNumber(const std::string &str);
-  std::vector<std::string> split(const std::string &line,
+  // split("a b,c", " ,") -> ["a", "b", "c"]
+  // once == 0(default) -> 싹다 split함
+  // once == 1 -> 한번만 split함
+  std::vector<std::string> Split(const std::string &line,
                                  const std::string &charset, int once = 0);
   void PrintConfigInfo(void);
 
-  void Clear(void);
   void Parse(void);
   int ParseServer(std::istringstream &iss);
   int SetServerConfigInfo(std::istringstream &iss, const std::string &key,
@@ -39,7 +41,6 @@ class ConfigParser {
 
  private:
   std::string content_;
-
   ServerConfigInfo serverConfigInfo_;
   std::vector<ServerConfigInfo> serverConfigInfos_;
 };

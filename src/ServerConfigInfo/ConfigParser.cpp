@@ -31,7 +31,7 @@ void ConfigParser::Parse(void) {
     if (line.size() == 0) break;
     if (line.find_first_not_of(" \t") == std::string::npos) continue;
 
-    std::vector<std::string> vec = split(line, " \t", 1);
+    std::vector<std::string> vec = Split(line, " \t", 1);
     if (vec.size() != 2 || vec[0] != "server" || vec[1] != "{")
       throw std::runtime_error("[Config Error] wrong config syntax");
 
@@ -58,7 +58,7 @@ int ConfigParser::ParseServer(std::istringstream& iss) {
     std::getline(iss, line, '\n');
     if (line.find_first_not_of(" \t") == std::string::npos) continue;
 
-    std::vector<std::string> vec = split(line, " \t", 1);
+    std::vector<std::string> vec = Split(line, " \t", 1);
     if (vec.size() == 1 && vec[0] == "}") break;
     if (vec.size() != 2) return 1;
 
@@ -71,7 +71,7 @@ int ConfigParser::SetServerConfigInfo(std::istringstream& iss,
                                       const std::string& key,
                                       const std::string& val) {
   std::string c = (key == "listen") ? ":" : " ";
-  std::vector<std::string> vec = split(val, c);
+  std::vector<std::string> vec = Split(val, c);
 
   std::cout << "key: '" << key << "'" << std::endl;
   std::cout << "val: '" << val << "'" << std::endl << std::endl;
@@ -90,7 +90,7 @@ int ConfigParser::SetServerConfigInfo(std::istringstream& iss,
     for (size_t i = 0; i < vec.size(); ++i)
       serverConfigInfo_.methods.push_back(vec[i]);
   } else if (key == "error_page") {
-    vec = split(val, " ");
+    vec = Split(val, " ");
     if (vec.size() != 2 || !IsNumber(vec[0])) return 1;
     int status_code = atoi(vec[0].c_str());
     serverConfigInfo_.error_pages[status_code] = vec[1];
@@ -108,7 +108,7 @@ int ConfigParser::ParseLocation(std::istringstream& iss, const std::string& key,
   std::cout << "val: '" << val << "'" << std::endl << std::endl;
 
   std::string line;
-  std::vector<std::string> vec = split(val, " \t", 1);
+  std::vector<std::string> vec = Split(val, " \t", 1);
   if (vec.size() != 2 || vec[1] != "{") return 1;
 
   location l;
@@ -118,7 +118,7 @@ int ConfigParser::ParseLocation(std::istringstream& iss, const std::string& key,
     std::getline(iss, line, '\n');
     if (line.find_first_not_of(" \t") == std::string::npos) continue;
 
-    std::vector<std::string> vec = split(line, " \t", 1);
+    std::vector<std::string> vec = Split(line, " \t", 1);
     if (vec.size() == 1 && vec[0] == "}") break;
     if (vec.size() != 2) return 1;
 
@@ -132,7 +132,7 @@ int ConfigParser::ParseLocation(std::istringstream& iss, const std::string& key,
 
 int ConfigParser::SetServerLocation(location& l, const std::string& key,
                                     const std::string& val) {
-  std::vector<std::string> vec = split(val, " ");
+  std::vector<std::string> vec = Split(val, " ");
 
   std::cout << "key: '" << key << "'" << std::endl;
   std::cout << "val: '" << val << "'" << std::endl << std::endl;
@@ -163,7 +163,7 @@ int ConfigParser::IsNumber(const std::string& str) {
   return 1;
 }
 
-std::vector<std::string> ConfigParser::split(const std::string& str,
+std::vector<std::string> ConfigParser::Split(const std::string& str,
                                              const std::string& charset,
                                              int once) {
   std::vector<std::string> res;
