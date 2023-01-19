@@ -22,7 +22,7 @@ int main(int ac, char** av) {
 
 void main_process(int ac, char** av) {
   // server run
-  std::cout << GREEN << "main process runnging" << std::endl;
+  std::cout << GREEN << "-----  main process running  -----" << std::endl;
 
   config_process(ac, av);
 
@@ -30,7 +30,7 @@ void main_process(int ac, char** av) {
 }
 
 void config_process(int ac, char** av) {
-  std::cout << BLUE << "config process runnging" << std::endl;
+  std::cout << BLUE << "-----  config process running -----" << std::endl;
   if (ac == 1)
     ServerConfigInfo config("config/default.config");
   else if (ac == 2)
