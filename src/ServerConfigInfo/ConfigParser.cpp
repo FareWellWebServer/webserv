@@ -15,7 +15,10 @@ ConfigParser::ConfigParser(const char* file_path) {
   } else {
     throw std::runtime_error("[Config Error] config file open failed");
   }
-  std::cout << content_ << std::endl;
 }
 
 ConfigParser::~ConfigParser(void) {}
+
+void ConfigParser::parse(void) {
+  std::cout << "config parsing start" << std::endl;
+}

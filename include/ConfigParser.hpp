@@ -12,6 +12,8 @@ class ConfigParser {
   ConfigParser(const char* file_path);
   ~ConfigParser(void);
 
+  void parse(void);
+
  private:
   std::string content_;
 
