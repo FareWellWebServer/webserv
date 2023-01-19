@@ -33,9 +33,9 @@ void main_process(int ac, char** av) {
 void config_process(int ac, char** av) {
   std::cout << BLUE << "-----  config process running -----" << std::endl;
   if (ac == 1)
-    ServerConfigInfo config("config/default.config");
+    ConfigParser configParser("config/default.config");
   else if (ac == 2)
-    ServerConfigInfo config(av[1]);
+    ConfigParser configParser(av[1]);
   else
     throw std::runtime_error("[Config Error] few argument");
 }

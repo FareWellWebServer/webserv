@@ -1,19 +1,18 @@
 #ifndef SERVERCONFIGINFO_HPP
 #define SERVERCONFIGINFO_HPP
 
-#include <fstream>
 #include <iostream>
 #include <vector>
 
-struct server_data {
-  int port;                          // port number
-  int body_size;                     // client body size limit
-  std::string name;                  // server name
-  std::string host;                  // host
-  std::string error_page;            // default error page
-  std::string redirection_path;      // redirection path
-  std::vector<std::string> methods;  // limit method
-};
+// struct server_data {
+//   int port;                          // port number
+//   int body_size;                     // client body size limit
+//   std::string name;                  // server name
+//   std::string host;                  // host
+//   std::string error_page;            // default error page
+//   std::string redirection_path;      // redirection path
+//   std::vector<std::string> methods;  // limit method
+// };
 
 struct location {
   int status_code;
@@ -29,13 +28,18 @@ struct location {
 
 class ServerConfigInfo {
  public:
-  ServerConfigInfo(const char* file_path);
+  ServerConfigInfo(void);
   ~ServerConfigInfo(void);
 
  private:
-  std::string content;
+  int port;                          // port number
+  int body_size;                     // client body size limit
+  std::string name;                  // server name
+  std::string host;                  // host
+  std::string error_page;            // default error page
+  std::string redirection_path;      // redirection path
+  std::vector<std::string> methods;  // limit method
 
-  struct server_data s_data_;
   std::vector<location> locations_;
 };
 
