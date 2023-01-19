@@ -63,11 +63,11 @@
     </a>
 
     <h1>search the page!</h1>
-    <div class="page" id="page1" onclick="">get pages</div>
-    <div class="page" id="page2" onclick="">put pages</div>
-    <div class="page" id="page3" onclick="">post pages</div>
-    <div class="page" id="page4" onclick="">delete pages</div>
-    <div class="page" id="page5" onclick="">error pages</div>
+    <div class="page" id="page1" onclick="tempGuide()">get pages</div>
+    <div class="page" id="page2" onclick="tempGuide()">put pages</div>
+    <div class="page" id="page3" onclick="tempGuide()">post pages</div>
+    <div class="page" id="page4" onclick="tempGuide()">delete pages</div>
+    <div class="page" id="page5" onclick="tempGuide()">error pages</div>
 
     <script>
     const circle = document.querySelector(".circle");
@@ -77,10 +77,12 @@
         circle.style.left = mouseX + 'px';
         circle.style.top = mouseY + 'px';
     })
+    const tempGuide = () => {
+        alert("page redirection is not yet implemented.")
+    }
     const pagesNum = 5;
     for (let i = 1; i <= pagesNum; i++) {
         const tempPage = document.querySelector(`#page${i}`);
-        console.log(tempPage)
         const tempX = (window.innerWidth* Math.random() - 42) + 'px';
         const tempY =  window.innerHeight * Math.random() + 'px';
         tempPage.style.left = tempX;
