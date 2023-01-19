@@ -83,7 +83,7 @@
     const pagesNum = 5;
     for (let i = 1; i <= pagesNum; i++) {
         const tempPage = document.querySelector(`#page${i}`);
-        const tempX = (window.innerWidth* Math.random() - 42) + 'px';
+        const tempX = (window.innerWidth * Math.random() * 0.8) + 'px';
         const tempY =  window.innerHeight * Math.random() + 'px';
         tempPage.style.left = tempX;
         tempPage.style.top = tempY; 
