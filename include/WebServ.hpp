@@ -9,10 +9,11 @@
 
 #include <iostream>
 
-#include "ConfigParser.hpp"
+#include "Config/ConfigParser.hpp"
+#include "Config/ConfigValidator.hpp"
+#include "Config/ServerConfigInfo.hpp"
 #include "ErrorHandler.hpp"
 #include "Logger.hpp"
-#include "ServerConfigInfo.hpp"
 #include "WebServException.hpp"
 
 #endif
