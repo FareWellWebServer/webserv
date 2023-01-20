@@ -9,6 +9,8 @@ void ServerConfigInfo::ClearInfo(void) {
   host = "";
   port = -1;
   body_size = 0;
+  directory_list = false;
+  redirection_path = "";
   methods.clear();
   error_pages.clear();
   locations.clear();
@@ -50,6 +52,8 @@ void ServerConfigInfo::PrintInfo(void) const {
   std::cout << "host: " << host << std::endl;
   std::cout << "port: " << port << std::endl;
   std::cout << "body_size: " << body_size << std::endl;
+  std::cout << "directory_list: " << directory_list << std::endl;
+  std::cout << "redirection_path: " << redirection_path << std::endl;
   std::cout << "methods:";
   PrintVector(methods);
   std::cout << "error_pages:";

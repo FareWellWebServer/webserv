@@ -27,7 +27,7 @@ struct location {
 };
 
 class ServerConfigInfo {
-  // private 가 없고 public인 이유!
+  // private 가 없고 public인 이유)
   // 값 저장하려면 변수 별로 setter 함수를 만들어야 되서 일단 public으로
   // 진행했습니다
  public:
@@ -39,11 +39,18 @@ class ServerConfigInfo {
   void PrintLocations(void) const;
   void PrintInfo(void) const;
 
-  std::string name;
-  std::string host;
-  int port;
-  int body_size;
-  std::vector<std::string> methods;
+  std::string name;  // OK 필수 입력 X
+  std::string host;  // OK 필수 입력 O
+  int port;          // OK 필수 입력 O
+  int body_size;     // OK 필수 입력 O
+
+  // 추가한 변수들 설명 -> 없어도 상관은 없을 거 같은데 일단 받게 해놓음
+  // 추가한 변수 -> server에도 directory_list이 들어갈 수 있어야 될 것 같음
+  bool directory_list;  // OK 필수 입력 X
+  // 추가한 변수 -> server에도 리다이랙션이 들어갈 수 있어야 될 것 같음
+  std::string redirection_path;  // OK 필수 입력 X
+
+  std::vector<std::string> methods;  // OK 필수 입력 O
 
   /** error_page 변수 수정
    * std::string error_page
@@ -53,12 +60,9 @@ class ServerConfigInfo {
    * error_page 500 www/500.html
    * 같은 식으로 들어오니 그냥 map으로 변경
    */
-  std::map<int, std::string> error_pages;
+  std::map<int, std::string> error_pages;  // OK 필수 입력 O
 
-  std::vector<location> locations;
-
- private:
-  ;
+  std::vector<location> locations;  // OK 필수 입력 X
 };
 
 template <typename T>

@@ -84,6 +84,12 @@ int ConfigParser::SetServerConfigInfo(std::istringstream& iss,
   } else if (key == "body_size") {
     if (vec.size() != 1 || !IsNumber(vec[0])) return 1;
     serverConfigInfo_.body_size = atoi(vec[0].c_str());
+  } else if (key == "directory_list") {
+    if (vec.size() != 1 || (vec[0] != "on" && vec[0] != "off")) return 1;
+    serverConfigInfo_.directory_list = (vec[0] == "on") ? true : false;
+  } else if (key == "redirection") {
+    if (vec.size() != 1) return 1;
+    serverConfigInfo_.redirection_path = vec[0];
   } else if (key == "method") {
     for (size_t i = 0; i < vec.size(); ++i)
       serverConfigInfo_.methods.push_back(vec[i]);
@@ -132,7 +138,7 @@ int ConfigParser::SetServerLocation(location& l, const std::string& key,
   std::cout << "key: '" << key << "'" << std::endl;
   std::cout << "val: '" << val << "'" << std::endl << std::endl;
 
-  if (key == "status") {
+  if (key == "status_code") {
     if (vec.size() != 1 || !IsNumber(vec[0])) return 1;
     l.status_code = atoi(vec[0].c_str());
   } else if (key == "directory_list") {
