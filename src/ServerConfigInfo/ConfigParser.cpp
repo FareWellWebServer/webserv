@@ -13,14 +13,28 @@ ConfigParser::ConfigParser(const char* file_path) {
     }
     fs.close();
   } else {
-    throw std::runtime_error("[Config Error] config file open failed");
+    throw std::runtime_error("[Config Error] Config File Open Failed");
   }
 }
 
 ConfigParser::~ConfigParser(void) {}
 
 const char* ConfigParser::WrongConfigSyntaxException::what(void) const throw() {
-  return "[Config Error] wrong config syntax";
+  return "[Config Error] Wrong Config Syntax";
+}
+
+const char* ConfigParser::ConfigValidationException::what(void) const throw() {
+  return "[Config Error] Validation Check Failed";
+}
+
+void ConfigParser::ClearLocation(location& l) {
+  l.status_code = -1;
+  l.directory_list = serverConfigInfo_.directory_list;
+  l.methods = serverConfigInfo_.methods;
+  l.file_path.clear();
+
+  l.is_cgi = false;
+  l.cgi_pass = "";
 }
 
 void ConfigParser::Parse(void) {
@@ -115,7 +129,9 @@ int ConfigParser::ParseLocation(std::istringstream& iss, const std::string& key,
   if (vec.size() != 2 || vec[1] != "{") return 1;
 
   location l;
+  ClearLocation(l);
   l.uri = vec[0];
+  if (vec[0] == ".py") l.is_cgi = true;
   while (42) {
     std::getline(iss, line, '\n');
     if (line.find_first_not_of(" \t") == std::string::npos) continue;
@@ -150,19 +166,19 @@ int ConfigParser::SetServerLocation(location& l, const std::string& key,
   } else if (key == "file_path") {
     for (size_t i = 0; i < vec.size(); ++i) l.file_path.push_back(vec[i]);
   } else if (key == "cgi_pass") {
-    if (vec.size() != 1) return 1;
+    if (l.is_cgi == false || vec.size() != 1) return 1;
     l.cgi_pass = vec[0];
   }
   return 0;
 }
 
-int ConfigParser::IsNumber(const std::string& str) {
+int ConfigParser::IsNumber(const std::string& str) const {
   for (size_t i = 0; i < str.length() - 1; i++)
     if (!isdigit(str[i])) return 0;
   return 1;
 }
 
-void ConfigParser::PrintConfigInfo(void) {
+void ConfigParser::PrintConfigInfo(void) const {
   for (size_t i = 0; i < serverConfigInfos_.size(); ++i) {
     std::cout << BOLDGREEN << "---------- [server config info " << i
               << "] ----------" << std::endl;
@@ -174,7 +190,7 @@ void ConfigParser::PrintConfigInfo(void) {
 
 std::vector<std::string> ConfigParser::Split(const std::string& str,
                                              const std::string& charset,
-                                             int once) {
+                                             int once) const {
   std::vector<std::string> res;
   size_t start = str.find_first_not_of(charset);
   size_t end = str.find_first_of(charset, start);
@@ -193,4 +209,13 @@ std::vector<std::string> ConfigParser::Split(const std::string& str,
     res.push_back(str.substr(start, end - start));
   }
   return res;
+}
+
+void ConfigParser::ValidationCheck(void) const {
+  std::cout << BOLDCYAN << "===== Validation Check Start =====" << std::endl;
+  for (size_t i = 0; i < serverConfigInfos_.size(); ++i) {
+    if (serverConfigInfos_[i].ValidationCheck())
+      throw ConfigValidationException();
+  }
+  std::cout << "===== Validation Check Finish =====" << RESET << std::endl;
 }

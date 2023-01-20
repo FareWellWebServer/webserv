@@ -16,13 +16,14 @@
 // };
 
 struct location {
-  std::string uri;
-  int status_code;
-  bool directory_list;
-  std::string redirection_path;
-  std::vector<std::string> methods;
-  std::vector<std::string> file_path;
+  std::string uri;                     // 없을 수가 없는 변수
+  int status_code;                     // 필수 입력 O
+  bool directory_list;                 // 필수 입력 X
+  std::string redirection_path;        // 필수 입력 X
+  std::vector<std::string> methods;    // 필수 입력 X
+  std::vector<std::string> file_path;  // 필수 입력 O
 
+  bool is_cgi;
   std::string cgi_pass;
 };
 
@@ -34,23 +35,29 @@ class ServerConfigInfo {
   ServerConfigInfo(void);
   ~ServerConfigInfo(void);
 
+  /* ======================== Utils ======================== */
   void ClearInfo(void);
   void PrintLocation(const location &l) const;
   void PrintLocations(void) const;
   void PrintInfo(void) const;
 
-  std::string name;  // OK 필수 입력 X
-  std::string host;  // OK 필수 입력 O
-  int port;          // OK 필수 입력 O
-  int body_size;     // OK 필수 입력 O
+  /* ======================== Validation ======================== */
+  int ValidationCheck(void) const;
+  int LocationCheck(const location &l) const;
+
+  /* ======================== Variable ======================== */
+  std::string name;  // 필수 입력 X
+  std::string host;  // 필수 입력 O
+  int port;          // 필수 입력 O
+  int body_size;     // 필수 입력 O
 
   // 추가한 변수들 설명 -> 없어도 상관은 없을 거 같은데 일단 받게 해놓음
   // 추가한 변수 -> server에도 directory_list이 들어갈 수 있어야 될 것 같음
-  bool directory_list;  // OK 필수 입력 X
+  bool directory_list;  // 필수 입력 X
   // 추가한 변수 -> server에도 리다이랙션이 들어갈 수 있어야 될 것 같음
-  std::string redirection_path;  // OK 필수 입력 X
+  std::string redirection_path;  // 필수 입력 X
 
-  std::vector<std::string> methods;  // OK 필수 입력 O
+  std::vector<std::string> methods;  // 필수 입력 O
 
   /** error_page 변수 수정
    * std::string error_page
@@ -60,9 +67,9 @@ class ServerConfigInfo {
    * error_page 500 www/500.html
    * 같은 식으로 들어오니 그냥 map으로 변경
    */
-  std::map<int, std::string> error_pages;  // OK 필수 입력 O
+  std::map<int, std::string> error_pages;  // 필수 입력 O
 
-  std::vector<location> locations;  // OK 필수 입력 X
+  std::vector<location> locations;  // 필수 입력 X
 };
 
 template <typename T>
