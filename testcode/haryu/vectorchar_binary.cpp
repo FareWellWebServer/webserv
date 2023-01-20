@@ -46,7 +46,25 @@ int main(void) {
     if (i + 2 == file_length) break;
     copied << entity_data[i + 3];
   }
-
+#if CHAR
+  std::cout
+      << "====================== test char stdout =========================="
+      << std::endl;
+  for (int i = 0; i < file_length; i++) {
+    std::cout << buf[i];
+  }
+  std::cout << std::endl;
+#else
+  std::cout
+      << "====================== test vector out =========================="
+      << std::endl;
+  for (int i = 0; i < file_length; i += 2) {
+    std::cout << entity_data[i];
+    if (i + 1 == file_length) break;
+    std::cout << entity_data[i];
+  }
+  std::cout << std::endl;
+#endif
   png.close();
   copied.close();
 
