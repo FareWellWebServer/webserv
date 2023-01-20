@@ -39,15 +39,15 @@ void ServerConfigInfo::PrintLocation(const location &l) const {
 void ServerConfigInfo::PrintLocations(void) const {
   for (size_t i = 0; i < locations.size(); ++i) {
     std::cout << std::endl;
-    std::cout << "--- [locations " << i << " -> cgi ";
+    std::cout << "------ [locations " << i << " -> cgi ";
     (locations[i].cgi_pass.size()) ? std::cout << "O" : std::cout << "X";
-    std::cout << "] ---" << std::endl;
+    std::cout << "] ------" << std::endl;
     PrintLocation(locations[i]);
   }
 }
 
 void ServerConfigInfo::PrintInfo(void) const {
-  std::cout << "--- [server info] ---" << std::endl;
+  std::cout << "------ [server info] ------" << std::endl;
   std::cout << "name: " << name << std::endl;
   std::cout << "host: " << host << std::endl;
   std::cout << "port: " << port << std::endl;

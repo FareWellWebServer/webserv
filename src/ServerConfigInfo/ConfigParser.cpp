@@ -19,9 +19,12 @@ ConfigParser::ConfigParser(const char* file_path) {
 
 ConfigParser::~ConfigParser(void) {}
 
+const char* ConfigParser::WrongConfigSyntaxException::what(void) const throw() {
+  return "[Config Error] wrong config syntax";
+}
+
 void ConfigParser::Parse(void) {
-  if (content_.size() == 0)
-    throw std::runtime_error("[Config Error] wrong config syntax");
+  if (content_.size() == 0) throw WrongConfigSyntaxException();
 
   std::istringstream iss(content_);
   std::string line;
@@ -33,25 +36,23 @@ void ConfigParser::Parse(void) {
 
     std::vector<std::string> vec = Split(line, " \t", 1);
     if (vec.size() != 2 || vec[0] != "server" || vec[1] != "{")
-      throw std::runtime_error("[Config Error] wrong config syntax");
+      throw WrongConfigSyntaxException();
 
-    std::cout << BOLDBLUE << "----- server parse start -----" << std::endl;
+    std::cout << BOLDBLUE << "------------ server parse start ------------"
+              << std::endl;
     serverConfigInfo_.ClearInfo();
 
-    if (ParseServer(iss))
-      throw std::runtime_error("[Config Error] wrong config syntax");
+    if (ParseServer(iss)) throw WrongConfigSyntaxException();
 
     serverConfigInfos_.push_back(serverConfigInfo_);
-    std::cout << BOLDBLUE << "----- server parse finish -----" << RESET
-              << std::endl;
+    std::cout << BOLDBLUE << "----------- server parse finish ------------"
+              << RESET << std::endl;
   }
   std::cout << BOLDMAGENTA << "config parsing finish" << std::endl << std::endl;
 }
 
 int ConfigParser::ParseServer(std::istringstream& iss) {
-  std::string line;
-  std::string key;
-  std::string val;
+  std::string line, key, val;
 
   while (42) {
     std::getline(iss, line, '\n');
@@ -71,8 +72,7 @@ int ConfigParser::SetServerConfigInfo(std::istringstream& iss,
   std::string c = (key == "listen") ? ":" : " ";
   std::vector<std::string> vec = Split(val, c);
 
-  std::cout << "key: '" << key << "'" << std::endl;
-  std::cout << "val: '" << val << "'" << std::endl << std::endl;
+  printf("key: %-15s| val: %s\n", key.c_str(), val.c_str());
 
   if (key == "server_name") {
     if (vec.size() != 1) return 1;
@@ -94,7 +94,6 @@ int ConfigParser::SetServerConfigInfo(std::istringstream& iss,
     for (size_t i = 0; i < vec.size(); ++i)
       serverConfigInfo_.methods.push_back(vec[i]);
   } else if (key == "error_page") {
-    vec = Split(val, " ");
     if (vec.size() != 2 || !IsNumber(vec[0])) return 1;
     int status_code = atoi(vec[0].c_str());
     serverConfigInfo_.error_pages[status_code] = vec[1];
@@ -107,9 +106,9 @@ int ConfigParser::SetServerConfigInfo(std::istringstream& iss,
 
 int ConfigParser::ParseLocation(std::istringstream& iss, const std::string& key,
                                 const std::string& val) {
-  std::cout << BOLDYELLOW << "----- location parse start -----" << std::endl;
-  std::cout << "key: '" << key << "'" << std::endl;
-  std::cout << "val: '" << val << "'" << std::endl << std::endl;
+  std::cout << BOLDYELLOW << "----------- location parse start -----------"
+            << std::endl;
+  printf("key: %-15s| val: %s\n", key.c_str(), val.c_str());
 
   std::string line;
   std::vector<std::string> vec = Split(val, " \t", 1);
@@ -127,16 +126,15 @@ int ConfigParser::ParseLocation(std::istringstream& iss, const std::string& key,
     if (SetServerLocation(l, vec[0], vec[1])) return 1;
   }
   serverConfigInfo_.locations.push_back(l);
-  std::cout << BOLDYELLOW << "----- location parse finish -----" << RESET
-            << std::endl;
+  std::cout << BOLDYELLOW << "---------- location parse finish -----------"
+            << RESET << std::endl;
   return 0;
 }
 
 int ConfigParser::SetServerLocation(location& l, const std::string& key,
                                     const std::string& val) {
   std::vector<std::string> vec = Split(val, " ");
-  std::cout << "key: '" << key << "'" << std::endl;
-  std::cout << "val: '" << val << "'" << std::endl << std::endl;
+  printf("key: %-15s| val: %s\n", key.c_str(), val.c_str());
 
   if (key == "status_code") {
     if (vec.size() != 1 || !IsNumber(vec[0])) return 1;
@@ -166,10 +164,10 @@ int ConfigParser::IsNumber(const std::string& str) {
 
 void ConfigParser::PrintConfigInfo(void) {
   for (size_t i = 0; i < serverConfigInfos_.size(); ++i) {
-    std::cout << BOLDGREEN << "--------- [server config info " << i
-              << "] ---------" << std::endl;
+    std::cout << BOLDGREEN << "---------- [server config info " << i
+              << "] ----------" << std::endl;
     serverConfigInfos_[i].PrintInfo();
-    std::cout << "------------------------------------------" << RESET
+    std::cout << "--------------------------------------------" << RESET
               << std::endl;
   }
 }
