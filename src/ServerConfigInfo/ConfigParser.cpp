@@ -4,17 +4,19 @@ ConfigParser::ConfigParser(const char* file_path) {
   std::cout << "config file path: " << file_path << std::endl;
 
   std::ifstream fs(file_path);
+  std::string content;
   std::string line;
 
   if (fs.is_open()) {
     while (!fs.eof()) {
       getline(fs, line);
-      if (line.size()) content_.append(line + "\n");
+      content.append(line + "\n");
     }
     fs.close();
-  } else {
-    throw std::runtime_error("[Config Error] Config File Open Failed");
-  }
+  } else
+    ExitConfigParseError("Config File Open Failed");
+  if (content.size() == 0) ExitConfigParseError("Empty Config File");
+  config_stream_.str(content);
 }
 
 ConfigParser::~ConfigParser(void) {}
@@ -23,23 +25,20 @@ const char* ConfigParser::ConfigValidationException::what(void) const throw() {
   return "[Config Error] Validation Check Failed";
 }
 
+/* ======================== Parsing Server ======================== */
 void ConfigParser::Parse(void) {
-  line_num_ = -1;
-  if (content_.size() == 0) ExitConfigParseError();
-
-  std::istringstream iss(content_);
-
+  line_num_ = 0;
   while (42) {
     ++line_num_;
-    std::getline(iss, line_, '\n');
+    std::getline(config_stream_, line_, '\n');
 
-    if (iss.eof()) break;
+    if (config_stream_.eof()) break;
     if (IsWhiteLine()) continue;
 
     Print("------------- server parse start -------------", BOLDBLUE);
-    CheckFirstLine();
+    if (!IsOpenServerBracket()) ExitConfigParseError();
     InitServerConfigInfo(serverConfigInfo_);
-    ParseServer(iss);
+    ParseServer();
     Print("------------- server parse finish ------------", BOLDBLUE, 1);
 
     serverConfigInfos_.push_back(serverConfigInfo_);
@@ -47,101 +46,77 @@ void ConfigParser::Parse(void) {
   Print("config parsing finish", BOLDMAGENTA, 1);
 }
 
-void ConfigParser::ParseServer(std::istringstream& iss) {
+void ConfigParser::ParseServer(void) {
   while (42) {
     ++line_num_;
-    std::getline(iss, line_, '\n');
+    std::getline(config_stream_, line_, '\n');
     if (IsWhiteLine()) continue;
 
     std::vector<std::string> vec = Split(line_, " \t", 1);
-    if (vec.size() == 1 && vec[0] == "}") break;
+    if (IsCloseBracket(vec)) break;
     if (vec.size() != 2) ExitConfigParseError();
 
-    SetServerConfigInfo(iss, vec[0], vec[1]);
+    SetServerConfigInfo(vec[0], vec[1]);
   }
 }
 
-void ConfigParser::SetServerConfigInfo(std::istringstream& iss,
-                                       const std::string& key,
+void ConfigParser::SetServerConfigInfo(const std::string& key,
                                        const std::string& val) {
   std::vector<std::string> vec = Split(val, " ");
   printf("key: %-18s| val: %s\n", key.c_str(), val.c_str());
 
   if (key == "listen") {
-    if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
-    serverConfigInfo_.port = atoi(vec[0].c_str());
-  } else if (key == "body_size") {
-    if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
-    serverConfigInfo_.body_size = atoi(vec[0].c_str());
+    ParseListen(vec);
   } else if (key == "root") {
-    if (vec.size() != 1) ExitConfigParseError();
-    serverConfigInfo_.root_path = vec[0];
+    ParseRoot(vec);
+  } else if (key == "body_size") {
+    ParseBodySize(vec);
   } else if (key == "server_name") {
-    if (vec.size() != 1) ExitConfigParseError();
-    serverConfigInfo_.server_name = val;
+    ParseServerName(vec);
   } else if (key == "autoindex") {
-    if (vec.size() != 1 || (vec[0] != "on" && vec[0] != "off"))
-      ExitConfigParseError();
-    serverConfigInfo_.autoindex = (vec[0] == "on") ? true : false;
-  } else if (key == "keepalive_timeout") {
-    if (!IsNumber(vec[0])) ExitConfigParseError();
-    serverConfigInfo_.keep_alive_time = atoi(vec[0].c_str());
+    ParseAutoindex(vec);
+  } else if (key == "timeout") {
+    ParseTimeout(vec);
   } else if (key == "method") {
-    for (size_t i = 0; i < vec.size(); ++i)
-      serverConfigInfo_.methods.push_back(vec[i]);
+    ParseMethods(vec);
   } else if (key == "error_page") {
-    if (vec.size() != 2 || !IsNumber(vec[0])) ExitConfigParseError();
-    int status_code = atoi(vec[0].c_str());
-    serverConfigInfo_.error_pages[status_code] = vec[1];
+    ParseErrorPage(vec);
   } else if (key == "location") {
-    ParseLocation(iss, key, val);
+    ParseLocation(key, val);
   } else
     ExitConfigParseError();
 }
 
-void ConfigParser::ParseLocation(std::istringstream& iss,
-                                 const std::string& key,
-                                 const std::string& val) {
-  Print("------------ location parse start ------------", BOLDYELLOW);
-  printf("key: %-18s| val: %s\n", key.c_str(), val.c_str());
-
-  std::vector<std::string> vec = Split(val, " \t", 1);
-  if (vec.size() != 2 || vec[1] != "{") ExitConfigParseError();
-
-  location l;
-  InitLocation(l, vec[0]);
-  while (42) {
-    ++line_num_;
-    std::getline(iss, line_, '\n');
-    if (IsWhiteLine()) continue;
-
-    std::vector<std::string> vec = Split(line_, " \t", 1);
-    if (vec.size() == 1 && vec[0] == "}") break;
-    if (vec.size() != 2) ExitConfigParseError();
-    SetLocation(l, vec[0], vec[1]);
+/* ======================== Validate Server ======================== */
+void ConfigParser::CheckLocation(const location& l) const {
+  if (!l.is_cgi) {  // cgi가 아닌 경우
+    std::cout << "Not Cgi Location Check" << std::endl;
+    if (l.status_code == -1 || !l.file_path.size())
+      ExitConfigValidateError(
+          "Missing Location Elements(status_code or file_path)");
+  } else {  // cgi인 경우
+    std::cout << "Cgi Location Check" << std::endl;
+    if (l.status_code == -1 || !l.cgi_pass.size())
+      ExitConfigValidateError(
+          "Missing Location Elements(status_code or cgi_pass)");
   }
-  serverConfigInfo_.locations.push_back(l);
-  Print("------------ location parse finish -----------", BOLDYELLOW, 1);
 }
 
-void ConfigParser::SetLocation(location& l, const std::string& key,
-                               const std::string& val) {
-  std::vector<std::string> vec = Split(val, " ");
-  printf("key: %-18s| val: %s\n", key.c_str(), val.c_str());
+void ConfigParser::CheckServerConfigInfo(const ServerConfigInfo& info) const {
+  std::cout << "Server Essential Check" << std::endl;
+  if (info.port == -1 || info.body_size == 0 || info.root_path.size() == 0 ||
+      !info.methods.size() || !info.error_pages.size())
+    ExitConfigValidateError("Missing Server Elements");
 
-  if (key == "status_code") {
-    if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
-    l.status_code = atoi(vec[0].c_str());
-  } else if (key == "redirection") {
-    if (vec.size() != 2 || !IsNumber(vec[0])) ExitConfigParseError();
-    l.redir_status = atoi(vec[0].c_str());
-    l.redir_path = vec[1];
-  } else if (key == "method") {
-    for (size_t i = 0; i < vec.size(); ++i) l.methods.push_back(vec[i]);
-  } else if (key == "file_path") {
-    for (size_t i = 0; i < vec.size(); ++i) l.file_path.push_back(vec[i]);
-  } else if (key == "cgi_pass") {
-    if (l.is_cgi == false || vec.size() != 1) ExitConfigParseError();
-    l.cgi_pass = vec[0];
-  }
+  std::cout << "====== Location Check Start ======" << std::endl;
+  for (size_t i = 0; i < info.locations.size(); ++i)
+    CheckLocation(info.locations[i]);
+  std::cout << "====== Location Check Finish =====" << std::endl;
+}
+
+void ConfigParser::CheckValidation(void) const {
+  Print("===== Validation Check Start =====", BOLDCYAN);
+  for (size_t i = 0; i < serverConfigInfos_.size(); ++i)
+    CheckServerConfigInfo(serverConfigInfos_[i]);
+  Print("===== Validation Check Finish =====", BOLDCYAN, 1);
 }

@@ -1,13 +1,18 @@
 #include "../../include/Config/ConfigParser.hpp"
 
 /* =========================== Utils Error =========================== */
-void ConfigParser::ExitConfigParseError(void) const {
-  std::cerr << BOLDRED << "[Config Error] ";
-  if (line_num_ == -1)
-    std::cerr << "Empty Config File" << std::endl;
+void ConfigParser::ExitConfigParseError(std::string msg) const {
+  std::cerr << BOLDRED << "[Config Parsing Error] ";
+  if (msg.size())
+    std::cerr << msg << std::endl;
   else
     std::cerr << "Line " << line_num_ << " -> " << line_ << std::endl;
   std::cerr << RESET;
+  exit(EXIT_FAILURE);
+}
+
+void ConfigParser::ExitConfigValidateError(std::string msg) const {
+  std::cerr << BOLDRED << "[Config Validate Error] " << msg << RESET <<std::endl;
   exit(EXIT_FAILURE);
 }
 
@@ -34,11 +39,34 @@ void ConfigParser::InitServerConfigInfo(ServerConfigInfo& info) {
 
   info.server_name = "";
   info.autoindex = false;
-  info.keep_alive_time = 0;
+  info.timeout = 0;
 
   info.methods.clear();
   info.error_pages.clear();
   info.locations.clear();
+}
+
+/* ========================== Utils Parsing ========================== */
+bool ConfigParser::IsWhiteLine(void) const {
+  if (line_.find_first_not_of(" \t") == std::string::npos) return true;
+  return false;
+}
+
+bool ConfigParser::IsOpenServerBracket(void) const {
+  std::vector<std::string> vec = Split(line_, " \t", 1);
+  if (vec.size() != 2 || vec[0] != "server" || vec[1] != "{") return false;
+  return true;
+}
+
+bool ConfigParser::IsOpenLocationBracket(
+    const std::vector<std::string>& vec) const {
+  if (vec.size() != 2 || vec[1] != "{") return false;
+  return true;
+}
+
+bool ConfigParser::IsCloseBracket(const std::vector<std::string>& vec) const {
+  if (vec.size() == 1 && vec[0] == "}") return true;
+  return false;
 }
 
 /* =========================== Utils Print =========================== */
@@ -85,12 +113,12 @@ void ConfigParser::PrintConfigInfo(const ServerConfigInfo& info) const {
   std::cout << "------ [server info] ------" << std::endl;
   std::cout << "host: " << info.host << std::endl;
   std::cout << "port: " << info.port << std::endl;
-  std::cout << "body_size: " << info.body_size << std::endl;
   std::cout << "root_path: " << info.root_path << std::endl;
+  std::cout << "body_size: " << info.body_size << std::endl;
 
   std::cout << "server_name: " << info.server_name << std::endl;
   std::cout << "autoindex: " << info.autoindex << std::endl;
-  std::cout << "keep_alive_time: " << info.keep_alive_time << std::endl;
+  std::cout << "timeout: " << info.timeout << std::endl;
 
   std::cout << "methods:";
   PrintVector(info.methods);
@@ -113,10 +141,10 @@ void ConfigParser::PrintConfigInfos(void) const {
 }
 
 /* =========================== Utils =========================== */
-int IsNumber(const std::string& str) {
+bool IsNumber(const std::string& str) {
   for (size_t i = 0; i < str.length(); i++)
-    if (!isdigit(str[i])) return 0;
-  return 1;
+    if (!isdigit(str[i])) return false;
+  return true;
 }
 
 std::vector<std::string> Split(const std::string& str,
@@ -131,11 +159,11 @@ std::vector<std::string> Split(const std::string& str,
     res.push_back(str.substr(start, end - start));
     start = str.find_first_not_of(charset, end);
     end = str.find(charset, start);
+    if (start == std::string::npos) break;
     if (once) {
       res.push_back(str.substr(start, end - start));
       break;
     }
-    if (start == std::string::npos) break;
     res.push_back(str.substr(start, end - start));
   }
   return res;
