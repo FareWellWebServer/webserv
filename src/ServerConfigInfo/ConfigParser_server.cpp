@@ -70,26 +70,3 @@ int ConfigParser::SetServerConfigInfo(std::istringstream& iss,
     return 1;
   return 0;
 }
-
-int ConfigParser::SetServerLocation(location& l, const std::string& key,
-                                    const std::string& val) {
-  std::vector<std::string> vec = Split(val, " ");
-  printf("key: %-15s| val: %s\n", key.c_str(), val.c_str());
-
-  if (key == "status_code") {
-    if (vec.size() != 1 || !IsNumber(vec[0])) return 1;
-    l.status_code = atoi(vec[0].c_str());
-  } else if (key == "redirection") {
-    if (vec.size() != 2 || !IsNumber(vec[0])) return 1;
-    l.redir_status = atoi(vec[0].c_str());
-    l.redir_path = vec[1];
-  } else if (key == "method") {
-    for (size_t i = 0; i < vec.size(); ++i) l.methods.push_back(vec[i]);
-  } else if (key == "file_path") {
-    for (size_t i = 0; i < vec.size(); ++i) l.file_path.push_back(vec[i]);
-  } else if (key == "cgi_pass") {
-    if (l.is_cgi == false || vec.size() != 1) return 1;
-    l.cgi_pass = vec[0];
-  }
-  return 0;
-}

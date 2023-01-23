@@ -51,8 +51,7 @@ class ConfigParser {
                           const std::string &val);
   int ParseLocation(std::istringstream &iss, const std::string &key,
                     const std::string &val);
-  int SetServerLocation(location &l, const std::string &key,
-                        const std::string &val);
+  int SetLocation(location &l, const std::string &key, const std::string &val);
 
   /* ======================== Validation ======================== */
   void ValidationCheck(void) const;
