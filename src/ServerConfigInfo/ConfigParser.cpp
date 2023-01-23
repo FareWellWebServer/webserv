@@ -34,30 +34,24 @@ void ConfigParser::Parse(void) {
     std::getline(iss, line_, '\n');
 
     if (iss.eof()) break;
-    if (line_.find_first_not_of(" \t") == std::string::npos) continue;
+    if (IsWhiteLine()) continue;
 
-    std::vector<std::string> vec = Split(line_, " \t", 1);
-    if (vec.size() != 2 || vec[0] != "server" || vec[1] != "{")
-      ExitConfigParseError();
-
-    std::cout << BOLDBLUE << "------------ server parse start ------------"
-              << std::endl;
-
+    Print("------------- server parse start -------------", BOLDBLUE);
+    CheckFirstLine();
     InitServerConfigInfo(serverConfigInfo_);
     ParseServer(iss);
+    Print("------------- server parse finish ------------", BOLDBLUE, 1);
 
     serverConfigInfos_.push_back(serverConfigInfo_);
-    std::cout << BOLDBLUE << "----------- server parse finish ------------"
-              << RESET << std::endl;
   }
-  std::cout << BOLDMAGENTA << "config parsing finish" << std::endl << std::endl;
+  Print("config parsing finish", BOLDMAGENTA, 1);
 }
 
 void ConfigParser::ParseServer(std::istringstream& iss) {
   while (42) {
     ++line_num_;
     std::getline(iss, line_, '\n');
-    if (line_.find_first_not_of(" \t") == std::string::npos) continue;
+    if (IsWhiteLine()) continue;
 
     std::vector<std::string> vec = Split(line_, " \t", 1);
     if (vec.size() == 1 && vec[0] == "}") break;
@@ -71,8 +65,7 @@ void ConfigParser::SetServerConfigInfo(std::istringstream& iss,
                                        const std::string& key,
                                        const std::string& val) {
   std::vector<std::string> vec = Split(val, " ");
-
-  printf("key: %-15s| val: %s\n", key.c_str(), val.c_str());
+  printf("key: %-18s| val: %s\n", key.c_str(), val.c_str());
 
   if (key == "listen") {
     if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
@@ -109,8 +102,7 @@ void ConfigParser::SetServerConfigInfo(std::istringstream& iss,
 void ConfigParser::ParseLocation(std::istringstream& iss,
                                  const std::string& key,
                                  const std::string& val) {
-  std::cout << BOLDYELLOW << "----------- location parse start -----------"
-            << std::endl;
+  Print("------------ location parse start ------------", BOLDYELLOW);
   printf("key: %-18s| val: %s\n", key.c_str(), val.c_str());
 
   std::vector<std::string> vec = Split(val, " \t", 1);
@@ -118,11 +110,10 @@ void ConfigParser::ParseLocation(std::istringstream& iss,
 
   location l;
   InitLocation(l, vec[0]);
-  if (vec[0] == ".py") l.is_cgi = true;
   while (42) {
     ++line_num_;
     std::getline(iss, line_, '\n');
-    if (line_.find_first_not_of(" \t") == std::string::npos) continue;
+    if (IsWhiteLine()) continue;
 
     std::vector<std::string> vec = Split(line_, " \t", 1);
     if (vec.size() == 1 && vec[0] == "}") break;
@@ -130,14 +121,13 @@ void ConfigParser::ParseLocation(std::istringstream& iss,
     SetLocation(l, vec[0], vec[1]);
   }
   serverConfigInfo_.locations.push_back(l);
-  std::cout << BOLDYELLOW << "---------- location parse finish -----------"
-            << RESET << std::endl;
+  Print("------------ location parse finish -----------", BOLDYELLOW, 1);
 }
 
 void ConfigParser::SetLocation(location& l, const std::string& key,
                                const std::string& val) {
   std::vector<std::string> vec = Split(val, " ");
-  printf("key: %-15s| val: %s\n", key.c_str(), val.c_str());
+  printf("key: %-18s| val: %s\n", key.c_str(), val.c_str());
 
   if (key == "status_code") {
     if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();

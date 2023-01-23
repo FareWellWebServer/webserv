@@ -14,6 +14,9 @@ void ConfigParser::ExitConfigParseError(void) const {
 /* =========================== Utils Init =========================== */
 void ConfigParser::InitLocation(location& l, const std::string& uri) {
   l.uri = uri;
+  l.is_cgi = (uri == ".py") ? true : false;
+  l.cgi_pass = "";
+
   l.status_code = -1;
   l.file_path.clear();
 
@@ -21,9 +24,6 @@ void ConfigParser::InitLocation(location& l, const std::string& uri) {
 
   l.redir_status = -1;
   l.redir_path = "";
-
-  l.is_cgi = false;
-  l.cgi_pass = "";
 }
 
 void ConfigParser::InitServerConfigInfo(ServerConfigInfo& info) {
@@ -42,6 +42,14 @@ void ConfigParser::InitServerConfigInfo(ServerConfigInfo& info) {
 }
 
 /* =========================== Utils Print =========================== */
+void ConfigParser::Print(const std::string str, const std::string color,
+                         int reset) const {
+  if (reset)
+    std::cout << color << str << RESET << std::endl;
+  else
+    std::cout << color << str << std::endl;
+}
+
 void ConfigParser::PrintLocation(const location& l) const {
   if (l.is_cgi) {
     std::cout << "uri: " << l.uri << std::endl;

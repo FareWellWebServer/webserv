@@ -31,19 +31,26 @@ class ConfigParser {
   // Error
   void ExitConfigParseError(void) const;
   // Init
-  void InitLocation(location &l, const std::string &uri);
   void InitServerConfigInfo(ServerConfigInfo &info);
+  void InitLocation(location &l, const std::string &uri);
   // Print
-  void PrintLocation(const location &l) const;
-  void PrintLocations(const std::vector<location> &locations) const;
-  void PrintConfigInfo(const ServerConfigInfo &info) const;
+  void Print(const std::string color, const std::string str,
+             int reset = 0) const;
   void PrintConfigInfos(void) const;
+  void PrintConfigInfo(const ServerConfigInfo &info) const;
+  void PrintLocations(const std::vector<location> &locations) const;
+  void PrintLocation(const location &l) const;
 
-  /* ======================== Parsing ======================== */
+  /* ======================== Parsing Server ======================== */
   void Parse(void);
   void ParseServer(std::istringstream &iss);
   void SetServerConfigInfo(std::istringstream &iss, const std::string &key,
                            const std::string &val);
+
+  int IsWhiteLine(void) const;
+  void CheckFirstLine(void) const;
+
+  /* ======================== Parsing Location ======================== */
   void ParseLocation(std::istringstream &iss, const std::string &key,
                      const std::string &val);
   void SetLocation(location &l, const std::string &key, const std::string &val);
