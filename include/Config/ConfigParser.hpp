@@ -16,50 +16,61 @@
 #include <vector>
 
 #include "ServerConfigInfo.hpp"
-
 class ConfigParser {
  public:
   ConfigParser(const char *file_path);
   ~ConfigParser(void);
 
   /* ======================== Error ======================== */
-  class WrongConfigSyntaxException : public std::exception {
-   public:
-    const char *what(void) const throw();
-  };
-
   class ConfigValidationException : public std::exception {
    public:
     const char *what(void) const throw();
   };
 
   /* ======================== Utils ======================== */
-  int IsNumber(const std::string &str) const;
-  void PrintConfigInfo(void) const;
-  // split("a b,c", " ,") -> ["a", "b", "c"]
-  // once == 0(default) -> 싹다 split
-  // once == 1 -> 한번만 split함
-  std::vector<std::string> Split(const std::string &str,
-                                 const std::string &charset,
-                                 int once = 0) const;
+  // Error
+  void ExitConfigParseError(void) const;
+  // Init
+  void InitLocation(location &l, const std::string &uri);
+  void InitServerConfigInfo(ServerConfigInfo &info);
+  // Print
+  void PrintLocation(const location &l) const;
+  void PrintLocations(const std::vector<location> &locations) const;
+  void PrintConfigInfo(const ServerConfigInfo &info) const;
+  void PrintConfigInfos(void) const;
 
   /* ======================== Parsing ======================== */
-  void ClearLocation(location &l);
   void Parse(void);
-  int ParseServer(std::istringstream &iss);
-  int SetServerConfigInfo(std::istringstream &iss, const std::string &key,
-                          const std::string &val);
-  int ParseLocation(std::istringstream &iss, const std::string &key,
-                    const std::string &val);
-  int SetLocation(location &l, const std::string &key, const std::string &val);
+  void ParseServer(std::istringstream &iss);
+  void SetServerConfigInfo(std::istringstream &iss, const std::string &key,
+                           const std::string &val);
+  void ParseLocation(std::istringstream &iss, const std::string &key,
+                     const std::string &val);
+  void SetLocation(location &l, const std::string &key, const std::string &val);
 
   /* ======================== Validation ======================== */
   void ValidationCheck(void) const;
 
  private:
   std::string content_;
+  int line_num_;
+  std::string line_;
   ServerConfigInfo serverConfigInfo_;
   std::vector<ServerConfigInfo> serverConfigInfos_;
 };
+
+int IsNumber(const std::string &str);
+// once == 0(default) -> 싹다 split
+// once == 1 -> 한번만 split함
+// EX) split("a b,c d", " ,") -> ["a", "b", "c", "d"]
+// EX) split("a b,c d", " ,", 1) -> ["a", "b,c d"]
+std::vector<std::string> Split(const std::string &str,
+                               const std::string &charset, int once = 0);
+
+template <typename T>
+void PrintVector(const std::vector<T> &vec) {
+  for (size_t i = 0; i < vec.size(); ++i) std::cout << " " << vec[i];
+  std::cout << std::endl;
+}
 
 #endif

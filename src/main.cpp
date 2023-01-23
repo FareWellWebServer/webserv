@@ -42,6 +42,6 @@ void config_process(int ac, char** av) {
 
   ConfigParser configParser(file_path);
   configParser.Parse();
-  configParser.PrintConfigInfo();
+  configParser.PrintConfigInfos();
   configParser.ValidationCheck();
 }

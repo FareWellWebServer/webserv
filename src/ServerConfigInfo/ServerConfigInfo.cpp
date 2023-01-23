@@ -43,7 +43,7 @@ int ServerConfigInfo::ValidationCheck(void) const {
   return 0;
 }
 
-int ServerConfigInfo::LocationCheck(const location &l) const {
+int ServerConfigInfo::LocationCheck(const location& l) const {
   std::cout << "====== Location Check Start ======" << std::endl;
   // 필수 요소 확인
   std::cout << "Location Essential Check" << std::endl;

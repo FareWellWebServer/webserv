@@ -19,38 +19,139 @@ ConfigParser::ConfigParser(const char* file_path) {
 
 ConfigParser::~ConfigParser(void) {}
 
-const char* ConfigParser::WrongConfigSyntaxException::what(void) const throw() {
-  return "[Config Error] Wrong Config Syntax";
-}
-
 const char* ConfigParser::ConfigValidationException::what(void) const throw() {
   return "[Config Error] Validation Check Failed";
 }
 
 void ConfigParser::Parse(void) {
-  if (content_.size() == 0) throw WrongConfigSyntaxException();
+  line_num_ = -1;
+  if (content_.size() == 0) ExitConfigParseError();
 
   std::istringstream iss(content_);
-  std::string line;
 
   while (42) {
-    std::getline(iss, line, '\n');
-    if (line.size() == 0) break;
-    if (line.find_first_not_of(" \t") == std::string::npos) continue;
+    ++line_num_;
+    std::getline(iss, line_, '\n');
 
-    std::vector<std::string> vec = Split(line, " \t", 1);
+    if (iss.eof()) break;
+    if (line_.find_first_not_of(" \t") == std::string::npos) continue;
+
+    std::vector<std::string> vec = Split(line_, " \t", 1);
     if (vec.size() != 2 || vec[0] != "server" || vec[1] != "{")
-      throw WrongConfigSyntaxException();
+      ExitConfigParseError();
 
     std::cout << BOLDBLUE << "------------ server parse start ------------"
               << std::endl;
-    serverConfigInfo_.ClearInfo();
 
-    if (ParseServer(iss)) throw WrongConfigSyntaxException();
+    InitServerConfigInfo(serverConfigInfo_);
+    ParseServer(iss);
 
     serverConfigInfos_.push_back(serverConfigInfo_);
     std::cout << BOLDBLUE << "----------- server parse finish ------------"
               << RESET << std::endl;
   }
   std::cout << BOLDMAGENTA << "config parsing finish" << std::endl << std::endl;
+}
+
+void ConfigParser::ParseServer(std::istringstream& iss) {
+  while (42) {
+    ++line_num_;
+    std::getline(iss, line_, '\n');
+    if (line_.find_first_not_of(" \t") == std::string::npos) continue;
+
+    std::vector<std::string> vec = Split(line_, " \t", 1);
+    if (vec.size() == 1 && vec[0] == "}") break;
+    if (vec.size() != 2) ExitConfigParseError();
+
+    SetServerConfigInfo(iss, vec[0], vec[1]);
+  }
+}
+
+void ConfigParser::SetServerConfigInfo(std::istringstream& iss,
+                                       const std::string& key,
+                                       const std::string& val) {
+  std::vector<std::string> vec = Split(val, " ");
+
+  printf("key: %-15s| val: %s\n", key.c_str(), val.c_str());
+
+  if (key == "listen") {
+    if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
+    serverConfigInfo_.port = atoi(vec[0].c_str());
+  } else if (key == "body_size") {
+    if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
+    serverConfigInfo_.body_size = atoi(vec[0].c_str());
+  } else if (key == "root") {
+    if (vec.size() != 1) ExitConfigParseError();
+    serverConfigInfo_.root_path = vec[0];
+  } else if (key == "server_name") {
+    if (vec.size() != 1) ExitConfigParseError();
+    serverConfigInfo_.server_name = val;
+  } else if (key == "autoindex") {
+    if (vec.size() != 1 || (vec[0] != "on" && vec[0] != "off"))
+      ExitConfigParseError();
+    serverConfigInfo_.autoindex = (vec[0] == "on") ? true : false;
+  } else if (key == "keepalive_timeout") {
+    if (!IsNumber(vec[0])) ExitConfigParseError();
+    serverConfigInfo_.keep_alive_time = atoi(vec[0].c_str());
+  } else if (key == "method") {
+    for (size_t i = 0; i < vec.size(); ++i)
+      serverConfigInfo_.methods.push_back(vec[i]);
+  } else if (key == "error_page") {
+    if (vec.size() != 2 || !IsNumber(vec[0])) ExitConfigParseError();
+    int status_code = atoi(vec[0].c_str());
+    serverConfigInfo_.error_pages[status_code] = vec[1];
+  } else if (key == "location") {
+    ParseLocation(iss, key, val);
+  } else
+    ExitConfigParseError();
+}
+
+void ConfigParser::ParseLocation(std::istringstream& iss,
+                                 const std::string& key,
+                                 const std::string& val) {
+  std::cout << BOLDYELLOW << "----------- location parse start -----------"
+            << std::endl;
+  printf("key: %-18s| val: %s\n", key.c_str(), val.c_str());
+
+  std::vector<std::string> vec = Split(val, " \t", 1);
+  if (vec.size() != 2 || vec[1] != "{") ExitConfigParseError();
+
+  location l;
+  InitLocation(l, vec[0]);
+  if (vec[0] == ".py") l.is_cgi = true;
+  while (42) {
+    ++line_num_;
+    std::getline(iss, line_, '\n');
+    if (line_.find_first_not_of(" \t") == std::string::npos) continue;
+
+    std::vector<std::string> vec = Split(line_, " \t", 1);
+    if (vec.size() == 1 && vec[0] == "}") break;
+    if (vec.size() != 2) ExitConfigParseError();
+    SetLocation(l, vec[0], vec[1]);
+  }
+  serverConfigInfo_.locations.push_back(l);
+  std::cout << BOLDYELLOW << "---------- location parse finish -----------"
+            << RESET << std::endl;
+}
+
+void ConfigParser::SetLocation(location& l, const std::string& key,
+                               const std::string& val) {
+  std::vector<std::string> vec = Split(val, " ");
+  printf("key: %-15s| val: %s\n", key.c_str(), val.c_str());
+
+  if (key == "status_code") {
+    if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
+    l.status_code = atoi(vec[0].c_str());
+  } else if (key == "redirection") {
+    if (vec.size() != 2 || !IsNumber(vec[0])) ExitConfigParseError();
+    l.redir_status = atoi(vec[0].c_str());
+    l.redir_path = vec[1];
+  } else if (key == "method") {
+    for (size_t i = 0; i < vec.size(); ++i) l.methods.push_back(vec[i]);
+  } else if (key == "file_path") {
+    for (size_t i = 0; i < vec.size(); ++i) l.file_path.push_back(vec[i]);
+  } else if (key == "cgi_pass") {
+    if (l.is_cgi == false || vec.size() != 1) ExitConfigParseError();
+    l.cgi_pass = vec[0];
+  }
 }
