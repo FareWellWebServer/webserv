@@ -32,7 +32,10 @@ void ConfigParser::ClearLocation(location& l) {
   l.directory_list = serverConfigInfo_.directory_list;
   l.methods = serverConfigInfo_.methods;
   l.file_path.clear();
-
+  
+  l.redir_status = -1;
+  l.redirection_path = "";
+  
   l.is_cgi = false;
   l.cgi_pass = "";
 }
@@ -75,7 +78,7 @@ int ConfigParser::ParseServer(std::istringstream& iss) {
     std::vector<std::string> vec = Split(line, " \t", 1);
     if (vec.size() == 1 && vec[0] == "}") break;
     if (vec.size() != 2) return 1;
-    if (SetServerConfigInfo(iss, vec[0], vec[1])) return 1;
+    if (SetServerConfigInfo(iss, vec[0], vec[1]))return 1;
   }
   return 0;
 }
@@ -86,6 +89,7 @@ int ConfigParser::SetServerConfigInfo(std::istringstream& iss,
   std::string c = (key == "listen") ? ":" : " ";
   std::vector<std::string> vec = Split(val, c);
 
+  PrintVector(vec);
   printf("key: %-15s| val: %s\n", key.c_str(), val.c_str());
 
   if (key == "server_name") {
@@ -113,7 +117,14 @@ int ConfigParser::SetServerConfigInfo(std::istringstream& iss,
     serverConfigInfo_.error_pages[status_code] = vec[1];
   } else if (key == "location") {
     if (ParseLocation(iss, key, val)) return 1;
-  } else
+  } else if (key == "keepalive_timeout") {
+    if (!IsNumber(vec[0])) return 1;
+    serverConfigInfo_.keep_alive_time = atoi(vec[0].c_str());
+  } else if (key == "root") {
+    if(vec.size() != 1) return 1;
+    serverConfigInfo_.root_path = vec[0];
+  } 
+  else
     return 1;
   return 0;
 }
@@ -159,8 +170,9 @@ int ConfigParser::SetServerLocation(location& l, const std::string& key,
     if (vec.size() != 1 || (vec[0] != "on" && vec[0] != "off")) return 1;
     l.directory_list = (vec[0] == "on") ? true : false;
   } else if (key == "redirection") {
-    if (vec.size() != 1) return 1;
-    l.redirection_path = vec[0];
+    if (vec.size() != 2 || !IsNumber(vec[0])) return 1;
+    l.redir_status = atoi(vec[0].c_str());
+    l.redirection_path = vec[1];
   } else if (key == "method") {
     for (size_t i = 0; i < vec.size(); ++i) l.methods.push_back(vec[i]);
   } else if (key == "file_path") {

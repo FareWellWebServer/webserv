@@ -11,6 +11,8 @@ void ServerConfigInfo::ClearInfo(void) {
   body_size = 0;
   directory_list = false;
   redirection_path = "";
+  keep_alive_time = 0;
+  root_path = "";
   methods.clear();
   error_pages.clear();
   locations.clear();
@@ -24,6 +26,7 @@ void ServerConfigInfo::PrintLocation(const location &l) const {
     std::cout << "uri: " << l.uri << std::endl;
     std::cout << "status_code: " << l.status_code << std::endl;
     std::cout << "directory_list: " << l.directory_list << std::endl;
+    std::cout << "redir status : " << l.redir_status << std::endl;
     std::cout << "redirection_path: " << l.redirection_path << std::endl;
     std::cout << "methods:";
     for (size_t i = 0; i < l.methods.size(); ++i)
@@ -54,8 +57,10 @@ void ServerConfigInfo::PrintInfo(void) const {
   std::cout << "body_size: " << body_size << std::endl;
   std::cout << "directory_list: " << directory_list << std::endl;
   std::cout << "redirection_path: " << redirection_path << std::endl;
+  std::cout << "root_path: " << root_path << std::endl;
   std::cout << "methods:";
   PrintVector(methods);
+  std::cout << "keep_alive_time: " << keep_alive_time << std::endl;
   std::cout << "error_pages:";
   std::map<int, std::string>::const_iterator it;
   for (it = error_pages.begin(); it != error_pages.end(); ++it)

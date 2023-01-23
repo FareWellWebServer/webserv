@@ -38,7 +38,7 @@ void config_process(int ac, char** av) {
   std::cout << BOLDMAGENTA << "-----  config process running -----"
             << std::endl;
   if (ac > 2) throw std::runtime_error("[Config Error] few argument");
-  const char* file_path = (ac == 1) ? "config/default.config" : av[1];
+  const char* file_path = (ac == 1) ? "config/test.config" : av[1];
 
   ConfigParser configParser(file_path);
   configParser.Parse();
