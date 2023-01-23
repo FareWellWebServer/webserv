@@ -23,12 +23,6 @@ class ConfigParser {
   ConfigParser(const char *file_path);
   ~ConfigParser(void);
 
-  /* ======================== Error ======================== */
-  class ConfigValidationException : public std::exception {
-   public:
-    const char *what(void) const throw();
-  };
-
   /* ======================== Utils ======================== */
   // Error
   void ExitConfigParseError(std::string msg = "") const;

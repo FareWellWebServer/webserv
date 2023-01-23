@@ -21,10 +21,6 @@ ConfigParser::ConfigParser(const char* file_path) {
 
 ConfigParser::~ConfigParser(void) {}
 
-const char* ConfigParser::ConfigValidationException::what(void) const throw() {
-  return "[Config Error] Validation Check Failed";
-}
-
 /* ======================== Parsing Server ======================== */
 void ConfigParser::Parse(void) {
   line_num_ = 0;
