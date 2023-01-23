@@ -18,13 +18,12 @@
 struct location {
   std::string uri;                     // 없을 수가 없는 변수
   int status_code;                     // 필수 입력 O
-  bool directory_list;                 // 필수 입력 X
   std::vector<std::string> methods;    // 필수 입력 X
   std::vector<std::string> file_path;  // 필수 입력 O
-  
-  //return 상태코드 경로 인 case 처리.
+
+  // return 상태코드 경로 인 case 처리.
   int redir_status;
-  std::string redirection_path;        // 필수 입력 X
+  std::string redir_path;  // 필수 입력 X
 
   bool is_cgi;
   std::string cgi_pass;
@@ -49,31 +48,24 @@ class ServerConfigInfo {
   int LocationCheck(const location &l) const;
 
   /* ======================== Variable ======================== */
-  std::string name;  // 필수 입력 X
-  std::string host;  // 필수 입력 O
-  int port;          // 필수 입력 O
-  int body_size;     // 필수 입력 O
+  std::string name;       // 필수 입력 X
+  std::string host;       // 필수 입력 O
+  int port;               // 필수 입력 O
+  int body_size;          // 필수 입력 O
+  std::string root_path;  // 필수 입력 O
 
-
-  //논의필요한 변수 keep_alive_time
-  int keep_alive_time; //필수 입력 X default를 정해준다고 치면 필수는 아닌데 정의는 되어야함
-  std::string root_path;
- 
   // 추가한 변수들 설명 -> 없어도 상관은 없을 거 같은데 일단 받게 해놓음
   // 추가한 변수 -> server에도 directory_list이 들어갈 수 있어야 될 것 같음
-  bool directory_list;  // 필수 입력 X
-  // 추가한 변수 -> server에도 리다이랙션이 들어갈 수 있어야 될 것 같음
-  std::string redirection_path;  // 필수 입력 X
+  bool autoindex;  // 필수 입력 X
+
+  // 논의 필요한 변수 keep_alive_time
+  // default를 정해준다고 치면 필수는 아닌데 정의는 되어야함
+  int keep_alive_time;  // 필수 입력 X
 
   std::vector<std::string> methods;  // 필수 입력 O
-
   /** error_page 변수 수정
-   * std::string error_page
-   * -> std::map<int, std::string>  error_pages
-   *
    * error_page 404 www/404.html
-   * error_page 500 www/500.html
-   * 같은 식으로 들어오니 그냥 map으로 변경
+   * 같은 식으로 들어오니 그냥 map으로 쓰는게 편해 보임
    */
   std::map<int, std::string> error_pages;  // 필수 입력 O
 

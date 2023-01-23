@@ -4,8 +4,6 @@ ServerConfigInfo::ServerConfigInfo(void) {}
 
 ServerConfigInfo::~ServerConfigInfo(void) {}
 
-
-
 void ConfigParser::ValidationCheck(void) const {
   std::cout << BOLDCYAN << "===== Validation Check Start =====" << std::endl;
   for (size_t i = 0; i < serverConfigInfos_.size(); ++i) {

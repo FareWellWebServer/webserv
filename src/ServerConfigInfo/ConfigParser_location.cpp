@@ -2,13 +2,12 @@
 
 void ConfigParser::ClearLocation(location& l) {
   l.status_code = -1;
-  l.directory_list = serverConfigInfo_.directory_list;
   l.methods = serverConfigInfo_.methods;
   l.file_path.clear();
-  
+
   l.redir_status = -1;
-  l.redirection_path = "";
-  
+  l.redir_path = "";
+
   l.is_cgi = false;
   l.cgi_pass = "";
 }

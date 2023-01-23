@@ -39,16 +39,15 @@ std::vector<std::string> ConfigParser::Split(const std::string& str,
   return res;
 }
 
-void ServerConfigInfo::PrintLocation(const location &l) const {
+void ServerConfigInfo::PrintLocation(const location& l) const {
   if (l.is_cgi) {
     std::cout << "uri: " << l.uri << std::endl;
     std::cout << "cgi_pass: " << l.cgi_pass << std::endl;
   } else {
     std::cout << "uri: " << l.uri << std::endl;
     std::cout << "status_code: " << l.status_code << std::endl;
-    std::cout << "directory_list: " << l.directory_list << std::endl;
     std::cout << "redir status : " << l.redir_status << std::endl;
-    std::cout << "redirection_path: " << l.redirection_path << std::endl;
+    std::cout << "redirection_path: " << l.redir_path << std::endl;
     std::cout << "methods:";
     for (size_t i = 0; i < l.methods.size(); ++i)
       std::cout << " " << l.methods[i];
@@ -76,8 +75,7 @@ void ServerConfigInfo::PrintInfo(void) const {
   std::cout << "host: " << host << std::endl;
   std::cout << "port: " << port << std::endl;
   std::cout << "body_size: " << body_size << std::endl;
-  std::cout << "directory_list: " << directory_list << std::endl;
-  std::cout << "redirection_path: " << redirection_path << std::endl;
+  std::cout << "directory_list: " << autoindex << std::endl;
   std::cout << "root_path: " << root_path << std::endl;
   std::cout << "methods:";
   PrintVector(methods);
@@ -89,4 +87,3 @@ void ServerConfigInfo::PrintInfo(void) const {
   std::cout << std::endl;
   PrintLocations();
 }
-
