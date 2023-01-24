@@ -36,15 +36,17 @@ class ConfigParser {
   bool IsOpenLocationBracket(const std::vector<std::string> &vec) const;
   bool IsCloseBracket(const std::vector<std::string> &vec) const;
   // Print
-  void Print(const std::string color, const std::string str,
+  void Print(const std::string &color, const std::string &str,
              int reset = 0) const;
+  void PrintKeyVal(const std::string &key, const std::string &val);
+
   void PrintConfigInfos(void) const;
   void PrintConfigInfo(const ServerConfigInfo &info) const;
   void PrintLocations(const std::vector<location> &locations) const;
   void PrintLocation(const location &l) const;
 
   /* ======================== Parsing Server ======================== */
-  void Parse(void);
+  void Parse(int print_mode = 0);
   void ParseServer(void);
   void SetServerConfigInfo(const std::string &key, const std::string &val);
 
@@ -75,6 +77,7 @@ class ConfigParser {
   void CheckLocation(const location &l) const;
 
  private:
+  int print_mode_;
   std::istringstream config_stream_;
   int line_num_;
   std::string line_;

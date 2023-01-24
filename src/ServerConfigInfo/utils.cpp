@@ -12,7 +12,8 @@ void ConfigParser::ExitConfigParseError(std::string msg) const {
 }
 
 void ConfigParser::ExitConfigValidateError(std::string msg) const {
-  std::cerr << BOLDRED << "[Config Validate Error] " << msg << RESET <<std::endl;
+  std::cerr << BOLDRED << "[Config Validate Error] " << msg << RESET
+            << std::endl;
   exit(EXIT_FAILURE);
 }
 
@@ -70,12 +71,20 @@ bool ConfigParser::IsCloseBracket(const std::vector<std::string>& vec) const {
 }
 
 /* =========================== Utils Print =========================== */
-void ConfigParser::Print(const std::string str, const std::string color,
+void ConfigParser::Print(const std::string& str, const std::string& color,
                          int reset) const {
+  if (!print_mode_) return;
   if (reset)
     std::cout << color << str << RESET << std::endl;
   else
     std::cout << color << str << std::endl;
+}
+
+void ConfigParser::PrintKeyVal(const std::string& key, const std::string& val) {
+  if (!print_mode_) return;
+  std::cout << "line: " << std::left << std::setw(3) << line_num_
+            << "| key: " << std::left << std::setw(12) << key.c_str()
+            << "| val: " << val.c_str() << std::endl;
 }
 
 void ConfigParser::PrintLocation(const location& l) const {

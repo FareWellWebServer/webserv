@@ -35,13 +35,14 @@ void main_process(int ac, char** av) {
 }
 
 void config_process(int ac, char** av) {
-  std::cout << BOLDMAGENTA << "-----  config process running -----"
-            << std::endl;
+  std::cout << "-----  config process running -----" << std::endl;
   if (ac > 2) throw std::runtime_error("[Config Error] few argument");
   const char* file_path = (ac == 1) ? "config/test.config" : av[1];
 
   ConfigParser configParser(file_path);
-  configParser.Parse();
-  configParser.PrintConfigInfos();
-  configParser.CheckValidation();
+  // configParser.Parse();  // 파싱 과정 출력 X
+  configParser.Parse(1);  // 파싱 과정 출력 O
+  // configParser.PrintConfigInfos();
+  // configParser.CheckValidation();
+  std::cout << "-----  config process finish -----" << std::endl;
 }

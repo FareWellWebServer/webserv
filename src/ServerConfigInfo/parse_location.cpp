@@ -3,8 +3,8 @@
 /* ========================== Parsing Location ========================== */
 void ConfigParser::ParseLocation(const std::string& key,
                                  const std::string& val) {
-  Print("------------ location parse start ------------", BOLDYELLOW);
-  printf("key: %-18s| val: %s\n", key.c_str(), val.c_str());
+  Print("-------------- location parse start --------------", BOLDYELLOW);
+  PrintKeyVal(key, val);
 
   std::vector<std::string> vec = Split(val, " \t", 1);
   if (!IsOpenLocationBracket(vec)) ExitConfigParseError();
@@ -23,13 +23,13 @@ void ConfigParser::ParseLocation(const std::string& key,
     SetLocation(l, vec[0], vec[1]);
   }
   serverConfigInfo_.locations.push_back(l);
-  Print("------------ location parse finish -----------", BOLDYELLOW, 1);
+  Print("-------------- location parse finish -------------", BOLDYELLOW, 1);
 }
 
 void ConfigParser::SetLocation(location& l, const std::string& key,
                                const std::string& val) {
   std::vector<std::string> vec = Split(val, " ");
-  printf("key: %-18s| val: %s\n", key.c_str(), val.c_str());
+  PrintKeyVal(key, val);
 
   if (key == "status_code") {
     ParseLocationStatusCode(l, vec);
