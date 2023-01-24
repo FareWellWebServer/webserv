@@ -42,7 +42,7 @@ void config_process(int ac, char** av) {
   ConfigParser configParser(file_path);
   // configParser.Parse();  // 파싱 과정 출력 X
   configParser.Parse(1);  // 파싱 과정 출력 O
-  // configParser.PrintConfigInfos();
-  // configParser.CheckValidation();
+  configParser.PrintConfigInfos();
+  configParser.CheckValidation();
   std::cout << "-----  config process finish -----" << std::endl;
 }
