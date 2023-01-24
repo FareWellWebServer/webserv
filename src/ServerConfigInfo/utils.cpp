@@ -11,7 +11,7 @@ void ConfigParser::ExitConfigParseError(std::string msg) const {
   exit(EXIT_FAILURE);
 }
 
-void ConfigParser::ExitConfigValidateError(std::string msg) const {
+void ConfigParser::ExitConfigValidateError(const std::string& msg) const {
   std::cerr << BOLDRED << "[Config Validate Error] " << msg << RESET
             << std::endl;
   exit(EXIT_FAILURE);
@@ -48,6 +48,12 @@ void ConfigParser::InitServerConfigInfo(ServerConfigInfo& info) {
 }
 
 /* ========================== Utils Parsing ========================== */
+bool ConfigParser::IsNumber(const std::string& str) const {
+  for (size_t i = 0; i < str.length(); i++)
+    if (!isdigit(str[i])) return false;
+  return true;
+}
+
 bool ConfigParser::IsWhiteLine(void) const {
   if (line_.find_first_not_of(" \t") == std::string::npos) return true;
   return false;
@@ -70,6 +76,29 @@ bool ConfigParser::IsCloseBracket(const std::vector<std::string>& vec) const {
   return false;
 }
 
+std::vector<std::string> ConfigParser::Split(const std::string& str,
+                                             const std::string& charset,
+                                             int once) const {
+  std::vector<std::string> res;
+  size_t start = str.find_first_not_of(charset);
+  size_t end = str.find_first_of(charset, start);
+
+  if (end == std::string::npos) res.push_back(str.substr(start, str.size()));
+
+  while (end != std::string::npos) {
+    res.push_back(str.substr(start, end - start));
+    start = str.find_first_not_of(charset, end);
+    end = str.find(charset, start);
+    if (start == std::string::npos) break;
+    if (once) {
+      res.push_back(str.substr(start, end - start));
+      break;
+    }
+    res.push_back(str.substr(start, end - start));
+  }
+  return res;
+}
+
 /* =========================== Utils Print =========================== */
 void ConfigParser::Print(const std::string& str, const std::string& color,
                          int reset) const {
@@ -80,7 +109,8 @@ void ConfigParser::Print(const std::string& str, const std::string& color,
     std::cout << color << str << std::endl;
 }
 
-void ConfigParser::PrintKeyVal(const std::string& key, const std::string& val) {
+void ConfigParser::PrintKeyVal(const std::string& key,
+                               const std::string& val) const {
   if (!print_mode_) return;
   std::cout << "line: " << std::left << std::setw(3) << line_num_
             << "| key: " << std::left << std::setw(12) << key.c_str()
@@ -147,33 +177,4 @@ void ConfigParser::PrintConfigInfos(void) const {
     std::cout << "--------------------------------------------" << RESET
               << std::endl;
   }
-}
-
-/* =========================== Utils =========================== */
-bool IsNumber(const std::string& str) {
-  for (size_t i = 0; i < str.length(); i++)
-    if (!isdigit(str[i])) return false;
-  return true;
-}
-
-std::vector<std::string> Split(const std::string& str,
-                               const std::string& charset, int once) {
-  std::vector<std::string> res;
-  size_t start = str.find_first_not_of(charset);
-  size_t end = str.find_first_of(charset, start);
-
-  if (end == std::string::npos) res.push_back(str.substr(start, str.size()));
-
-  while (end != std::string::npos) {
-    res.push_back(str.substr(start, end - start));
-    start = str.find_first_not_of(charset, end);
-    end = str.find(charset, start);
-    if (start == std::string::npos) break;
-    if (once) {
-      res.push_back(str.substr(start, end - start));
-      break;
-    }
-    res.push_back(str.substr(start, end - start));
-  }
-  return res;
 }

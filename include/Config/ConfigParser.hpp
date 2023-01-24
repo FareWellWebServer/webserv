@@ -26,19 +26,23 @@ class ConfigParser {
   /* ======================== Utils ======================== */
   // Error
   void ExitConfigParseError(std::string msg = "") const;
-  void ExitConfigValidateError(std::string msg) const;
+  void ExitConfigValidateError(const std::string &msg) const;
   // Init
   void InitServerConfigInfo(ServerConfigInfo &info);
   void InitLocation(location &l, const std::string &uri);
   // Parsing
+  bool IsNumber(const std::string &str) const;
   bool IsWhiteLine(void) const;
   bool IsOpenServerBracket(void) const;
   bool IsOpenLocationBracket(const std::vector<std::string> &vec) const;
   bool IsCloseBracket(const std::vector<std::string> &vec) const;
+  std::vector<std::string> Split(const std::string &str,
+                                 const std::string &charset,
+                                 int once = 0) const;
   // Print
   void Print(const std::string &color, const std::string &str,
              int reset = 0) const;
-  void PrintKeyVal(const std::string &key, const std::string &val);
+  void PrintKeyVal(const std::string &key, const std::string &val) const;
 
   void PrintConfigInfos(void) const;
   void PrintConfigInfo(const ServerConfigInfo &info) const;
@@ -84,14 +88,6 @@ class ConfigParser {
   ServerConfigInfo serverConfigInfo_;
   std::vector<ServerConfigInfo> serverConfigInfos_;
 };
-
-bool IsNumber(const std::string &str);
-// once == 0(default) -> 싹다 split
-// once == 1 -> 한번만 split함
-// EX) split("a b,c d", " ,") -> ["a", "b", "c", "d"]
-// EX) split("a b,c d", " ,", 1) -> ["a", "b,c d"]
-std::vector<std::string> Split(const std::string &str,
-                               const std::string &charset, int once = 0);
 
 template <typename T>
 void PrintVector(const std::vector<T> &vec) {
