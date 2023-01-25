@@ -5,103 +5,131 @@ ClientMetaData::ClientMetaData() : current_fd_(-1)
 
 ClientMetaData::~ClientMetaData() {}
 
-void ClientMetaData::validCheckToAccessData()
+void ClientMetaData::ValidCheckToAccessData()
 {
-  if (data_.find(current_fd_) == data_.end())
+  if (datas_.find(current_fd_) == datas_.end())
     throw WrongFd();
+}
+
+void ClientMetaData::InitializeData(Data *data)
+{
+  data->litsen_fd_ = -1;
+  data->port_ = -1;
+  // data->client_fd_ = -1;
+  data->event_ = NULL;
+  // data->config_ = NULL;
+  data->req_message_ = NULL;
+  data->res_message_ = NULL;
+  data->status_code_ = 200;
+  data->entity_ = NULL;
+}
+
+void ClientMetaData::SetCurrentFd(const fd& client_fd)
+{
+  current_fd_ = client_fd;
 }
 
 void ClientMetaData::AddData(const int& listen_fd, const int& client_fd, const int& port)
 {
   Data new_data;
 
+  InitializeData(&new_data);
   new_data.litsen_fd_ = listen_fd;
   // new_data.client_fd_ = client_fd;
   new_data.port_ = port;
-  data_.insert({client_fd, new_data});
+  datas_.insert({client_fd, new_data});
   current_fd_ = client_fd;
 }
 
-void ClientMetaData::setConfig(struct kevent& event)
+void ClientMetaData::SetConfig(struct kevent& event)
 {
-  validCheckToAccessData();
-  data_[current_fd_].event_ = &event;
-  // data_[current_fd_].config_ = reinterpret_cast<ServerConfigInfo*>(event.udata);
+  ValidCheckToAccessData();
+  datas_[current_fd_].event_ = &event;
+  datas_[current_fd_].config_ = reinterpret_cast<ServerConfigInfo*>(event.udata);
 }
 
 void ClientMetaData::DeleteByFd(const int& client_fd)
 {
-  validCheckToAccessData();
-  data_.erase(current_fd_);
+  ValidCheckToAccessData();
+  datas_.erase(client_fd);
 }
 
 void ClientMetaData::SetReqMessage(struct HTTPMessage* header)
 {
-  validCheckToAccessData();
-  data_[current_fd_].req_message_ = header;
+  ValidCheckToAccessData();
+  datas_[current_fd_].req_message_ = header;
 }
 
 void ClientMetaData::SetResMessage(struct HTTPMessage* header)
 {
-  validCheckToAccessData();
-  data_[current_fd_].res_message_ = header;
+  ValidCheckToAccessData();
+  datas_[current_fd_].res_message_ = header;
 }
 
 void ClientMetaData::SetEntity(char* entitiy)
 {
-  validCheckToAccessData();
-  data_[current_fd_].entity_ = entitiy;
+  ValidCheckToAccessData();
+  datas_[current_fd_].entity_ = entitiy;
 }
 
 Data& ClientMetaData::GetData()
 {
-  validCheckToAccessData();
-  return data_[current_fd_];
+  ValidCheckToAccessData();
+  return datas_[current_fd_];
 }
 struct HTTPMessage* ClientMetaData::GetReqHeader()
 {
-  validCheckToAccessData();
-  return data_[current_fd_].req_message_;
+  ValidCheckToAccessData();
+  return datas_[current_fd_].req_message_;
 }
 
 struct HTTPMessage* ClientMetaData::GetResHeader()
 {
-  validCheckToAccessData();
-  return data_[current_fd_].res_message_;
+  ValidCheckToAccessData();
+  return datas_[current_fd_].res_message_;
 }
 
 ServerConfigInfo* ClientMetaData::GetConfig()
 {
-  validCheckToAccessData();
-  return reinterpret_cast<ServerConfigInfo*>(data_[current_fd_].event_.udata);
+  ValidCheckToAccessData();
+  return reinterpret_cast<ServerConfigInfo*>(datas_[current_fd_].event_->udata);
 }
 
 int ClientMetaData::GetPort()
 {
-  validCheckToAccessData();
-  return data_[current_fd_].port_;
+  ValidCheckToAccessData();
+  return datas_[current_fd_].port_;
 }
 
 int ClientMetaData::GetDataCount(void)
 {
-  validCheckToAccessData();
-  return data_.size();
+  ValidCheckToAccessData();
+  return datas_.size();
 }
 
 int ClientMetaData::GetStatusCode()
 {
-  validCheckToAccessData();
-  data_[current_fd_].status_code_;
+  ValidCheckToAccessData();
+  datas_[current_fd_].status_code_;
 }
 
 std::vector<std::string> ClientMetaData::GetMethods()
 {
-  validCheckToAccessData();
-  return data_[current_fd_].req_message.getMethod();
+  ValidCheckToAccessData();
+  return datas_[current_fd_].req_message_.getMethod();
+}
+
+bool ClientMetaData::FindMethods(std::string method)
+{
+  ValidCheckToAccessData();
+  if (std::find(GetMethods().begin(), GetMethods().end(), method) == GetMethods().end())
+    return false;
+  else
+    return true;
 }
 
 char* ClientMetaData::GetURL()
 {
-  validCheckToAccessData();
-  return data_[current_fd_].req_message.getURL();
+  ValidCheckToAccessData();
+  return datas_[current_fd_].req_message_.getURL();
 }
