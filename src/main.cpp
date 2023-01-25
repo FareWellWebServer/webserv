@@ -1,7 +1,10 @@
 #include "../include/WebServ.hpp"
 
-void main_process(void);
-int main(void);
+void main_process(void) {
+  Server server_1("temp_domain/4242");
+
+  server_1.Run();
+}
 
 int main(void) {
   try {
@@ -13,10 +16,4 @@ int main(void) {
     // 미쳐 처리하지 못한 에러 잡기
     std::cerr << error.what() << std::endl;
   };
-}
-
-void main_process(void) {
-  // server run
-  std::cout << "main process runnging" << std::endl;
-  throw WebServException("example error message");
 }

@@ -5,6 +5,7 @@
 
 #include "ErrorHandler.hpp"
 #include "Logger.hpp"
+#include "Server.hpp"
 #include "WebServException.hpp"
 
 #endif
