@@ -17,6 +17,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <set>
 
 #include "ServerConfigInfo.hpp"
 class ConfigParser {

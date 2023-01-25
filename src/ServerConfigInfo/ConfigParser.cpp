@@ -85,6 +85,39 @@ void ConfigParser::SetServerConfigInfo(const std::string& key,
 }
 
 /* ======================== Validate Server ======================== */
+void ConfigParser::CheckValidation(void) const {
+  std::cout << BOLDCYAN
+            << "======== Validation Check Start ========" << std::endl;
+  std::set<int> port_list;
+  std::vector<int> duplicate_port_list;
+
+  for (size_t i = 0; i < serverConfigInfos_.size(); ++i) {
+    ServerConfigInfo info = serverConfigInfos_[i];
+    if (info.port == -1 || info.body_size == 0 || info.root_path.size() == 0 ||
+        !info.methods.size() || !info.error_pages.size())
+      ExitConfigValidateError("Missing Server Elements");
+
+    if (port_list.empty() || port_list.find(info.port) == port_list.end())
+      port_list.insert(info.port);
+    else
+      duplicate_port_list.push_back(i);
+
+    for (size_t i = 0; i < info.locations.size(); ++i)
+      CheckLocation(info.locations[i]);
+  }
+
+  if (duplicate_port_list.empty())
+    std::cout << "중복된 port 없음" << std::endl;
+  else {
+    std::cout << "중복된 port ServerConfigInfo index:";
+    for (std::size_t i = 0; i < duplicate_port_list.size(); ++i)
+      std::cout << " " << duplicate_port_list[i];
+    std::cout << std::endl;
+  }
+
+  std::cout << "======= Validation Check Finish ========" << RESET << std::endl;
+}
+
 void ConfigParser::CheckLocation(const location& l) const {
   if (!l.is_cgi) {  // cgi가 아닌 경우
     if (l.status_code == -1 || !l.file_path.size())
@@ -95,20 +128,4 @@ void ConfigParser::CheckLocation(const location& l) const {
       ExitConfigValidateError(
           "Missing Location Elements(status_code or cgi_pass)");
   }
-}
-
-void ConfigParser::CheckServerConfigInfo(const ServerConfigInfo& info) const {
-  if (info.port == -1 || info.body_size == 0 || info.root_path.size() == 0 ||
-      !info.methods.size() || !info.error_pages.size())
-    ExitConfigValidateError("Missing Server Elements");
-
-  for (size_t i = 0; i < info.locations.size(); ++i)
-    CheckLocation(info.locations[i]);
-}
-
-void ConfigParser::CheckValidation(void) const {
-  std::cout << BOLDCYAN << "===== Validation Check Start =====" << std::endl;
-  for (size_t i = 0; i < serverConfigInfos_.size(); ++i)
-    CheckServerConfigInfo(serverConfigInfos_[i]);
-  std::cout << "==== Validation Check Finish =====" << RESET << std::endl;
 }
