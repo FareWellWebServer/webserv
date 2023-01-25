@@ -1,12 +1,12 @@
+/* fd 있는 버전
 #ifndef CLIENTMETADATA_HPP
 #define CLIENTMETADATA_HPP
 #include <map>
 
-/**
  * @brief
  * kevent와 config의 new | free는 여기서 하지 않음
  * req&res_message 는 관리하는거 상황 봐서 어디서 free할지 정하기
- */
+
 typedef struct s_data {
   const int litsen_fd_;  // 어느 listen fd에 연결됐는지
   const int port_;  // listen fd에 bind 되어있는 port 번호. config볼 때 필요
@@ -66,7 +66,76 @@ class ClientMetaData {
   ~ClientMetaData();
 };
 
-ClientMetaData::ClientMetaData(/* args */) {}
+ClientMetaData::ClientMetaData() {}
+
+ClientMetaData::~ClientMetaData() {}
+
+#endif
+
+*/
+
+/* fd 없는 버전 */
+#ifndef CLIENTMETADATA_HPP
+#define CLIENTMETADATA_HPP
+#include <map>
+
+#include "Data.hpp"
+
+class ClientMetaData {
+ private:
+  std::map<int, Data> data_;
+//   std::map<int, int> server_fd_;  // socket_fd, port_number, bind할때
+  int current_fd;
+
+ public:
+  ClientMetaData();
+//   bool AddServer(const int& server_fd, const int& port);
+  // bind 할 때 해주기
+
+  bool AddData(const int& listen_fd);
+  // kevent에서 listen fd가 read 했을 때, listen_fd저장, port번호 저장
+
+  bool setConfig(struct kevent& event, const struct config* config);
+  // kevent에서 accept된 fd가 read했을 때
+
+  bool DeleteByFd(const int& client_fd);
+  // accept 된 fd를 close할때, map에서 지워줌
+
+  bool SetReqMessage(const int& client_fd, struct HTTPMessage* header);
+  // reqHandler에서 요청헤더 파싱 후
+
+  bool SetResMessage(const int& client_fd, struct HTTPMessage* header);
+  // core에서 처리 후
+
+  bool SetEntity(const char* entitiy);
+
+  data* GetData();
+  // data 통채로 원할 때
+
+  struct HTTPMessage* GetReqHeader();
+  // core에서 요청 헤더 데이터 필요할 때
+
+  struct HTTPMessage* GetResHeader();
+  // core에서 응답 헤더 데이터 필요할 때
+
+  struct config* GetConfig();
+  // core에서 헤더 데이터 필요할 때
+
+  char* GetPort();
+
+  int GetDataCount(void);  // return data_.size();
+
+  int GetStatusCode();
+  // 루프 처음시작할때 errorHandler에 *나& 로 넣어주면서 인스턴스화 해도 될듯?
+  // 그러면 한번만 호출해도 되니까
+  char* GetMethod();
+
+  char* GetURL();
+
+  ~ClientMetaData();
+};
+
+ClientMetaData::ClientMetaData() {}
 
 ClientMetaData::~ClientMetaData() {}
 
