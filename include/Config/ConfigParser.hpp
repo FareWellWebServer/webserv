@@ -15,9 +15,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <vector>
-#include <set>
 
 #include "ServerConfigInfo.hpp"
 class ConfigParser {
@@ -87,7 +87,9 @@ class ConfigParser {
   std::istringstream config_stream_;
   int line_num_;
   std::string line_;
+
   ServerConfigInfo serverConfigInfo_;
+
   std::vector<ServerConfigInfo> serverConfigInfos_;
 };
 
