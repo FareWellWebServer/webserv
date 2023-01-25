@@ -78,38 +78,45 @@ ClientMetaData::~ClientMetaData() {}
 #ifndef CLIENTMETADATA_HPP
 #define CLIENTMETADATA_HPP
 #include <map>
-
+#include <sys/event.h>
+#include <exception>
 #include "Data.hpp"
+// #include "config"
+// #include "http parser"
 
 class ClientMetaData {
  private:
   std::map<int, Data> data_;
-//   std::map<int, int> server_fd_;  // socket_fd, port_number, bind할때
-  int current_fd;
+  int current_fd_;
+  class WrongFd : public std::exception 
+  {
+    public :
+    {
+      const char* what() const throw();
+    }
+  };
 
  public:
   ClientMetaData();
-//   bool AddServer(const int& server_fd, const int& port);
-  // bind 할 때 해주기
 
-  bool AddData(const int& listen_fd);
-  // kevent에서 listen fd가 read 했을 때, listen_fd저장, port번호 저장
+  void AddData(const int& listen_fd, const int& client_fd, const int& port);
+  // kevent에서 listen fd가 read 했을 때, accept할 때, listen_fd저장, port번호 저장
 
-  bool setConfig(struct kevent& event, const struct config* config);
-  // kevent에서 accept된 fd가 read했을 때
+  void setConfig(struct kevent& event);
+  // kevent에서 이미 accept된 fd가 read했을 때. config == event.udata
 
-  bool DeleteByFd(const int& client_fd);
+  void DeleteByFd(const int& client_fd);
   // accept 된 fd를 close할때, map에서 지워줌
 
-  bool SetReqMessage(const int& client_fd, struct HTTPMessage* header);
+  void SetReqMessage(struct HTTPMessage* header);
   // reqHandler에서 요청헤더 파싱 후
 
-  bool SetResMessage(const int& client_fd, struct HTTPMessage* header);
+  void SetResMessage(struct HTTPMessage* header);
   // core에서 처리 후
 
-  bool SetEntity(const char* entitiy);
+  void SetEntity(char* entitiy);
 
-  data* GetData();
+  Data& GetData();
   // data 통채로 원할 때
 
   struct HTTPMessage* GetReqHeader();
@@ -118,25 +125,22 @@ class ClientMetaData {
   struct HTTPMessage* GetResHeader();
   // core에서 응답 헤더 데이터 필요할 때
 
-  struct config* GetConfig();
+  ServerConfigInfo* GetConfig();
   // core에서 헤더 데이터 필요할 때
 
-  char* GetPort();
+  int GetPort();
 
   int GetDataCount(void);  // return data_.size();
 
   int GetStatusCode();
   // 루프 처음시작할때 errorHandler에 *나& 로 넣어주면서 인스턴스화 해도 될듯?
   // 그러면 한번만 호출해도 되니까
-  char* GetMethod();
+
+  std::vector<std::string> GetMethods();
 
   char* GetURL();
 
   ~ClientMetaData();
 };
-
-ClientMetaData::ClientMetaData() {}
-
-ClientMetaData::~ClientMetaData() {}
 
 #endif
