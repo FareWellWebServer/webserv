@@ -64,5 +64,7 @@
 		"functional": "cpp",
 		"map": "cpp",
 		"*.tcc": "cpp"
+		"filesystem": "cpp",
+		"stack": "cpp"
 	}
 }
