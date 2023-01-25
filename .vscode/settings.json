@@ -61,5 +61,8 @@
 		"vector": "cpp",
 		"algorithm": "cpp",
 		"set": "cpp"
+		"deque": "cpp",
+		"filesystem": "cpp",
+		"stack": "cpp"
 	}
 }
