@@ -1,5 +1,5 @@
-#ifndef CONFIGPARSER_HPP
-#define CONFIGPARSER_HPP
+#ifndef CONFIG_HPP
+#define CONFIG_HPP
 
 #define RESET "\033[0m"
 #define BOLDRED "\033[1m\033[31m"
@@ -20,10 +20,10 @@
 #include <vector>
 
 #include "ServerConfigInfo.hpp"
-class ConfigParser {
+class Config {
  public:
-  ConfigParser(const char *file_path);
-  ~ConfigParser(void);
+  Config(const char *file_path);
+  ~Config(void);
 
   /* ======================== Utils ======================== */
   // Error
@@ -78,8 +78,8 @@ class ConfigParser {
   void ParseLocationCgi(location &l, const std::vector<std::string> &vec);
 
   /* ======================== Validation ======================== */
+  bool CheckDuplicatePort(int port) const;
   void CheckValidation(void) const;
-  void CheckServerConfigInfo(const ServerConfigInfo &info) const;
   void CheckLocation(const location &l) const;
 
  private:
@@ -88,9 +88,8 @@ class ConfigParser {
   int line_num_;
   std::string line_;
 
-  ServerConfigInfo serverConfigInfo_;
-
-  std::vector<ServerConfigInfo> serverConfigInfos_;
+  ServerConfigInfo server_config_info_;
+  std::vector<ServerConfigInfo> server_config_infos_;
 };
 
 template <typename T>

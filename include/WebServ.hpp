@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include "Config/ConfigParser.hpp"
+#include "Config/Config.hpp"
 #include "Config/ServerConfigInfo.hpp"
 #include "ErrorHandler.hpp"
 #include "Logger.hpp"

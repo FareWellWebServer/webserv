@@ -1,7 +1,7 @@
 #include "../../include/WebServ.hpp"
 
-ConfigParser::ConfigParser(const char* file_path) {
-  std::cout << "config file path: " << file_path << std::endl;
+Config::Config(const char* file_path) {
+  std::cout << "Config file path: " << file_path << std::endl;
 
   std::ifstream fs(file_path);
   std::string content;
@@ -19,13 +19,13 @@ ConfigParser::ConfigParser(const char* file_path) {
   config_stream_.str(content);
 }
 
-ConfigParser::~ConfigParser(void) {}
+Config::~Config(void) {}
 
 /* ======================== Parsing Server ======================== */
-void ConfigParser::Parse(int print_mode) {
+void Config::Parse(int print_mode) {
   print_mode_ = print_mode;
   line_num_ = 0;
-  while (42) {
+  while (true) {
     ++line_num_;
     std::getline(config_stream_, line_, '\n');
 
@@ -34,17 +34,18 @@ void ConfigParser::Parse(int print_mode) {
 
     Print("--------------- server parse start ---------------", BOLDBLUE);
     if (!IsOpenServerBracket()) ExitConfigParseError();
-    InitServerConfigInfo(serverConfigInfo_);
+    InitServerConfigInfo(server_config_info_);
     ParseServer();
     Print("--------------- server parse finish --------------", BOLDBLUE, 1);
 
-    serverConfigInfos_.push_back(serverConfigInfo_);
+    if (!CheckDuplicatePort(server_config_info_.port))
+      server_config_infos_.push_back(server_config_info_);
   }
-  Print("config parsing finish", BOLDMAGENTA, 1);
+  Print("Config parsing finish", BOLDMAGENTA, 1);
 }
 
-void ConfigParser::ParseServer(void) {
-  while (42) {
+void Config::ParseServer(void) {
+  while (true) {
     ++line_num_;
     std::getline(config_stream_, line_, '\n');
     if (IsWhiteLine()) continue;
@@ -57,8 +58,8 @@ void ConfigParser::ParseServer(void) {
   }
 }
 
-void ConfigParser::SetServerConfigInfo(const std::string& key,
-                                       const std::string& val) {
+void Config::SetServerConfigInfo(const std::string& key,
+                                 const std::string& val) {
   std::vector<std::string> vec = Split(val, " ");
   PrintKeyVal(key, val);
 
@@ -85,40 +86,30 @@ void ConfigParser::SetServerConfigInfo(const std::string& key,
 }
 
 /* ======================== Validate Server ======================== */
-void ConfigParser::CheckValidation(void) const {
+void Config::CheckValidation(void) const {
   std::cout << BOLDCYAN
             << "======== Validation Check Start ========" << std::endl;
-  std::set<int> port_list;
-  std::vector<int> duplicate_port_list;
 
-  for (size_t i = 0; i < serverConfigInfos_.size(); ++i) {
-    ServerConfigInfo info = serverConfigInfos_[i];
+  for (size_t i = 0; i < server_config_infos_.size(); ++i) {
+    ServerConfigInfo info = server_config_infos_[i];
     if (info.port == -1 || info.body_size == 0 || info.root_path.size() == 0 ||
         !info.methods.size() || !info.error_pages.size())
       ExitConfigValidateError("Missing Server Elements");
 
-    if (port_list.empty() || port_list.find(info.port) == port_list.end())
-      port_list.insert(info.port);
-    else
-      duplicate_port_list.push_back(i);
-
     for (size_t i = 0; i < info.locations.size(); ++i)
       CheckLocation(info.locations[i]);
   }
-
-  if (duplicate_port_list.empty())
-    std::cout << "중복된 port 없음" << std::endl;
-  else {
-    std::cout << "중복된 port ServerConfigInfo index:";
-    for (std::size_t i = 0; i < duplicate_port_list.size(); ++i)
-      std::cout << " " << duplicate_port_list[i];
-    std::cout << std::endl;
-  }
-
   std::cout << "======= Validation Check Finish ========" << RESET << std::endl;
 }
 
-void ConfigParser::CheckLocation(const location& l) const {
+bool Config::CheckDuplicatePort(int port) const {
+  for (size_t i = 0; i < server_config_infos_.size(); ++i) {
+    if (port == server_config_infos_[i].port) return true;
+  }
+  return false;
+}
+
+void Config::CheckLocation(const location& l) const {
   if (!l.is_cgi) {  // cgi가 아닌 경우
     if (l.status_code == -1 || !l.file_path.size())
       ExitConfigValidateError(

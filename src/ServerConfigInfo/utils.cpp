@@ -1,7 +1,7 @@
-#include "../../include/Config/ConfigParser.hpp"
+#include "../../include/Config/Config.hpp"
 
 /* =========================== Utils Error =========================== */
-void ConfigParser::ExitConfigParseError(std::string msg) const {
+void Config::ExitConfigParseError(std::string msg) const {
   std::cerr << BOLDRED << "[Config Parsing Error] ";
   if (msg.size())
     std::cerr << msg << std::endl;
@@ -11,14 +11,14 @@ void ConfigParser::ExitConfigParseError(std::string msg) const {
   exit(EXIT_FAILURE);
 }
 
-void ConfigParser::ExitConfigValidateError(const std::string& msg) const {
+void Config::ExitConfigValidateError(const std::string& msg) const {
   std::cerr << BOLDRED << "[Config Validate Error] " << msg << RESET
             << std::endl;
   exit(EXIT_FAILURE);
 }
 
 /* =========================== Utils Init =========================== */
-void ConfigParser::InitLocation(location& l, const std::string& uri) {
+void Config::InitLocation(location& l, const std::string& uri) {
   l.uri = uri;
   l.is_cgi = (uri == ".py") ? true : false;
   l.cgi_pass = "";
@@ -26,13 +26,13 @@ void ConfigParser::InitLocation(location& l, const std::string& uri) {
   l.status_code = -1;
   l.file_path.clear();
 
-  l.methods = serverConfigInfo_.methods;
+  l.methods = server_config_info_.methods;
 
   l.redir_status = -1;
   l.redir_path = "";
 }
 
-void ConfigParser::InitServerConfigInfo(ServerConfigInfo& info) {
+void Config::InitServerConfigInfo(ServerConfigInfo& info) {
   info.host = "127.0.0.1";
   info.port = -1;
   info.body_size = 0;
@@ -48,37 +48,36 @@ void ConfigParser::InitServerConfigInfo(ServerConfigInfo& info) {
 }
 
 /* ========================== Utils Parsing ========================== */
-bool ConfigParser::IsNumber(const std::string& str) const {
+bool Config::IsNumber(const std::string& str) const {
   for (size_t i = 0; i < str.length(); i++)
     if (!isdigit(str[i])) return false;
   return true;
 }
 
-bool ConfigParser::IsWhiteLine(void) const {
+bool Config::IsWhiteLine(void) const {
   if (line_.find_first_not_of(" \t") == std::string::npos) return true;
   return false;
 }
 
-bool ConfigParser::IsOpenServerBracket(void) const {
+bool Config::IsOpenServerBracket(void) const {
   std::vector<std::string> vec = Split(line_, " \t", 1);
   if (vec.size() != 2 || vec[0] != "server" || vec[1] != "{") return false;
   return true;
 }
 
-bool ConfigParser::IsOpenLocationBracket(
-    const std::vector<std::string>& vec) const {
+bool Config::IsOpenLocationBracket(const std::vector<std::string>& vec) const {
   if (vec.size() != 2 || vec[1] != "{") return false;
   return true;
 }
 
-bool ConfigParser::IsCloseBracket(const std::vector<std::string>& vec) const {
+bool Config::IsCloseBracket(const std::vector<std::string>& vec) const {
   if (vec.size() == 1 && vec[0] == "}") return true;
   return false;
 }
 
-std::vector<std::string> ConfigParser::Split(const std::string& str,
-                                             const std::string& charset,
-                                             int once) const {
+std::vector<std::string> Config::Split(const std::string& str,
+                                       const std::string& charset,
+                                       int once) const {
   std::vector<std::string> res;
   size_t start = str.find_first_not_of(charset);
   size_t end = str.find_first_of(charset, start);
@@ -100,8 +99,8 @@ std::vector<std::string> ConfigParser::Split(const std::string& str,
 }
 
 /* =========================== Utils Print =========================== */
-void ConfigParser::Print(const std::string& str, const std::string& color,
-                         int reset) const {
+void Config::Print(const std::string& str, const std::string& color,
+                   int reset) const {
   if (!print_mode_) return;
   if (reset)
     std::cout << color << str << RESET << std::endl;
@@ -109,15 +108,14 @@ void ConfigParser::Print(const std::string& str, const std::string& color,
     std::cout << color << str << std::endl;
 }
 
-void ConfigParser::PrintKeyVal(const std::string& key,
-                               const std::string& val) const {
+void Config::PrintKeyVal(const std::string& key, const std::string& val) const {
   if (!print_mode_) return;
   std::cout << "line: " << std::left << std::setw(3) << line_num_
             << "| key: " << std::left << std::setw(12) << key.c_str()
             << "| val: " << val.c_str() << std::endl;
 }
 
-void ConfigParser::PrintLocation(const location& l) const {
+void Config::PrintLocation(const location& l) const {
   if (l.is_cgi) {
     std::cout << "uri: " << l.uri << std::endl;
     std::cout << "cgi_pass: " << l.cgi_pass << std::endl;
@@ -137,8 +135,7 @@ void ConfigParser::PrintLocation(const location& l) const {
   }
 }
 
-void ConfigParser::PrintLocations(
-    const std::vector<location>& locations) const {
+void Config::PrintLocations(const std::vector<location>& locations) const {
   for (size_t i = 0; i < locations.size(); ++i) {
     std::cout << std::endl;
     std::cout << "------ [locations " << i << " -> cgi ";
@@ -148,7 +145,7 @@ void ConfigParser::PrintLocations(
   }
 }
 
-void ConfigParser::PrintConfigInfo(const ServerConfigInfo& info) const {
+void Config::PrintConfigInfo(const ServerConfigInfo& info) const {
   std::cout << "------ [server info] ------" << std::endl;
   std::cout << "host: " << info.host << std::endl;
   std::cout << "port: " << info.port << std::endl;
@@ -169,11 +166,11 @@ void ConfigParser::PrintConfigInfo(const ServerConfigInfo& info) const {
   PrintLocations(info.locations);
 }
 
-void ConfigParser::PrintConfigInfos(void) const {
-  for (size_t i = 0; i < serverConfigInfos_.size(); ++i) {
+void Config::PrintConfigInfos(void) const {
+  for (size_t i = 0; i < server_config_infos_.size(); ++i) {
     std::cout << BOLDGREEN << "---------- [server config info " << i
               << "] ----------" << std::endl;
-    PrintConfigInfo(serverConfigInfos_[i]);
+    PrintConfigInfo(server_config_infos_[i]);
     std::cout << "--------------------------------------------" << RESET
               << std::endl;
   }

@@ -1,53 +1,53 @@
 #include "../../include/WebServ.hpp"
 
 /* =========================== Parsing Server =========================== */
-void ConfigParser::ParseListen(const std::vector<std::string> &vec) {
+void Config::ParseListen(const std::vector<std::string> &vec) {
   if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
 
   int port = atoi(vec[0].c_str());
   if (port < 0 || port > 65535) ExitConfigParseError();
-  serverConfigInfo_.port = port;
+  server_config_info_.port = port;
 }
 
-void ConfigParser::ParseBodySize(const std::vector<std::string> &vec) {
+void Config::ParseBodySize(const std::vector<std::string> &vec) {
   if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
 
   int body_size = atoi(vec[0].c_str());
   if (body_size < 1) ExitConfigParseError();
-  serverConfigInfo_.body_size = body_size;
+  server_config_info_.body_size = body_size;
 }
 
-void ConfigParser::ParseRoot(const std::vector<std::string> &vec) {
+void Config::ParseRoot(const std::vector<std::string> &vec) {
   if (vec.size() != 1) ExitConfigParseError();
 
   std::string root_path = vec[0];
   struct stat sb;
   if (stat(root_path.c_str(), &sb) == 0)
-    serverConfigInfo_.root_path = root_path;
+    server_config_info_.root_path = root_path;
   else
     ExitConfigParseError();
 }
 
-void ConfigParser::ParseServerName(const std::vector<std::string> &vec) {
+void Config::ParseServerName(const std::vector<std::string> &vec) {
   if (vec.size() != 1) ExitConfigParseError();
-  serverConfigInfo_.server_name = vec[0];
+  server_config_info_.server_name = vec[0];
 }
 
-void ConfigParser::ParseAutoindex(const std::vector<std::string> &vec) {
+void Config::ParseAutoindex(const std::vector<std::string> &vec) {
   if (vec.size() != 1 || (vec[0] != "on" && vec[0] != "off"))
     ExitConfigParseError();
-  serverConfigInfo_.autoindex = (vec[0] == "on") ? true : false;
+  server_config_info_.autoindex = (vec[0] == "on") ? true : false;
 }
 
-void ConfigParser::ParseTimeout(const std::vector<std::string> &vec) {
+void Config::ParseTimeout(const std::vector<std::string> &vec) {
   if (!IsNumber(vec[0])) ExitConfigParseError();
 
   int time_out = atoi(vec[0].c_str());
   if (time_out <= 0) ExitConfigParseError();
-  serverConfigInfo_.timeout = time_out;
+  server_config_info_.timeout = time_out;
 }
 
-void ConfigParser::ParseMethods(const std::vector<std::string> &vec) {
+void Config::ParseMethods(const std::vector<std::string> &vec) {
   if (!vec.size()) ExitConfigParseError();
 
   std::string method;
@@ -56,11 +56,11 @@ void ConfigParser::ParseMethods(const std::vector<std::string> &vec) {
     if (!(method == "GET" || method == "HEAD" || method == "POST" ||
           method == "PUT" || method == "DELETE"))
       ExitConfigParseError();
-    serverConfigInfo_.methods.push_back(method);
+    server_config_info_.methods.push_back(method);
   }
 }
 
-void ConfigParser::ParseErrorPage(const std::vector<std::string> &vec) {
+void Config::ParseErrorPage(const std::vector<std::string> &vec) {
   if (vec.size() != 2 || !IsNumber(vec[0])) ExitConfigParseError();
 
   int error_status_code = atoi(vec[0].c_str());
@@ -71,5 +71,5 @@ void ConfigParser::ParseErrorPage(const std::vector<std::string> &vec) {
   std::ifstream fs(error_page_path);
   if (fs.fail()) ExitConfigParseError();
 
-  serverConfigInfo_.error_pages[error_status_code] = error_page_path;
+  server_config_info_.error_pages[error_status_code] = error_page_path;
 }
