@@ -20,10 +20,51 @@
 #include <vector>
 
 #include "ServerConfigInfo.hpp"
+
 class Config {
  public:
   Config(const char *file_path);
   ~Config(void);
+
+  typedef std::vector<std::string> value;
+
+  /* ======================== Getter ======================== */
+  std::vector<ServerConfigInfo> GetServerConfigInfos(void);
+
+  /* ======================== Parsing Server ======================== */
+  void InitServerConfigInfo(ServerConfigInfo &info);
+
+  void Parse(int print_mode = 0);
+  void ParseServer(void);
+  void SetServerConfigInfo(const std::string &key, const std::string &val);
+
+  void ParseListen(const value &vec);
+  void ParseBodySize(const value &vec);
+  void ParseRoot(const value &vec);
+  void ParseFilePath(const value &vec);
+  void ParseUploadPath(const value &vec);
+  void ParseServerName(const value &vec);
+  void ParseDirectoryList(const value &vec);
+  void ParseTimeout(const value &vec);
+  void ParseMethods(const value &vec);
+  void ParseErrorPage(const value &vec);
+
+  /* ======================== Parsing Location ======================== */
+  void InitLocation(location &l, const std::string &uri);
+
+  void ParseLocation(const std::string &key, const std::string &val);
+  void SetLocation(location &l, const std::string &key, const std::string &val);
+
+  void ParseLocationStatusCode(location &l, const value &vec);
+  void ParseLocationRedirection(location &l, const value &vec);
+  void ParseLocationMethods(location &l, const value &vec);
+  void ParseLocationFilePath(location &l, const value &vec);
+  void ParseLocationCgi(location &l, const value &vec);
+
+  /* ======================== Validation ======================== */
+  bool CheckDuplicatePort(int port) const;
+  void CheckValidation(void) const;
+  void CheckLocation(const location &l) const;
 
   /* ======================== Utils ======================== */
   // Error
@@ -33,57 +74,18 @@ class Config {
   bool IsNumber(const std::string &str) const;
   bool IsWhiteLine(void) const;
   bool IsOpenServerBracket(void) const;
-  bool IsOpenLocationBracket(const std::vector<std::string> &vec) const;
-  bool IsCloseBracket(const std::vector<std::string> &vec) const;
-  std::vector<std::string> Split(const std::string &str,
-                                 const std::string &charset,
-                                 int once = 0) const;
+  bool IsOpenLocationBracket(const value &vec) const;
+  bool IsCloseBracket(const value &vec) const;
+  value Split(const std::string &str, const std::string &charset,
+              int once = 0) const;
   // Print
   void Print(const std::string &color, const std::string &str,
              int reset = 0) const;
   void PrintKeyVal(const std::string &key, const std::string &val) const;
-
   void PrintConfigInfos(void) const;
   void PrintConfigInfo(const ServerConfigInfo &info) const;
   void PrintLocations(const std::vector<location> &locations) const;
   void PrintLocation(const location &l) const;
-
-  /* ======================== Parsing Server ======================== */
-  void InitServerConfigInfo(ServerConfigInfo &info);
-
-  void Parse(int print_mode = 0);
-  void ParseServer(void);
-  void SetServerConfigInfo(const std::string &key, const std::string &val);
-
-  void ParseListen(const std::vector<std::string> &vec);
-  void ParseBodySize(const std::vector<std::string> &vec);
-  void ParseRoot(const std::vector<std::string> &vec);
-  void ParseFilePath(const std::vector<std::string> &vec);
-  void ParseUploadPath(const std::vector<std::string> &vec);
-  void ParseServerName(const std::vector<std::string> &vec);
-  void ParseDirectoryList(const std::vector<std::string> &vec);
-  void ParseTimeout(const std::vector<std::string> &vec);
-  void ParseMethods(const std::vector<std::string> &vec);
-  void ParseErrorPage(const std::vector<std::string> &vec);
-
-  /* ======================== Parsing Location ======================== */
-  void InitLocation(location &l, const std::string &uri);
-
-  void ParseLocation(const std::string &key, const std::string &val);
-  void SetLocation(location &l, const std::string &key, const std::string &val);
-
-  void ParseLocationStatusCode(location &l,
-                               const std::vector<std::string> &vec);
-  void ParseLocationRedirection(location &l,
-                                const std::vector<std::string> &vec);
-  void ParseLocationMethods(location &l, const std::vector<std::string> &vec);
-  void ParseLocationFilePath(location &l, const std::vector<std::string> &vec);
-  void ParseLocationCgi(location &l, const std::vector<std::string> &vec);
-
-  /* ======================== Validation ======================== */
-  bool CheckDuplicatePort(int port) const;
-  void CheckValidation(void) const;
-  void CheckLocation(const location &l) const;
 
  private:
   int print_mode_;
