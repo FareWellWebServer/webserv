@@ -5,11 +5,12 @@
 
 class Server {
  public:
-  Server(const std::string& host);
+  Server(const std::string& host_port);
   ~Server(void);
   void Run();
 
  private:
+  std::string host_port_;
   void Init();
 };
 
