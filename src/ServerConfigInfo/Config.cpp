@@ -13,17 +13,20 @@ Config::Config(const char* file_path) {
       content.append(line + "\n");
     }
     fs.close();
-  } else
+  } else {
     ExitConfigParseError("Config File Open Failed");
-  if (content.size() == 0) ExitConfigParseError("Empty Config File");
+  }
+  if (content.size() == 0) {
+    ExitConfigParseError("Empty Config File");
+  }
   config_stream_.str(content);
 }
 
 Config::~Config(void) {}
 
 /* ======================== Parsing Server ======================== */
-void Config::Parse(int print_mode) {
-  print_mode_ = print_mode;
+void Config::Parse(ParseMode mode) {
+  parse_mode_ = mode;
   line_num_ = 0;
   while (true) {
     ++line_num_;
@@ -31,9 +34,9 @@ void Config::Parse(int print_mode) {
 
     if (config_stream_.eof()) break;
     if (IsWhiteLine()) continue;
+    if (!IsOpenServerBracket()) ExitConfigParseError();
 
     Print("--------------- server parse start ---------------", BOLDBLUE);
-    if (!IsOpenServerBracket()) ExitConfigParseError();
     InitServerConfigInfo(server_config_info_);
     ParseServer();
     Print("--------------- server parse finish --------------", BOLDBLUE, 1);

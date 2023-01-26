@@ -21,6 +21,11 @@
 
 #include "ServerConfigInfo.hpp"
 
+enum ParseMode {
+  VISIBLE,
+  NOT_VISIBLE,
+};
+
 class Config {
  public:
   Config(const char *file_path);
@@ -28,13 +33,13 @@ class Config {
 
   typedef std::vector<std::string> value;
 
-  /* ======================== Getter ======================== */
+  /* ======================== Server ======================== */
   std::vector<ServerConfigInfo> GetServerConfigInfos(void);
 
   /* ======================== Parsing Server ======================== */
   void InitServerConfigInfo(ServerConfigInfo &info);
 
-  void Parse(int print_mode = 0);
+  void Parse(ParseMode mode);
   void ParseServer(void);
   void SetServerConfigInfo(const std::string &key, const std::string &val);
 
@@ -88,7 +93,7 @@ class Config {
   void PrintLocation(const location &l) const;
 
  private:
-  int print_mode_;
+  ParseMode parse_mode_;
   std::istringstream config_stream_;
   int line_num_;
   std::string line_;

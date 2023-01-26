@@ -40,8 +40,8 @@ void config_process(int ac, char** av) {
   const char* file_path = (ac == 1) ? "config/default.config" : av[1];
 
   Config config(file_path);
-  // configParser.Parse();  // 파싱 과정 출력 X
-  config.Parse(1);  // 파싱 과정 출력 O
+  // config.Parse(NOT_VISIBLE);  // 파싱 과정 출력 X
+  config.Parse(VISIBLE);  // 파싱 과정 출력 O
   config.PrintConfigInfos();
   config.CheckValidation();
   std::cout << "-----  config process finish -----" << std::endl;

@@ -71,7 +71,7 @@ std::vector<std::string> Config::Split(const std::string& str,
 /* =========================== Utils Print =========================== */
 void Config::Print(const std::string& str, const std::string& color,
                    int reset) const {
-  if (!print_mode_) return;
+  if (parse_mode_ == NOT_VISIBLE) return;
   if (reset)
     std::cout << color << str << RESET << std::endl;
   else
@@ -79,7 +79,7 @@ void Config::Print(const std::string& str, const std::string& color,
 }
 
 void Config::PrintKeyVal(const std::string& key, const std::string& val) const {
-  if (!print_mode_) return;
+  if (parse_mode_ == NOT_VISIBLE) return;
   std::cout << "line: " << std::left << std::setw(3) << line_num_
             << "| key: " << std::left << std::setw(12) << key.c_str()
             << "| val: " << val.c_str() << std::endl;
