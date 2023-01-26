@@ -24,6 +24,6 @@ public :
     ~ReqHandler(void);
 };
 
-
+void Parse_Req_msg(int c_socket);
 
 #endif
