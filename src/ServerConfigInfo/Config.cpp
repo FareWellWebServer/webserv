@@ -65,14 +65,18 @@ void Config::SetServerConfigInfo(const std::string& key,
 
   if (key == "listen") {
     ParseListen(vec);
-  } else if (key == "root") {
-    ParseRoot(vec);
   } else if (key == "body_size") {
     ParseBodySize(vec);
+  } else if (key == "root") {
+    ParseRoot(vec);
+  } else if (key == "file_path") {
+    ParseFilePath(vec);
+  } else if (key == "upload_path") {
+    ParseUploadPath(vec);
   } else if (key == "server_name") {
     ParseServerName(vec);
-  } else if (key == "autoindex") {
-    ParseAutoindex(vec);
+  } else if (key == "directory_list") {
+    ParseDirectoryList(vec);
   } else if (key == "timeout") {
     ParseTimeout(vec);
   } else if (key == "method") {
@@ -92,8 +96,9 @@ void Config::CheckValidation(void) const {
 
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
     ServerConfigInfo info = server_config_infos_[i];
-    if (info.port == -1 || info.body_size == 0 || info.root_path.size() == 0 ||
-        !info.methods.size() || !info.error_pages.size())
+    if (info.port == -1 || info.body_size == 0 || info.root_path.empty() ||
+        info.upload_path.empty() || info.methods.empty() ||
+        info.error_pages.empty())
       ExitConfigValidateError("Missing Server Elements");
 
     for (size_t i = 0; i < info.locations.size(); ++i)
@@ -111,11 +116,11 @@ bool Config::CheckDuplicatePort(int port) const {
 
 void Config::CheckLocation(const location& l) const {
   if (!l.is_cgi) {  // cgi가 아닌 경우
-    if (l.status_code == -1 || !l.file_path.size())
+    if (l.status_code == -1 || l.file_path.empty())
       ExitConfigValidateError(
           "Missing Location Elements(status_code or file_path)");
   } else {  // cgi인 경우
-    if (l.status_code == -1 || !l.cgi_pass.size())
+    if (l.status_code == -1 || l.cgi_pass.empty())
       ExitConfigValidateError(
           "Missing Location Elements(status_code or cgi_pass)");
   }

@@ -1,5 +1,21 @@
 #include "../../include/WebServ.hpp"
 
+/* ======================= ServerConfigInfo Init ======================= */
+void Config::InitServerConfigInfo(ServerConfigInfo &info) {
+  info.host = "127.0.0.1";
+  info.port = -1;
+  info.body_size = 0;
+  info.root_path = "";
+
+  info.server_name = "";
+  info.directory_list = false;
+  info.timeout = 0;
+
+  info.methods.clear();
+  info.error_pages.clear();
+  info.locations.clear();
+}
+
 /* =========================== Parsing Server =========================== */
 void Config::ParseListen(const std::vector<std::string> &vec) {
   if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
@@ -28,15 +44,37 @@ void Config::ParseRoot(const std::vector<std::string> &vec) {
     ExitConfigParseError();
 }
 
+void Config::ParseFilePath(const std::vector<std::string> &vec) {
+  if (vec.size() != 1) ExitConfigParseError();
+
+  std::string file_path = vec[0];
+  struct stat sb;
+  if (stat(file_path.c_str(), &sb) == 0)
+    server_config_info_.file_path = file_path;
+  else
+    ExitConfigParseError();
+}
+
+void Config::ParseUploadPath(const std::vector<std::string> &vec) {
+  if (vec.size() != 1) ExitConfigParseError();
+
+  std::string upload_path = vec[0];
+  struct stat sb;
+  if (stat(upload_path.c_str(), &sb) == 0)
+    server_config_info_.upload_path = upload_path;
+  else
+    ExitConfigParseError();
+}
+
 void Config::ParseServerName(const std::vector<std::string> &vec) {
   if (vec.size() != 1) ExitConfigParseError();
   server_config_info_.server_name = vec[0];
 }
 
-void Config::ParseAutoindex(const std::vector<std::string> &vec) {
+void Config::ParseDirectoryList(const std::vector<std::string> &vec) {
   if (vec.size() != 1 || (vec[0] != "on" && vec[0] != "off"))
     ExitConfigParseError();
-  server_config_info_.autoindex = (vec[0] == "on") ? true : false;
+  server_config_info_.directory_list = (vec[0] == "on") ? true : false;
 }
 
 void Config::ParseTimeout(const std::vector<std::string> &vec) {

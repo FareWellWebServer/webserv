@@ -17,36 +17,6 @@ void Config::ExitConfigValidateError(const std::string& msg) const {
   exit(EXIT_FAILURE);
 }
 
-/* =========================== Utils Init =========================== */
-void Config::InitLocation(location& l, const std::string& uri) {
-  l.uri = uri;
-  l.is_cgi = (uri == ".py") ? true : false;
-  l.cgi_pass = "";
-
-  l.status_code = -1;
-  l.file_path.clear();
-
-  l.methods = server_config_info_.methods;
-
-  l.redir_status = -1;
-  l.redir_path = "";
-}
-
-void Config::InitServerConfigInfo(ServerConfigInfo& info) {
-  info.host = "127.0.0.1";
-  info.port = -1;
-  info.body_size = 0;
-  info.root_path = "";
-
-  info.server_name = "";
-  info.autoindex = false;
-  info.timeout = 0;
-
-  info.methods.clear();
-  info.error_pages.clear();
-  info.locations.clear();
-}
-
 /* ========================== Utils Parsing ========================== */
 bool Config::IsNumber(const std::string& str) const {
   for (size_t i = 0; i < str.length(); i++)
@@ -122,15 +92,12 @@ void Config::PrintLocation(const location& l) const {
   } else {
     std::cout << "uri: " << l.uri << std::endl;
     std::cout << "status_code: " << l.status_code << std::endl;
+    std::cout << "file_path: " << l.file_path << std::endl;
     std::cout << "redir status : " << l.redir_status << std::endl;
     std::cout << "redirection_path: " << l.redir_path << std::endl;
     std::cout << "methods:";
     for (size_t i = 0; i < l.methods.size(); ++i)
       std::cout << " " << l.methods[i];
-    std::cout << std::endl;
-    std::cout << "file_path:";
-    for (size_t i = 0; i < l.file_path.size(); ++i)
-      std::cout << " " << l.file_path[i];
     std::cout << std::endl;
   }
 }
@@ -149,11 +116,13 @@ void Config::PrintConfigInfo(const ServerConfigInfo& info) const {
   std::cout << "------ [server info] ------" << std::endl;
   std::cout << "host: " << info.host << std::endl;
   std::cout << "port: " << info.port << std::endl;
-  std::cout << "root_path: " << info.root_path << std::endl;
   std::cout << "body_size: " << info.body_size << std::endl;
+  std::cout << "root_path: " << info.root_path << std::endl;
+  std::cout << "file_path: " << info.file_path << std::endl;
+  std::cout << "upload_path: " << info.upload_path << std::endl;
 
   std::cout << "server_name: " << info.server_name << std::endl;
-  std::cout << "autoindex: " << info.autoindex << std::endl;
+  std::cout << "directory_list: " << info.directory_list << std::endl;
   std::cout << "timeout: " << info.timeout << std::endl;
 
   std::cout << "methods:";

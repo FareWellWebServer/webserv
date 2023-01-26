@@ -29,9 +29,6 @@ class Config {
   // Error
   void ExitConfigParseError(std::string msg = "") const;
   void ExitConfigValidateError(const std::string &msg) const;
-  // Init
-  void InitServerConfigInfo(ServerConfigInfo &info);
-  void InitLocation(location &l, const std::string &uri);
   // Parsing
   bool IsNumber(const std::string &str) const;
   bool IsWhiteLine(void) const;
@@ -52,6 +49,8 @@ class Config {
   void PrintLocation(const location &l) const;
 
   /* ======================== Parsing Server ======================== */
+  void InitServerConfigInfo(ServerConfigInfo &info);
+
   void Parse(int print_mode = 0);
   void ParseServer(void);
   void SetServerConfigInfo(const std::string &key, const std::string &val);
@@ -59,13 +58,17 @@ class Config {
   void ParseListen(const std::vector<std::string> &vec);
   void ParseBodySize(const std::vector<std::string> &vec);
   void ParseRoot(const std::vector<std::string> &vec);
+  void ParseFilePath(const std::vector<std::string> &vec);
+  void ParseUploadPath(const std::vector<std::string> &vec);
   void ParseServerName(const std::vector<std::string> &vec);
-  void ParseAutoindex(const std::vector<std::string> &vec);
+  void ParseDirectoryList(const std::vector<std::string> &vec);
   void ParseTimeout(const std::vector<std::string> &vec);
   void ParseMethods(const std::vector<std::string> &vec);
   void ParseErrorPage(const std::vector<std::string> &vec);
 
   /* ======================== Parsing Location ======================== */
+  void InitLocation(location &l, const std::string &uri);
+
   void ParseLocation(const std::string &key, const std::string &val);
   void SetLocation(location &l, const std::string &key, const std::string &val);
 

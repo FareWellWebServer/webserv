@@ -1,5 +1,20 @@
 #include "../../include/WebServ.hpp"
 
+/* ========================== Location Init ========================== */
+void Config::InitLocation(location& l, const std::string& uri) {
+  l.uri = uri;
+  l.is_cgi = (uri == ".py") ? true : false;
+  l.cgi_pass = "";
+
+  l.status_code = -1;
+  l.file_path.clear();
+
+  l.methods = server_config_info_.methods;
+
+  l.redir_status = -1;
+  l.redir_path = "";
+}
+
 /* ========================== Parsing Location ========================== */
 void Config::ParseLocation(const std::string& key, const std::string& val) {
   Print("-------------- location parse start --------------", BOLDYELLOW);
@@ -87,13 +102,11 @@ void Config::ParseLocationMethods(location& l,
 
 void Config::ParseLocationFilePath(location& l,
                                    const std::vector<std::string>& vec) {
-  if (!vec.size()) ExitConfigParseError();
+  if (vec.size() != 1) ExitConfigParseError();
 
-  for (size_t i = 0; i < vec.size(); ++i) {
-    std::ifstream fs(vec[i]);
-    if (fs.fail()) ExitConfigParseError();
-    l.file_path.push_back(vec[i]);
-  }
+  std::ifstream fs(vec[0]);
+  if (fs.fail()) ExitConfigParseError();
+  l.file_path = vec[0];
 }
 
 void Config::ParseLocationCgi(location& l,
