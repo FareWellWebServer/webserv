@@ -21,7 +21,7 @@ int main(int ac, char** av) {
 }
 
 void main_process(int ac, char** av) {
-  std::vector<ServerConfigInfo> server_infos = config_process(ac, av);
+  const std::vector<ServerConfigInfo> server_infos = config_process(ac, av);
 
   for (int i = 0; i < server_infos.size(); ++i) {
     Server server(server_infos[i].host + std::to_string(server_infos[i].port));
