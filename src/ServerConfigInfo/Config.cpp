@@ -125,3 +125,8 @@ void Config::CheckLocation(const location& l) const {
           "Missing Location Elements(status_code or cgi_pass)");
   }
 }
+
+/* ======================== Getter ======================== */
+std::vector<ServerConfigInfo> Config::GetServerConfigInfos(void) {
+  return server_config_infos_;
+}
