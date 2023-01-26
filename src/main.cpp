@@ -20,21 +20,16 @@ int main(int ac, char** av) {
   };
 }
 
-void main_process(int ac, char** av) {
-  // server run
-  std::cout << "-----  main process running  -----" << std::endl;
-
-  config_process(ac, av);
-}
+void main_process(int ac, char** av) { config_process(ac, av); }
 
 void config_process(int ac, char** av) {
-  std::cout << "-----  config process running -----" << std::endl;
-  if (ac > 2) throw std::runtime_error("[Config Error] few argument");
+  if (ac > 2) {
+    throw std::runtime_error("[Config Error] few argument");
+  }
   const char* file_path = (ac == 1) ? "config/default.config" : av[1];
 
   Config config(file_path);
   config.Parse();  // 파싱 과정 출력 X
   config.PrintConfigInfos();
   config.CheckValidation();
-  std::cout << "-----  config process finish -----" << std::endl;
 }
