@@ -60,6 +60,7 @@
 		"variant": "cpp",
 		"vector": "cpp",
 		"algorithm": "cpp",
+		"set": "cpp"
 		"deque": "cpp",
 		"functional": "cpp",
 		"map": "cpp",
