@@ -36,7 +36,7 @@ class example {
 
   int test_; // 멤버변수 snake case + _
 
-  void Example_Function(); // 함수는 Pascal case
+  void ExampleFunction(); // 함수는 Pascal case
 
 }
 ```
