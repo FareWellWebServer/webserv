@@ -110,7 +110,7 @@ class ClientMetaData {
   void ValidCheckToAccessData();
   class WrongFd : public std::exception {
    public:
-    { const char* what() const throw(); }
+    const char* what() const throw();
   };
   void InitializeData(Data* data);
 

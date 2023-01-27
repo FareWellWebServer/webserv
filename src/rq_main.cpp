@@ -1,3 +1,3 @@
-#include "../include/Webserv.hpp"
+#include "../include/WebServ.hpp"
 
 int main() { std::cout << "test" << std::endl; }
