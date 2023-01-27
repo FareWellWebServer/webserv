@@ -22,11 +22,10 @@ int main(int ac, char** av) {
 
 void main_process(int ac, char** av) {
   const std::vector<ServerConfigInfo> server_infos = config_process(ac, av);
+  Server server;
 
-  for (int i = 0; i < server_infos.size(); ++i) {
-    Server server(server_infos[i].host + std::to_string(server_infos[i].port));
-    server.Run();
-  }
+  server.Init(server_infos);
+  server.Run();
 }
 
 std::vector<ServerConfigInfo> config_process(int ac, char** av) {
@@ -37,7 +36,9 @@ std::vector<ServerConfigInfo> config_process(int ac, char** av) {
 
   Config config(file_path);
   config.Parse();  // 파싱 과정 출력 X
+#if DG
   config.PrintConfigInfos();
+#endif
   config.CheckValidation();
   return config.GetServerConfigInfos();
 }
