@@ -1,12 +1,17 @@
 #include "../../include/WebServ.hpp"
 
+// typedef struct t_req_enti {
+//   size_t length;
+//   char* entity;
+// } s_req_enti;
+
 // typedef struct t_req_msg {
 //   std::string method;
 //   std::string req_url;
 //   std::string protocol;
 //   std::map<std::string, std::string> headers;
 //   bool is_body;
-//   std::string req_body;
+//   s_req_enti body_data;
 // } s_req_msg;
 
 ReqHandler::ReqHandler(void) {}
@@ -50,12 +55,15 @@ void Parse_Req_msg(int c_socket, ReqHandler& reqhandle) {
     std::vector<std::string> head_line = s_split(data[0], ": ", 1);
     if (head_line.size() == 1) break;
     Remove_Tab_Space(head_line[0]);
+    if (head_line[0] == "Content-Length")
+      reqhandle.req_msg.body_data.length = atoi(head_line[1].c_str());
     std::pair<std::string, std::string> t =
         std::pair<std::string, std::string>(head_line[0], head_line[1]);
     reqhandle.req_msg.headers.insert(t);
     data.erase(data.begin());
     head_line.clear();
   }
+  std::cout << "Length : " << reqhandle.req_msg.body_data.length << std::endl;
   PrintVector(data);
   Print_Map(reqhandle.req_msg.headers);
 }
@@ -70,6 +78,7 @@ void Remove_Tab_Space(std::string& str) {
 }
 
 void Print_Map(std::map<std::string, std::string>& map) {
+  std::cout << RED << "[[PRINT MAP]]" << RESET << std::endl;
   for (std::map<std::string, std::string>::iterator it = map.begin();
        it != map.end(); ++it) {
     std::cout << "key : " << it->first << " || value : " << it->second

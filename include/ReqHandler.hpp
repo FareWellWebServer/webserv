@@ -3,13 +3,17 @@
 
 #include "WebServ.hpp"
 
+typedef struct t_req_enti {
+  size_t length;
+  char* entity;
+} s_req_enti;
+
 typedef struct t_req_msg {
   std::string method;
   std::string req_url;
   std::string protocol;
   std::map<std::string, std::string> headers;
-  bool is_body;
-  std::string req_body;
+  s_req_enti body_data;
 } s_req_msg;
 
 class ReqHandler {
