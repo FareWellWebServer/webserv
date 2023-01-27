@@ -1,4 +1,4 @@
-#include "../../include/Webserv.hpp"
+#include "../../include/WebServ.hpp"
 
 ReqHandler::ReqHandler(void) { std::memset(this, 0, sizeof(ReqHandler)); }
 
