@@ -155,6 +155,9 @@ class ClientMetaData {
 
   // 루프 처음시작할때 errorHandler에 *나& 로 넣어주면서 인스턴스화 해도 될듯?
   // 그러면 한번만 호출해도 되니까
+
+  void SetStatusCode(int status_code);
+
   int GetStatusCode();
 
   // Method 전체 리턴

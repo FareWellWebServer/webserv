@@ -4,6 +4,7 @@ RH_NAME = Req_handle
 CC = c++
 
 # Compiler flags
+# CFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic -fsanitize=address
 CFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
 
 # Colors
