@@ -2,18 +2,18 @@
 
 /* ======================= ServerConfigInfo Init ======================= */
 void Config::InitServerConfigInfo(ServerConfigInfo &info) {
-  info.host = "127.0.0.1";
-  info.port = -1;
-  info.body_size = 0;
-  info.root_path = "";
+  info.host_ = "127.0.0.1";
+  info.port_ = -1;
+  info.body_size_ = 0;
+  info.root_path_ = "";
 
-  info.server_name = "";
-  info.directory_list = false;
-  info.timeout = 0;
+  info.server_name_ = "";
+  info.directory_list_ = false;
+  info.timeout_ = 0;
 
-  info.methods.clear();
-  info.error_pages.clear();
-  info.locations.clear();
+  info.methods_.clear();
+  info.error_pages_.clear();
+  info.locations_.clear();
 }
 
 /* =========================== Parsing Server =========================== */
@@ -22,7 +22,7 @@ void Config::ParseListen(const std::vector<std::string> &vec) {
 
   int port = atoi(vec[0].c_str());
   if (port < 0 || port > 65535) ExitConfigParseError();
-  server_config_info_.port = port;
+  server_config_info_.port_ = port;
 }
 
 void Config::ParseBodySize(const std::vector<std::string> &vec) {
@@ -30,7 +30,7 @@ void Config::ParseBodySize(const std::vector<std::string> &vec) {
 
   int body_size = atoi(vec[0].c_str());
   if (body_size < 1) ExitConfigParseError();
-  server_config_info_.body_size = body_size;
+  server_config_info_.body_size_ = body_size;
 }
 
 void Config::ParseRoot(const std::vector<std::string> &vec) {
@@ -39,7 +39,7 @@ void Config::ParseRoot(const std::vector<std::string> &vec) {
   std::string root_path = vec[0];
   struct stat sb;
   if (stat(root_path.c_str(), &sb) == 0)
-    server_config_info_.root_path = root_path;
+    server_config_info_.root_path_ = root_path;
   else
     ExitConfigParseError();
 }
@@ -50,7 +50,7 @@ void Config::ParseFilePath(const std::vector<std::string> &vec) {
   std::string file_path = vec[0];
   struct stat sb;
   if (stat(file_path.c_str(), &sb) == 0)
-    server_config_info_.file_path = file_path;
+    server_config_info_.file_path_ = file_path;
   else
     ExitConfigParseError();
 }
@@ -61,20 +61,20 @@ void Config::ParseUploadPath(const std::vector<std::string> &vec) {
   std::string upload_path = vec[0];
   struct stat sb;
   if (stat(upload_path.c_str(), &sb) == 0)
-    server_config_info_.upload_path = upload_path;
+    server_config_info_.upload_path_ = upload_path;
   else
     ExitConfigParseError();
 }
 
 void Config::ParseServerName(const std::vector<std::string> &vec) {
   if (vec.size() != 1) ExitConfigParseError();
-  server_config_info_.server_name = vec[0];
+  server_config_info_.server_name_ = vec[0];
 }
 
 void Config::ParseDirectoryList(const std::vector<std::string> &vec) {
   if (vec.size() != 1 || (vec[0] != "on" && vec[0] != "off"))
     ExitConfigParseError();
-  server_config_info_.directory_list = (vec[0] == "on") ? true : false;
+  server_config_info_.directory_list_ = (vec[0] == "on") ? true : false;
 }
 
 void Config::ParseTimeout(const std::vector<std::string> &vec) {
@@ -82,7 +82,7 @@ void Config::ParseTimeout(const std::vector<std::string> &vec) {
 
   int time_out = atoi(vec[0].c_str());
   if (time_out <= 0) ExitConfigParseError();
-  server_config_info_.timeout = time_out;
+  server_config_info_.timeout_ = time_out;
 }
 
 void Config::ParseMethods(const std::vector<std::string> &vec) {
@@ -94,7 +94,7 @@ void Config::ParseMethods(const std::vector<std::string> &vec) {
     if (!(method == "GET" || method == "HEAD" || method == "POST" ||
           method == "PUT" || method == "DELETE"))
       ExitConfigParseError();
-    server_config_info_.methods.push_back(method);
+    server_config_info_.methods_.push_back(method);
   }
 }
 
@@ -109,5 +109,5 @@ void Config::ParseErrorPage(const std::vector<std::string> &vec) {
   std::ifstream fs(error_page_path);
   if (fs.fail()) ExitConfigParseError();
 
-  server_config_info_.error_pages[error_status_code] = error_page_path;
+  server_config_info_.error_pages_[error_status_code] = error_page_path;
 }

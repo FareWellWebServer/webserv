@@ -55,21 +55,22 @@ class Config {
   void ParseErrorPage(const value &vec);
 
   /* ======================== Parsing Location ======================== */
-  void InitLocation(location &l, const std::string &uri);
+  void InitLocation(t_location &l, const std::string &uri);
 
   void ParseLocation(const std::string &key, const std::string &val);
-  void SetLocation(location &l, const std::string &key, const std::string &val);
+  void SetLocation(t_location &l, const std::string &key,
+                   const std::string &val);
 
-  void ParseLocationStatusCode(location &l, const value &vec);
-  void ParseLocationRedirection(location &l, const value &vec);
-  void ParseLocationMethods(location &l, const value &vec);
-  void ParseLocationFilePath(location &l, const value &vec);
-  void ParseLocationCgi(location &l, const value &vec);
+  void ParseLocationStatusCode(t_location &l, const value &vec);
+  void ParseLocationRedirection(t_location &l, const value &vec);
+  void ParseLocationMethods(t_location &l, const value &vec);
+  void ParseLocationFilePath(t_location &l, const value &vec);
+  void ParseLocationCgi(t_location &l, const value &vec);
 
   /* ======================== Validation ======================== */
   bool CheckDuplicatePort(int port) const;
   void CheckValidation(void) const;
-  void CheckLocation(const location &l) const;
+  void CheckLocation(const t_location &l) const;
 
   /* ======================== Utils ======================== */
   // Error
@@ -89,8 +90,8 @@ class Config {
   void PrintKeyVal(const std::string &key, const std::string &val) const;
   void PrintConfigInfos(void) const;
   void PrintConfigInfo(const ServerConfigInfo &info) const;
-  void PrintLocations(const std::vector<location> &locations) const;
-  void PrintLocation(const location &l) const;
+  void PrintLocations(const std::vector<t_location> &locations) const;
+  void PrintLocation(const t_location &l) const;
 
  private:
   ParseMode parse_mode_;

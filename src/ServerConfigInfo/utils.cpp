@@ -85,7 +85,7 @@ void Config::PrintKeyVal(const std::string& key, const std::string& val) const {
             << "| val: " << val.c_str() << std::endl;
 }
 
-void Config::PrintLocation(const location& l) const {
+void Config::PrintLocation(const t_location& l) const {
   if (l.is_cgi) {
     std::cout << "uri: " << l.uri << std::endl;
     std::cout << "cgi_pass: " << l.cgi_pass << std::endl;
@@ -102,7 +102,7 @@ void Config::PrintLocation(const location& l) const {
   }
 }
 
-void Config::PrintLocations(const std::vector<location>& locations) const {
+void Config::PrintLocations(const std::vector<t_location>& locations) const {
   for (size_t i = 0; i < locations.size(); ++i) {
     std::cout << std::endl;
     std::cout << "------ [locations " << i << " -> cgi ";
@@ -114,25 +114,25 @@ void Config::PrintLocations(const std::vector<location>& locations) const {
 
 void Config::PrintConfigInfo(const ServerConfigInfo& info) const {
   std::cout << "------ [server info] ------" << std::endl;
-  std::cout << "host: " << info.host << std::endl;
-  std::cout << "port: " << info.port << std::endl;
-  std::cout << "body_size: " << info.body_size << std::endl;
-  std::cout << "root_path: " << info.root_path << std::endl;
-  std::cout << "file_path: " << info.file_path << std::endl;
-  std::cout << "upload_path: " << info.upload_path << std::endl;
+  std::cout << "host: " << info.host_ << std::endl;
+  std::cout << "port: " << info.port_ << std::endl;
+  std::cout << "body_size: " << info.body_size_ << std::endl;
+  std::cout << "root_path: " << info.root_path_ << std::endl;
+  std::cout << "file_path: " << info.file_path_ << std::endl;
+  std::cout << "upload_path: " << info.upload_path_ << std::endl;
 
-  std::cout << "server_name: " << info.server_name << std::endl;
-  std::cout << "directory_list: " << info.directory_list << std::endl;
-  std::cout << "timeout: " << info.timeout << std::endl;
+  std::cout << "server_name: " << info.server_name_ << std::endl;
+  std::cout << "directory_list: " << info.directory_list_ << std::endl;
+  std::cout << "timeout: " << info.timeout_ << std::endl;
 
   std::cout << "methods:";
-  PrintVector(info.methods);
+  PrintVector(info.methods_);
   std::cout << "error_pages:";
   std::map<int, std::string>::const_iterator it;
-  for (it = info.error_pages.begin(); it != info.error_pages.end(); ++it)
+  for (it = info.error_pages_.begin(); it != info.error_pages_.end(); ++it)
     std::cout << " [" << it->first << " -> " << it->second << "]";
   std::cout << std::endl;
-  PrintLocations(info.locations);
+  PrintLocations(info.locations_);
 }
 
 void Config::PrintConfigInfos(void) const {

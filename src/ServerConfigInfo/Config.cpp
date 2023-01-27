@@ -41,7 +41,7 @@ void Config::Parse(ParseMode mode) {
     ParseServer();
     Print("--------------- server parse finish --------------", BOLDBLUE, 1);
 
-    if (!CheckDuplicatePort(server_config_info_.port))
+    if (!CheckDuplicatePort(server_config_info_.port_))
       server_config_infos_.push_back(server_config_info_);
   }
   Print("Config parsing finish", BOLDMAGENTA, 1);
@@ -99,25 +99,25 @@ void Config::CheckValidation(void) const {
 
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
     ServerConfigInfo info = server_config_infos_[i];
-    if (info.port == -1 || info.body_size == 0 || info.root_path.empty() ||
-        info.upload_path.empty() || info.methods.empty() ||
-        info.error_pages.empty())
+    if (info.port_ == -1 || info.body_size_ == 0 || info.root_path_.empty() ||
+        info.upload_path_.empty() || info.methods_.empty() ||
+        info.error_pages_.empty())
       ExitConfigValidateError("Missing Server Elements");
 
-    for (size_t i = 0; i < info.locations.size(); ++i)
-      CheckLocation(info.locations[i]);
+    for (size_t i = 0; i < info.locations_.size(); ++i)
+      CheckLocation(info.locations_[i]);
   }
   std::cout << "======= Validation Check Finish ========" << RESET << std::endl;
 }
 
 bool Config::CheckDuplicatePort(int port) const {
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
-    if (port == server_config_infos_[i].port) return true;
+    if (port == server_config_infos_[i].port_) return true;
   }
   return false;
 }
 
-void Config::CheckLocation(const location& l) const {
+void Config::CheckLocation(const t_location& l) const {
   if (!l.is_cgi) {  // cgi가 아닌 경우
     if (l.status_code == -1 || l.file_path.empty())
       ExitConfigValidateError(
