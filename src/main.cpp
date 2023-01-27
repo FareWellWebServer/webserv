@@ -5,10 +5,12 @@ void main_process(int ac, char** av);
 int main(int ac, char** av);
 
 // 누수 잡는 용
-void a(void) { system("leaks farewell_webserv | grep leaked"); }
+void CheckLeaks(void) { system("leaks farewell_webserv | grep leaked"); }
 
 int main(int ac, char** av) {
-  atexit(a);
+#if DG
+  atexit(CheckLeaks);
+#endif
   try {
     main_process(ac, av);
   } catch (const WebServException& custom_error) {

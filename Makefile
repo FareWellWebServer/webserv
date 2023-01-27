@@ -3,8 +3,8 @@ NAME = farewell_webserv
 CXX = c++
 
 # Compiler flags
-CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
-# CXXFLAGS = -g3 -fsanitize=address
+#CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
+ CXXFLAGS = -g3 -fsanitize=address -D DG=1
 
 # Colors
 GREEN = \033[32m
