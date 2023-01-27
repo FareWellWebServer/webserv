@@ -15,4 +15,6 @@
 #include "Logger.hpp"
 #include "WebServException.hpp"
 
+std::string GetCurrentDate(void);
+
 #endif
