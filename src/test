@@ -8,4 +8,4 @@ Host: localhost:4000#@
  User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36#@
  X-DevTools-Emulate-Network-Conditions-Client-Id: 2829E8CC4902FCCF69EF66EA4993993E#@
 
-123
+licenseID=string&content=string&/paramsXML=string

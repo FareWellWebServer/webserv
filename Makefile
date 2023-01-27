@@ -1,11 +1,11 @@
 NAME = farewell_webserv
 RH_NAME = Req_handle
 # Compiler
-CXX = c++
+CC = c++
 
 # Compiler flags
-CXXFLAGS = -std=c++98 -pedantic -g3
-# CXXFLAGS = -std=c++98  -pedantic
+# CFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic -fsanitize=address
+CFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
 
 # Colors
 GREEN = \033[32m
@@ -24,12 +24,12 @@ all: server
 # Build the server executable
 server: $(SERVER_OBJ)
 	@echo "$(YELLOW)Building $@...$(RESET)"
-	@$(CXX) $(CXXFLAGS) $(SERVER_OBJ) -o $(NAME)
+	@$(CC) $(CFLAGS) $(SERVER_OBJ) -o $(NAME)
 	@echo "$(GREEN)Done.$(RESET)"
 
 rp: $(REQHANDLE_OBJ)
 	@echo "$(YELLOW)Req_Handle_Building $@...$(RESET)"
-	@$(CXX) $(CXXFLAGS) $(REQHANDLE_OBJ) -o $(RH_NAME)
+	@$(CC) $(CFLAGS) $(REQHANDLE_OBJ) -o $(RH_NAME)
 	@echo "$(GREEN)Done.$(RESET)"
 # Clean up
 clean:
