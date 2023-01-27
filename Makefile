@@ -1,9 +1,10 @@
 NAME = farewell_webserv
 # Compiler
-CC = c++
+CXX = c++
 
 # Compiler flags
-CFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
+CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
+# CXXFLAGS = -g3 -fsanitize=address
 
 # Colors
 GREEN = \033[32m
@@ -19,7 +20,7 @@ all: server
 # Build the server executable
 server: $(SERVER_OBJ)
 	@echo "$(YELLOW)Building $@...$(RESET)"
-	@$(CC) $(CFLAGS) $(SERVER_OBJ) -o $(NAME)
+	@$(CXX) $(CXXFLAGS) $(SERVER_OBJ) -o $(NAME)
 	@echo "$(GREEN)Done.$(RESET)"
 
 
