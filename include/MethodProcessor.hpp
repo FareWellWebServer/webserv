@@ -221,12 +221,14 @@ struct entity {
   size_t entity_length_;
 } entity_t;
 
+enum Method { DEFAULT, GET, HEAD, PUT, POST, DELETE };
+
 class MethodProcessor {
  private:
   bool isExistFile(std::string filePath_);
   static std::map<int, struct entity_t *> cache_Entity_;
 
-  struct entity_t *GET(std::string filePath_) {
+  struct entity_t *MethodGET(std::string filePath_) {
     struct entity_t *ret;
 
     // 들어오는 URI 방식
@@ -259,10 +261,10 @@ class MethodProcessor {
     return (ret);
   }
   /// @brief GET 과 동일하게 진행하며, 단순 메서드로 구분한다.
-  struct entity_t *HEAD(std::string filePath_);
-  void POST();
-  void DELETE();
-  void PUT();
+  struct entity_t *MethodHEAD(std::string filePath_);
+  void MethodPOST();
+  void MethodDELETE();
+  void MethodPUT();
 
  public:
   MethodProcessor(void);
@@ -270,7 +272,31 @@ class MethodProcessor {
   void MethodProcessorInput(ClientMetaData *clients) {
     // 요청 메서드 구분
     // switch 로 구분하여 들어가야할 메서드 처리 함수 메서드로 진입
-    // 정리가 마무리 되면 그대로 반환
+    // 정리가 마무리 되면 그대로 전달 및 처리
+    Method switching = DEFAULT;
+
+    switch (switching) {
+      case GET: {
+        /* Method 호출 */
+        break;
+      }
+      case HEAD: {
+        /* Method 호출 */
+        break;
+      }
+      case POST: {
+        /* Method 호출 */
+        break;
+      }
+      case PUT: {
+        /* Method 호출 */
+        break;
+      }
+      case DELETE: {
+        /* Method 호출 */
+        break;
+      }
+    }
   }
 };
 #endif
