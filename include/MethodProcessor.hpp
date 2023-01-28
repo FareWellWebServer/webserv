@@ -149,7 +149,7 @@ void PrintVector(const std::vector<T> &vec) {
  * @brief 임시 데이터 덩어리(client)
  *
  */
-typedef struct Data  // struct로
+struct Data  // struct로
 {
   int litsen_fd_;  // 어느 listen fd에 연결됐는지
   int port_;  // listen fd에 bind 되어있는 port 번호. config볼 때 필요
@@ -159,23 +159,23 @@ typedef struct Data  // struct로
   struct HTTPMessage *req_message_;  // HTTP 요청/응답 헤더 구분 어떻게?
   struct HTTPMessage *res_message_;  // 같은 클래스로? 다른 클래스로?
   int status_code_;                  // 상태코드 enum 정의 필요
-  char *entity_;                     // 응답 본문
+  const struct entity_t *entity_;    // 응답 본문
 } Data;
 
 /**
  * @brief 데이터 노드를 합쳐둔 메타 데이터
  *
  */
-class clientMetaData {
+class ClientMetaData {
  private:
-  std::map<int, Data> datas_;
+  std::map<int, struct Data> datas_;
   int current_fd_;
   void ValidCheckToAccessData();
   class WrongFd : public std::exception {
    public:
     { const char *what() const throw(); }
   };
-  void InitializeData(Data *data);
+  void InitializeData(struct Data *data);
 
  public:
   ClientMetaData();
@@ -196,7 +196,7 @@ class clientMetaData {
   void SetEntity(char *entitiy);
 
   // data 통채로 원할 때
-  Data &GetData();
+  struct Data &GetData(int current_fd_);
   // core에서 요청 헤더 데이터 필요할 때
   struct HTTPMessage *GetReqHeader();
   // core에서 응답 헤더 데이터 필요할 때
@@ -216,12 +216,50 @@ class clientMetaData {
   char *GetURL();
 };
 
+struct entity {
+  char *entity_;
+  size_t entity_length_;
+} entity_t;
+
 class MethodProcessor {
  private:
   bool isExistFile(std::string filePath_);
-  static std::map<std::string, char *> cache_Entity_;
-  char *GET();
-  char *HEAD();
+  static std::map<int, struct entity_t *> cache_Entity_;
+
+  struct entity_t *GET(std::string filePath_) {
+    struct entity_t *ret;
+
+    // 들어오는 URI 방식
+    // default page => / (root)
+    // default page 의 절대 경로를 알아야 한다.
+    // 들어오는 그 다음 페이지는 => /src/~~ 이런식으로 붙음. 즉, uri 에서 핵심은
+    // default 로 들어오는 루트 구별, 거기서 핵심은 포트일듯, 이후 이를 다
+    // 합쳐서 구분하는 것이 핵심이다.
+    // 즉 단순 client meta data 뿐만 아니라 서버 config 도 들어와서 이를 동시에
+    // 확인해야함.
+
+    /* 전체 로직 정리 */
+    // 파일 존재 여부 확인
+
+    // NO : 404 file notfound?
+    //// entity char * = NULL
+    //// entity_length_ = -1;
+    //// error code  = setting like HTTP
+
+    // YES : std::map <std::string, struct entity_t *> 에 등록된 URI인지 확인.
+
+    //// Hit : 해당 데이터 만 옮기고 리턴
+
+    //// miss : 해당 데이터 찾기 로직으로 들어감
+    ////// 파일 열기
+    ////// 파일 읽기 로직 진행 + content length 넣기
+    ////// 일반적인 index.html 문서의 경우 이에 대한 캐싱 작업(std::map.insert)
+    ////// 반환
+
+    return (ret);
+  }
+  /// @brief GET 과 동일하게 진행하며, 단순 메서드로 구분한다.
+  struct entity_t *HEAD(std::string filePath_);
   void POST();
   void DELETE();
   void PUT();
@@ -229,6 +267,10 @@ class MethodProcessor {
  public:
   MethodProcessor(void);
   ~MethodProcessor(void);
-  void MethodProcessorInput(struct data *data_);
+  void MethodProcessorInput(ClientMetaData *clients) {
+    // 요청 메서드 구분
+    // switch 로 구분하여 들어가야할 메서드 처리 함수 메서드로 진입
+    // 정리가 마무리 되면 그대로 반환
+  }
 };
 #endif
