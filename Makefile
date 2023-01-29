@@ -4,8 +4,9 @@ RH_NAME = Req_handle
 CXX = c++
 
 # Compiler flags
-CXXFLAGS = -std=c++98 -pedantic -fsanitize=address
-# CXXFLAGS = -std=c++98 -pedantic
+CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
+# CXXFLAGS = -g3 -fsanitize=address
+
 
 # Colors
 GREEN = \033[32m
