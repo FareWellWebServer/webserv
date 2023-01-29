@@ -18,6 +18,7 @@
 #include <map>
 #include <string>
 
+#include "ClientMetaData.hpp"
 #include "Config/Config.hpp"
 #include "Config/ServerConfigInfo.hpp"
 #include "ErrorHandler.hpp"

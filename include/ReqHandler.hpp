@@ -3,10 +3,10 @@
 
 #include "WebServ.hpp"
 
-typedef struct entity {
-  char* entity_;
-  size_t entity_length_;
-} entity_t;
+// typedef struct entity {
+//   char* entity_;
+//   size_t entity_length_;
+// } entity_t;
 
 typedef struct t_req_msg {
   std::string method_;
@@ -28,6 +28,9 @@ class ReqHandler {
 
 // void Parse_Req_msg(int c_socket);
 void Parse_Req_Msg(int c_socket, ReqHandler& reqhandle);
+
+void Parse_Req_Msg(int c_socket, Data& m_data);
+
 std::vector<std::string> split(const std::string& s, char delimiter, int cnt);
 std::vector<std::string> s_split(std::string& s, const std::string& delimiter,
                                  int cnt);
