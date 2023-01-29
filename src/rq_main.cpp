@@ -12,5 +12,5 @@ int main() {
   }
   ReqHandler reqhandle;
 
-  Parse_Req_msg(fd, reqhandle);
+  Parse_Req_Msg(fd, reqhandle);
 }

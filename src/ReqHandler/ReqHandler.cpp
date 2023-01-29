@@ -5,27 +5,29 @@
 //   char* entity;
 // } s_req_enti;
 
-// typedef struct t_req_msg {
+// typedef struct t_req_msg_ {
 //   std::string method;
 //   std::string req_url;
 //   std::string protocol;
 //   std::map<std::string, std::string> headers;
 //   bool is_body;
-//   s_req_enti body_data;
-// } s_req_msg;
+//   s_req_enti body_data_;
+// } s_req_msg_;
 
 ReqHandler::ReqHandler(void) {}
+
 void ReqHandler::print_structure() {
-  std::cout << GREEN << "METHOD | " << RESET << req_msg.method << std::endl;
-  std::cout << GREEN << "URL | " << RESET << req_msg.req_url << std::endl;
-  std::cout << GREEN << "PROTOCAL | " << RESET << req_msg.protocol << std::endl;
+  std::cout << GREEN << "METHOD | " << RESET << req_msg_.method_ << std::endl;
+  std::cout << GREEN << "URL | " << RESET << req_msg_.req_url_ << std::endl;
+  std::cout << GREEN << "PROTOCAL | " << RESET << req_msg_.protocol_
+            << std::endl;
 
   std::cout << "HEADERS | " << std::endl;
 }
 
 ReqHandler::~ReqHandler(void) {}
 
-void Parse_Req_msg(int c_socket, ReqHandler& reqhandle) {
+void Parse_Req_Msg(int c_socket, ReqHandler& reqhandle) {
   char* ctmp;
   std::string stmp;
   std::string contents;
@@ -49,9 +51,9 @@ void Parse_Req_msg(int c_socket, ReqHandler& reqhandle) {
 
   // //--------------start line parsing -----------------
   std::vector<std::string> start_line = split(data[0], ' ', 0);
-  reqhandle.req_msg.method = start_line[0];
-  reqhandle.req_msg.req_url = start_line[1];
-  reqhandle.req_msg.protocol = start_line[2];
+  reqhandle.req_msg_.method_ = start_line[0];
+  reqhandle.req_msg_.req_url_ = start_line[1];
+  reqhandle.req_msg_.protocol_ = start_line[2];
   start_line.clear();
   data.erase(data.begin());
 
@@ -61,27 +63,27 @@ void Parse_Req_msg(int c_socket, ReqHandler& reqhandle) {
     if (head_line.size() == 1) break;
     Remove_Tab_Space(head_line[0]);
     if (head_line[0] == "Content-Length")
-      reqhandle.req_msg.body_data.length = atoi(head_line[1].c_str());
+      reqhandle.req_msg_.body_data_.entity_length_ = atoi(head_line[1].c_str());
     std::pair<std::string, std::string> t =
         std::pair<std::string, std::string>(head_line[0], head_line[1]);
-    reqhandle.req_msg.headers.insert(t);
+    reqhandle.req_msg_.headers_.insert(t);
     data.erase(data.begin());
     head_line.clear();
   }
 
   //------------body parsing-----------------------
   size_t total_len = 0;
-  reqhandle.req_msg.body_data.entity = "";
+  reqhandle.req_msg_.body_data_.entity_ = "";
   for (int i = 0; (ctmp = get_next_line(c_socket)) != 0 ||
-                  total_len < reqhandle.req_msg.body_data.length;
+                  total_len < reqhandle.req_msg_.body_data_.entity_length_;
        i++) {
     total_len += strlen(ctmp);
     if (i == 0) {
-      reqhandle.req_msg.body_data.entity = strdup(ctmp);
+      reqhandle.req_msg_.body_data_.entity_ = strdup(ctmp);
       free(ctmp);
     } else
-      reqhandle.req_msg.body_data.entity =
-          ft_strjoin(reqhandle.req_msg.body_data.entity, ctmp);
+      reqhandle.req_msg_.body_data_.entity_ =
+          ft_strjoin(reqhandle.req_msg_.body_data_.entity_, ctmp);
   }
 }
 
