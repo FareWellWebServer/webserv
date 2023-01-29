@@ -34,15 +34,7 @@ void Server::Act(void) {
           events_[idx].filter == EVFILT_READ) {
         AcceptNewClient(idx);
       } else {
-        struct kevent event;
-
-        EV_SET(&event, events_[idx].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-        if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
-          std::cerr << "Error: kevent()\n";
-        }
-        // TODO: call ReqHandler and run other process
-        // TODO: call ResHandler and send data to client
-        DisConnect(events_[idx].ident);
+        ActCoreLogic(idx);
       }
     }
   }
@@ -81,6 +73,18 @@ void Server::AcceptNewClient(int idx) {
               MAXBUF, 0);
   clients_.AddData(events_[idx].ident, connfd, port);
   std::cout << "Connected to (" << host << ", " << port << ")\n";
+}
+
+void Server::ActCoreLogic(int idx) {
+  struct kevent event;
+
+  EV_SET(&event, events_[idx].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+  if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+    std::cerr << "Error: kevent()\n";
+  }
+  // TODO: call ReqHandler and run other process
+  // TODO: call ResHandler and send data to client
+  DisConnect(events_[idx].ident);
 }
 
 void Server::Listen(const std::string& host, const int& port) {

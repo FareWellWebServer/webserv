@@ -47,6 +47,7 @@ class Server {
 
   void Act(void);
   void AcceptNewClient(int idx);
+  void ActCoreLogic(int idx);
   t_listening* CreateListening(const std::string& host, const int& port,
                                const int& fd);
   bool IsListenFd(const int& fd);
