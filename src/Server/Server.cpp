@@ -19,15 +19,9 @@ void Server::Init(const std::vector<ServerConfigInfo> server_infos) {
 
 // private
 
-void Server::Act() {
+void Server::Act(void) {
   char buffer[MAXBUF];
-  char host[MAXBUF];
-  int port;
-  int connfd;
-  int flags;
-  socklen_t client_len;
-  struct sockaddr_storage client_addr;
-  struct kevent event;
+
   while (true) {
     int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
     if (n == -1) {
@@ -37,44 +31,10 @@ void Server::Act() {
       // A read event on the socket means there is a new connection
       if (IsListenFd(events_[idx].ident) &&
           events_[idx].filter == EVFILT_READ) {
-        // Accept the new connection
-        client_len = sizeof(client_addr);
-        connfd = accept(events_[idx].ident,
-                        reinterpret_cast<struct sockaddr*>(&client_addr),
-                        &client_len);
-        if (connfd == -1) {
-          if (errno != EWOULDBLOCK) {
-            std::cerr << "Error: accept()\n";
-            continue;
-          }
-        } else {
-          // Set the new client socket to non-blocking mode
-          flags = fcntl(connfd, F_GETFL, 0);
-          if (flags == -1) {
-            std::cerr << "Error: fcntl()\n";
-            continue;
-          }
-          flags |= O_NONBLOCK;
-          if (fcntl(connfd, F_SETFL, flags) == -1) {
-            std::cerr << "Error: fcntl()\n";
-            continue;
-          }
-
-          EV_SET(&event, connfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-
-          // Register the kevent with the kernel event queue
-          if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
-            std::cerr << "Error: kevent()\n";
-            continue;
-          }
-        }
-        getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr),
-                    client_len, host, MAXBUF,
-                    const_cast<char*>(std::to_string(port).c_str()), MAXBUF, 0);
-
-        clients_.AddData(events_[idx].ident, connfd, port);
-        std::cout << "Connected to (" << host << ", " << port << ")\n";
+        AcceptNewClient(idx);
       } else {
+        struct kevent event;
+
         EV_SET(&event, events_[idx].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
         if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
           std::cerr << "Error: kevent()\n";
@@ -85,6 +45,42 @@ void Server::Act() {
       }
     }
   }
+}
+
+void Server::AcceptNewClient(int idx) {
+  int connfd;
+  socklen_t client_len;
+  struct sockaddr_storage client_addr;
+  int flags;
+  char host[MAXBUF];
+  int port;
+  struct kevent event;
+
+  client_len = sizeof(client_addr);
+  connfd =
+      accept(events_[idx].ident,
+             reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
+  if (connfd == -1 || errno != EWOULDBLOCK) {
+    throw std::runtime_error("Error: accept()");
+  }
+  // Set the new client socket to non-blocking mode
+  flags = fcntl(connfd, F_GETFL, 0);
+  if (flags == -1) {
+    throw std::runtime_error("Error: fcntl()");
+  }
+  flags |= O_NONBLOCK;
+  if (fcntl(connfd, F_SETFL, flags) == -1) {
+    throw std::runtime_error("Error: fcntl()");
+  }
+  EV_SET(&event, connfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+  if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+    throw std::runtime_error("Error: kevent()");
+  }
+  getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr), client_len,
+              host, MAXBUF, const_cast<char*>(std::to_string(port).c_str()),
+              MAXBUF, 0);
+  clients_.AddData(events_[idx].ident, connfd, port);
+  std::cout << "Connected to (" << host << ", " << port << ")\n";
 }
 
 void Server::Listen(const std::string& host, const int& port) {
