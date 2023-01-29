@@ -22,8 +22,6 @@ void Server::Init(const std::vector<ServerConfigInfo> server_infos) {
 // private
 
 void Server::Act(void) {
-  char buffer[MAXBUF];
-
   while (true) {
     int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
     if (n == -1) {
