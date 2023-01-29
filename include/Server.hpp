@@ -45,6 +45,7 @@ class Server {
   std::set<t_listening*> servers_;
   ClientMetaData clients_;
 
+  void Act();
   t_listening* CreateListening(const std::string& host, const int& port,
                                const int& fd);
   bool IsListenFd(const int& fd);
