@@ -1,5 +1,7 @@
 #include "../../include/Server.hpp"
 
+#include <netdb.h>
+
 Server::Server() : kq_(kqueue()) {}
 
 Server::~Server(void) {}
@@ -28,7 +30,6 @@ void Server::Act(void) {
       throw std::runtime_error("Error: kevent()");
     }
     for (int idx = 0; idx < n; ++idx) {
-      // A read event on the socket means there is a new connection
       if (IsListenFd(events_[idx].ident) &&
           events_[idx].filter == EVFILT_READ) {
         AcceptNewClient(idx);
@@ -63,7 +64,6 @@ void Server::AcceptNewClient(int idx) {
   if (connfd == -1 || errno != EWOULDBLOCK) {
     throw std::runtime_error("Error: accept()");
   }
-  // Set the new client socket to non-blocking mode
   flags = fcntl(connfd, F_GETFL, 0);
   if (flags == -1) {
     throw std::runtime_error("Error: fcntl()");
@@ -91,8 +91,12 @@ void Server::Listen(const std::string& host, const int& port) {
   }
 #endif
 
-  struct addrinfo hints, *listp, *p;
-  int listenfd, status, optval = ENABLE;
+  struct addrinfo hints;
+  struct addrinfo* listp;
+  struct addrinfo* p;
+  int listenfd;
+  int status;
+  int optval = ENABLE;
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
@@ -105,7 +109,7 @@ void Server::Listen(const std::string& host, const int& port) {
   for (p = listp; p; p = p->ai_next) {
     listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
     if (listenfd < 0) {
-      continue;
+      throw std::runtime_error("failed at socket create");
     }
     setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
                reinterpret_cast<const void*>(&optval), sizeof(int));
@@ -114,19 +118,16 @@ void Server::Listen(const std::string& host, const int& port) {
   }
   freeaddrinfo(listp);
   if (p == NULL) {
-    std::cerr << "Error: socket()\n";
-    return;
+    throw std::runtime_error("Error: socket()");
   }
   if (listen(listenfd, BACKLOG) < 0) {
     close(listenfd);
-    std::cerr << "Error: listen()\n";
-    return;
+    throw std::runtime_error("Error: listen()");
   }
   struct kevent event;
   EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
   if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
-    std::cerr << "Error: kevent()\n";
-    return;
+    throw std::runtime_error("Error: kevent()");
   }
   servers_.insert(CreateListening(host, port, listenfd));
 #if DG
