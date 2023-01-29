@@ -30,11 +30,18 @@ void Parse_Req_msg(int c_socket, ReqHandler& reqhandle) {
   std::string stmp;
   std::string contents;
 
+  // gnl현재는 개행을 기준으로 잘라 값을string에 저장했지만
+  // 실제 요청 메세지가 온다면 개행 기준이 아니라 \r\n을 기준으로 나눠야한다.
   while ((ctmp = get_next_line(c_socket)) != 0) {
     stmp = ctmp;
+    if (stmp == "#@\n") {
+      stmp.clear();
+      free(ctmp);
+      break;
+    }
     contents.append(stmp);
-    free(ctmp);
     stmp.clear();
+    free(ctmp);
   }
 
   // data에 요청메세지 전체가 들어가있음.
@@ -49,8 +56,6 @@ void Parse_Req_msg(int c_socket, ReqHandler& reqhandle) {
   data.erase(data.begin());
 
   //---------------header parsing -------------------
-
-  std::cout << reqhandle.req_msg.headers.size() << std::endl;
   while (1) {
     std::vector<std::string> head_line = s_split(data[0], ": ", 1);
     if (head_line.size() == 1) break;
@@ -63,9 +68,21 @@ void Parse_Req_msg(int c_socket, ReqHandler& reqhandle) {
     data.erase(data.begin());
     head_line.clear();
   }
-  std::cout << "Length : " << reqhandle.req_msg.body_data.length << std::endl;
-  PrintVector(data);
-  Print_Map(reqhandle.req_msg.headers);
+
+  //------------body parsing-----------------------
+  size_t total_len = 0;
+  reqhandle.req_msg.body_data.entity = "";
+  for (int i = 0; (ctmp = get_next_line(c_socket)) != 0 ||
+                  total_len < reqhandle.req_msg.body_data.length;
+       i++) {
+    total_len += strlen(ctmp);
+    if (i == 0) {
+      reqhandle.req_msg.body_data.entity = strdup(ctmp);
+      free(ctmp);
+    } else
+      reqhandle.req_msg.body_data.entity =
+          ft_strjoin(reqhandle.req_msg.body_data.entity, ctmp);
+  }
 }
 
 void Remove_Tab_Space(std::string& str) {

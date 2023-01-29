@@ -10,6 +10,7 @@
 #define BUFFER_SIZE 1024
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <fstream>
