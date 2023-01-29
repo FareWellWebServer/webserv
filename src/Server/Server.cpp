@@ -10,7 +10,9 @@ void Server::Run(void) {
   if (servers_.size() == 0) {
     throw std::runtime_error("[Server Error]: no listening server");
   }
-  Act();
+  while (true) {
+    Act();
+  }
 }
 
 void Server::Init(const std::vector<ServerConfigInfo> server_infos) {
@@ -22,18 +24,15 @@ void Server::Init(const std::vector<ServerConfigInfo> server_infos) {
 // private
 
 void Server::Act(void) {
-  while (true) {
-    int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
-    if (n == -1) {
-      throw std::runtime_error("Error: kevent()");
-    }
-    for (int idx = 0; idx < n; ++idx) {
-      if (IsListenFd(events_[idx].ident) &&
-          events_[idx].filter == EVFILT_READ) {
-        AcceptNewClient(idx);
-      } else {
-        ActCoreLogic(idx);
-      }
+  int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
+  if (n == -1) {
+    throw std::runtime_error("Error: kevent()");
+  }
+  for (int idx = 0; idx < n; ++idx) {
+    if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ) {
+      AcceptNewClient(idx);
+    } else {
+      ActCoreLogic(idx);
     }
   }
 }
