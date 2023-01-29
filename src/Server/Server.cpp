@@ -108,7 +108,9 @@ void Server::Listen(const std::string& host, const int& port) {
   hints.ai_flags |= AI_NUMERICHOST;
   status =
       getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &listp);
-
+  if (status != 0) {
+    throw std::runtime_error(gai_strerror(status));
+  }
   for (p = listp; p; p = p->ai_next) {
     listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
     if (listenfd < 0) {
