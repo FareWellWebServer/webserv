@@ -49,7 +49,7 @@ class Server {
   void AcceptNewClient(int idx);
   void ActCoreLogic(int idx);
   void SetHostPortAvaiable(const std::string& host, const int& port);
-  void ListenBind(const std::string& host, const int& port, int& listenfd);
+  void BindListen(const std::string& host, const int& port, int& listenfd);
   void GetAddrInfo(const std::string& host, const int& port,
                    struct addrinfo** listp);
   t_listening* CreateListening(const std::string& host, const int& port,

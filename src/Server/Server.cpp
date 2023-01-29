@@ -96,7 +96,7 @@ void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
   struct kevent event;
   int listenfd;
 
-  ListenBind(host, port, listenfd);
+  BindListen(host, port, listenfd);
   EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
   if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("Error: kevent()");
@@ -107,7 +107,7 @@ void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
 #endif
 }
 
-void Server::ListenBind(const std::string& host, const int& port,
+void Server::BindListen(const std::string& host, const int& port,
                         int& listenfd) {
   struct addrinfo* listp;
   struct addrinfo* p;
