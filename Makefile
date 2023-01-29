@@ -4,7 +4,7 @@ RH_NAME = Req_handle
 CXX = c++
 
 # Compiler flags
-CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
+CXXFLAGS = -std=c++98  -pedantic
 # CXXFLAGS = -g3 -fsanitize=address
 
 

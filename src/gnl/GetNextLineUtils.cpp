@@ -2,17 +2,19 @@
 
 char *ft_strjoin(char *str, char *buffer) {
   int sum;
-  char *result;
 
   sum = 0;
   if (buffer == 0 || *buffer == '\0') return (str);
   sum = ft_strlen(str) + ft_strlen(buffer);
-  result = (char *)malloc(sizeof(char) * (sum + 1));
+
+  char *result = new char[sum + 1];
   if (result == 0) return (0);
   *result = '\0';
   ft_strcat(result, str);
   ft_strcat(result, buffer);
-  if (str != 0) free(str);
+  if (str != 0) {
+    delete[] str;
+  }
   return (result);
 }
 
@@ -33,12 +35,11 @@ char *ft_strcat(char *s1, char *s2) {
 }
 
 char *dup_loc(char *str, int loc_of_next) {
-  char *p;
   int i;
 
   if (loc_of_next == -1) return (0);
   if (loc_of_next == -2) loc_of_next = ft_strlen(str) - 1;
-  p = (char *)malloc(sizeof(char) * (loc_of_next + 1 + 1));
+  char *p = new char[loc_of_next + 2];
   if (p == 0) return (0);
   i = 0;
   while (*(str + i) != '\0' && i <= loc_of_next) {
@@ -51,23 +52,20 @@ char *dup_loc(char *str, int loc_of_next) {
 
 char *ft_substr(char *str, int start, int str_len) {
   int i;
-  char *substr;
 
-  // start 는 loc_of_next +1 이므로
-  //  if (start == -1 || str_len == 0)
   if (start == -1) {
-    free(str);
+    delete[] str;
     return (0);
   }
   i = 0;
-  substr = (char *)malloc(sizeof(char) * (str_len - start + 1));
+  char *substr = new char[str_len - start + 1];
   if (substr == 0) return (0);
   while (i < str_len - start) {
     *(substr + i) = *(str + start + i);
     i++;
   }
   *(substr + i) = '\0';
-  free(str);
+  delete[] str;
   return ((char *)substr);
 }
 
@@ -84,7 +82,7 @@ char *ret_line(char **str) {
   if (oneline == 0) return (0);
   *str = ft_substr(*str, loc_of_next + 1, strlen);
   if (*str == 0 && oneline != 0 && loc_of_next != -2) {
-    free(oneline);
+    delete[] oneline;
     return (0);
   }
   return (oneline);

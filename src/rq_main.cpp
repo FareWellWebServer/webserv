@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 
 #include "../include/WebServ.hpp"
 
@@ -13,4 +14,5 @@ int main() {
   ReqHandler reqhandle;
 
   Parse_Req_Msg(fd, reqhandle);
+  system("leaks Req_handle");
 }

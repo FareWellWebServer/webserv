@@ -88,11 +88,12 @@ ClientMetaData::~ClientMetaData() {}
 // #include "http parser"
 
 class ReqHandler;
+// 테스트 끝나면 주석풀기 0130_0019
 
-typedef struct entity {
-  char* entity_;
-  size_t entity_length_;
-} entity;
+// typedef struct entity {
+//   char* entity_;
+//   size_t entity_length_;
+// } entity;
 
 typedef struct Data  // struct로
 {

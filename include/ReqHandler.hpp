@@ -3,17 +3,19 @@
 
 #include "WebServ.hpp"
 
+// 테스트 끝나면 지우기
+
 typedef struct entity {
   char* entity_;
   size_t entity_length_;
-} entity_t;
+} entity;
 
 typedef struct t_req_msg {
   std::string method_;
   std::string req_url_;
   std::string protocol_;
   std::map<std::string, std::string> headers_;
-  //   entity_t body_data_;
+  entity body_data_;
 } s_req_msg;
 
 class ReqHandler {

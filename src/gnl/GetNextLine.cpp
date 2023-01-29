@@ -13,7 +13,7 @@ char *get_next_line(int fd) {
   if (str == 0) return (0);
   ret = ret_line(&str);
   if (ret == 0) {
-    free(str);
+    delete[] str;
     return (0);
   }
   return (ret);
@@ -21,9 +21,8 @@ char *get_next_line(int fd) {
 
 char *txt_read(int fd, char *str, int *is_end) {
   int byte;
-  char *buffer;
+  char *buffer = new char[BUFFER_SIZE + 1];
 
-  buffer = (char *)malloc(sizeof(char) * (BUFFER_SIZE + 1));
   if (buffer == 0) return (0);
   byte = 1;
   while (byte > 0 && find_next(str, '\n') < 0) {
@@ -36,7 +35,7 @@ char *txt_read(int fd, char *str, int *is_end) {
     str = ft_strjoin(str, buffer);
     if (str == 0) break;
   }
-  free(buffer);
+  delete[] buffer;
   if (byte < 0 || str == 0) return (0);
   return (str);
 }
