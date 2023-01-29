@@ -69,7 +69,9 @@ void Server::AcceptNewClient(int idx) {
               host, MAXBUF, const_cast<char*>(std::to_string(port).c_str()),
               MAXBUF, 0);
   clients_.AddData(events_[idx].ident, connfd, port);
+#if DG
   std::cout << "Connected to (" << host << ", " << port << ")\n";
+#endif
 }
 
 void Server::ActCoreLogic(int idx) {
