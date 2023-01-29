@@ -92,7 +92,7 @@ class ReqHandler;
 typedef struct entity {
   char* entity_;
   size_t entity_length_;
-} entity_t;
+} entity;
 
 typedef struct Data  // struct로
 {
@@ -101,15 +101,11 @@ typedef struct Data  // struct로
   // int client_fd_;
   struct kevent* event_;  // fd(ident), flag들
   ServerConfigInfo* config_;
-  // struct HTTPMessage* req_message_;  // HTTP 요청/응답 헤더 구분 어떻게?
   ReqHandler* req_message_;
   struct HTTPMessage* res_message_;  // 같은 클래스로? 다른 클래스로?
   int status_code_;                  // 상태코드 enum 정의 필요
-  // typedef entity_t may not be used in an elaborated type specifier란 에러...
-  // 왜..?
-  struct entity_t* entity_;
 
-  // char* entity_;                     // 응답 본문
+  struct entity* entity_;
 } Data;
 
 class ClientMetaData {
