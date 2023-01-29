@@ -50,6 +50,8 @@ class Server {
   void ActCoreLogic(int idx);
   void SetHostPortAvaiable(const std::string& host, const int& port);
   void ListenBind(const std::string& host, const int& port, int& listenfd);
+  void GetAddrInfo(const std::string& host, const int& port,
+                   struct addrinfo** listp);
   t_listening* CreateListening(const std::string& host, const int& port,
                                const int& fd);
   bool IsListenFd(const int& fd);

@@ -109,22 +109,11 @@ void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
 
 void Server::ListenBind(const std::string& host, const int& port,
                         int& listenfd) {
-  struct addrinfo hints;
   struct addrinfo* listp;
   struct addrinfo* p;
-  int status;
   int optval = ENABLE;
-  memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;
-  hints.ai_flags |= AI_ADDRCONFIG;
-  hints.ai_flags |= AI_NUMERICSERV;
-  hints.ai_flags |= AI_NUMERICHOST;
-  status =
-      getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &listp);
-  if (status != 0) {
-    throw std::runtime_error(gai_strerror(status));
-  }
+
+  GetAddrInfo(host, port, &listp);
   for (p = listp; p; p = p->ai_next) {
     listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
     if (listenfd < 0) {
@@ -144,6 +133,24 @@ void Server::ListenBind(const std::string& host, const int& port,
   if (listen(listenfd, BACKLOG) < 0) {
     close(listenfd);
     throw std::runtime_error("Error: listen()");
+  }
+}
+
+void Server::GetAddrInfo(const std::string& host, const int& port,
+                         struct addrinfo** listp) {
+  struct addrinfo hints;
+  int status;
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_PASSIVE;
+  hints.ai_flags |= AI_ADDRCONFIG;
+  hints.ai_flags |= AI_NUMERICSERV;
+  hints.ai_flags |= AI_NUMERICHOST;
+  status =
+      getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, listp);
+  if (status != 0) {
+    throw std::runtime_error(gai_strerror(status));
   }
 }
 
