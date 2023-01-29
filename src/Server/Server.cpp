@@ -93,11 +93,25 @@ void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
     return;
   }
 #endif
+  struct kevent event;
+  int listenfd;
 
+  ListenBind(host, port, listenfd);
+  EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+  if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+    throw std::runtime_error("Error: kevent()");
+  }
+  servers_.insert(CreateListening(host, port, listenfd));
+#if DG
+  std::cout << host << " is listening port on " << port << "\n";
+#endif
+}
+
+void Server::ListenBind(const std::string& host, const int& port,
+                        int& listenfd) {
   struct addrinfo hints;
   struct addrinfo* listp;
   struct addrinfo* p;
-  int listenfd;
   int status;
   int optval = ENABLE;
   memset(&hints, 0, sizeof(struct addrinfo));
@@ -118,7 +132,9 @@ void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
     }
     setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
                reinterpret_cast<const void*>(&optval), sizeof(int));
-    if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0) break;
+    if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0) {
+      break;
+    }
     close(listenfd);
   }
   freeaddrinfo(listp);
@@ -129,15 +145,6 @@ void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
     close(listenfd);
     throw std::runtime_error("Error: listen()");
   }
-  struct kevent event;
-  EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-  if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
-    throw std::runtime_error("Error: kevent()");
-  }
-  servers_.insert(CreateListening(host, port, listenfd));
-#if DG
-  std::cout << host << " is listening port on " << port << "\n";
-#endif
 }
 
 t_listening* Server::CreateListening(const std::string& host, const int& port,
