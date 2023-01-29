@@ -48,11 +48,11 @@ class Server {
   void Act(void);
   void AcceptNewClient(int idx);
   void ActCoreLogic(int idx);
+  void SetHostPortAvaiable(const std::string& host, const int& port);
   t_listening* CreateListening(const std::string& host, const int& port,
                                const int& fd);
   bool IsListenFd(const int& fd);
   void DisConnect(const int& fd);
-  void Listen(const std::string& host, const int& port);
 };
 
 #endif

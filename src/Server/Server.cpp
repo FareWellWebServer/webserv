@@ -17,7 +17,7 @@ void Server::Run(void) {
 
 void Server::Init(const std::vector<ServerConfigInfo> server_infos) {
   for (int i = 0; i < server_infos.size(); ++i) {
-    Listen(server_infos[i].host, server_infos[i].port);
+    SetHostPortAvaiable(server_infos[i].host, server_infos[i].port);
   }
 }
 
@@ -86,7 +86,7 @@ void Server::ActCoreLogic(int idx) {
   DisConnect(events_[idx].ident);
 }
 
-void Server::Listen(const std::string& host, const int& port) {
+void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
 #if DG
   if (servers_.size() == MAXLISTEN) {
     std::cerr << "Error: full of listening\n";
