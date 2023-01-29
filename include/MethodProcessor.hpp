@@ -240,8 +240,14 @@ class ClientMetaData {
 #define CGI ".py"
 #define INSTALLPATH "/original/path"
 #define INDEX "index.html"
+#define PNG ".png"
+#define JPG ".jpg"
+#define ICO ".ico"
+#define BUFFER_MAX 1024
 
 #include <unistd.h>
+
+extern char **environ;
 
 class MethodProcessor {
  private:
@@ -269,7 +275,7 @@ class MethodProcessor {
     } else
       return (false);
   }
-  bool isHtml(std::string &uri, const char *identifier) {
+  bool isFile(std::string &uri, const char *identifier) {
     std::string::reverse_iterator it = uri.rbegin();
 
     size_t len = strlen(identifier);
@@ -282,21 +288,89 @@ class MethodProcessor {
     }
     return (true);
   }
+  char *copyCstr(const char *cstr, size_t length) {
+    char *ret = new char[length + 1];
+    if (ret == NULL) {
+      /*error handling*/;
+    }
+    ret[length] = '\0';
+    for (size_t i = 0; i < length; i += 2) {
+      ret[i] = cstr[i];
+      if (i + 1 < length) ret[i + 1] = cstr[i + 1];
+    }
+    return ret;
+  }
   void MethodGETCgi(struct Data *client) {
-    // fork
-    // 자식
-    /// 파이프 작업(표준 입출력 -> 파이프 입력, 출력은 삭제
-    //// CGI 실행
-    // 부모
-    /// 파이프 작업(파이프 입력 닫기
-    /// wait(??)
-    //// wait 풀림, 데이터 받기 => CGI 데이터는 어차피 표준 입출력으로 구성 되어
-    /// 있을 것이므로 buf에 받고 string 으로 넣어도 상관 없음 / cstr() 으로 파일
-    /// 만들어서 client 등록
+    int cgi_stream[2];
+    int pid = 0;
+
+    if (pipe(cgi_stream) == -1) {
+      /*error handling */
+    }
+    pid = fork();
+    if (pid == 0) {
+      /* CGI handling*/
+      close(cgi_stream[0]);
+      dup2(cgi_stream[1], 1);
+
+      char **cgi_argv;
+      size_t cgi_length = client->req_message_->uri.size();
+
+      cgi_argv = new char *[2];
+      cgi_argv[0] = new char[cgi_length + 1];
+      cgi_argv[0][cgi_length] = '\0';
+      for (size_t i = 0; i < cgi_length; i += 2) {
+        cgi_argv[0][i] = client->req_message_->uri.at(i);
+        if (i + 1 < cgi_length)
+          cgi_argv[0][i + 1] = client->req_message_->uri.at(i + 1);
+      }
+      cgi_argv[1] = new char[1];
+      cgi_argv[1][0] = '\0';
+      execve(cgi_argv[0], cgi_argv, environ);
+    } else {
+      /* Parent handling*/
+      close(cgi_stream[1]);
+
+      int waitloc;
+      if (wait(&waitloc) == -1) { /*error handling*/
+      } else {
+        if (WIFEXITED(waitloc)) {
+          /* normal handling*/
+          char *buf;
+          size_t len = 0;
+
+          buf = new char[BUFFER_MAX + 1];
+          std::string temp_data;
+          while (true) {
+            len = read(cgi_stream[0], buf, BUFFER_MAX);
+            if (len == -1) {
+              /* error handling */
+            }
+            buf[BUFFER_MAX] = '\0';
+            temp_data.append(buf);
+            if (len != BUFFER_MAX) {
+              delete[] buf;
+              break;
+            }
+            size_t temp_length = temp_data.size();
+            client->entity_->entity_length_ = temp_length;
+            client->entity_->entity_data_ =
+                copyCstr(temp_data.c_str(), temp_length);
+          }
+          else if (WIFSIGNALED(waitloc)) {
+            /* error handling */;
+          }
+          return;
+        }
+      }
+    }
   }
   void MethodGETFile(struct Data *client) {
     struct entity *ret;
     ret = new struct entity();
+    if (ret == NULL) {
+      /* error handling */
+    }
     std::ifstream entityFile;
 
     entityFile.open(client->req_message_->uri, std::ifstream::in);
@@ -313,8 +387,6 @@ class MethodProcessor {
     return;
   }
   void MethodGET(struct Data *client) {
-    struct entity *ret;
-
     fetchOiginalPath(client->req_message_->uri);
     if (!isExistFile(client->req_message_->uri)) {
       client->status_code_ = 404;
@@ -326,25 +398,27 @@ class MethodProcessor {
       MethodGETCgi(client);
       return;
     }
-    if (!isHtml(client->req_message_->uri, INDEX)) {
+    if (isFile(client->req_message_->uri, PNG) ||
+        isFile(client->req_message_->uri, JPG) ||
+        isFile(client->req_message_->uri, ICO)) {
       MethodGETFile(client);
       return;
     }
     std::map<int, struct entity *>::iterator check_cache =
         cache_entity_.find(client->port_);
     if (check_cache != cache_entity_.end()) {
-      client->entity_->entity_data_ =
-          static_cast<std::map<int, struct entity *>>(cache_entity_)
-              .at(0)
-              ->entity_data_;
-      client->entity_->entity_length_ =
-          static_cast<std::map<int, struct entity *>>(cache_entity_)
-              .at(0)
-              ->entity_length_;
+      static_cast<std::map<int, struct entity *>>(cache_entity_);
+      client->entity_->entity_length_ = cache_entity_.at(0)->entity_length_;
+      client->entity_->entity_data_ = copyCstr(
+          cache_entity_.at(0)->entity_data_, client->entity_->entity_length_);
       return;
     }
 
+    struct entity *ret;
     ret = new struct entity();
+    if (ret == NULL) {
+      /* error handling */
+    }
     std::ifstream entityFile;
 
     entityFile.open(client->req_message_->uri, std::ifstream::in);
