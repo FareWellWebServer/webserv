@@ -13,7 +13,8 @@ typedef struct entity {
 typedef struct t_req_msg {
   std::string method_;
   std::string req_url_;
-  std::string protocol_;
+  std::string protocol_;  // 프로토콜 값을 저장하지 말고 파싱딴에서 HTTP/1.1이
+                          // 아니면 에러.
   std::map<std::string, std::string> headers_;
   entity body_data_;
 } s_req_msg;
