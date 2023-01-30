@@ -24,6 +24,7 @@
 #include "ErrorHandler.hpp"
 #include "GetNextLine.hpp"
 #include "Logger.hpp"
+#include "Server.hpp"
 #include "ReqHandler.hpp"
 #include "WebServException.hpp"
 #endif

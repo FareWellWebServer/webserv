@@ -1,19 +1,16 @@
 #include "../include/WebServ.hpp"
 
-/*
- * 에러 처리 부분은 바로 구현하기가 쉽지 않아 보여서 일단 runtime_error로
- * 처리했습니다.
- */
-
-void config_process(int ac, char** av);
+std::vector<ServerConfigInfo> config_process(int ac, char** av);
 void main_process(int ac, char** av);
 int main(int ac, char** av);
 
 // 누수 잡는 용
-void a(void) { system("leaks farewell_webserv | grep leaked"); }
+void CheckLeaks(void) { system("leaks farewell_webserv | grep leaked"); }
 
 int main(int ac, char** av) {
-  atexit(a);
+#if DG
+  atexit(CheckLeaks);
+#endif
   try {
     main_process(ac, av);
   } catch (const WebServException& custom_error) {
@@ -26,23 +23,24 @@ int main(int ac, char** av) {
 }
 
 void main_process(int ac, char** av) {
-  // server run
-  std::cout << "-----  main process running  -----" << std::endl;
+  const std::vector<ServerConfigInfo> server_infos = config_process(ac, av);
+  Server server;
 
-  config_process(ac, av);
-
-  // throw WebServException("example error message");
+  server.Init(server_infos);
+  server.Run();
 }
 
-void config_process(int ac, char** av) {
-  std::cout << "-----  config process running -----" << std::endl;
-  if (ac > 2) throw std::runtime_error("[Config Error] few argument");
+std::vector<ServerConfigInfo> config_process(int ac, char** av) {
+  if (ac > 2) {
+    throw std::runtime_error("[Config Error] few argument");
+  }
   const char* file_path = (ac == 1) ? "config/default.config" : av[1];
 
   Config config(file_path);
-  // configParser.Parse();  // 파싱 과정 출력 X
-  config.Parse(1);  // 파싱 과정 출력 O
+  config.Parse();  // 파싱 과정 출력 X
+#if DG
   config.PrintConfigInfos();
+#endif
   config.CheckValidation();
-  std::cout << "-----  config process finish -----" << std::endl;
+  return config.GetServerConfigInfos();
 }

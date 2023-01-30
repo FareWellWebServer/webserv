@@ -32,16 +32,21 @@ void Config::Parse(int print_mode) {
     if (config_stream_.eof()) break;
     if (IsWhiteLine()) continue;
 
+#if DG
     Print("--------------- server parse start ---------------", BOLDBLUE);
+#endif
     if (!IsOpenServerBracket()) ExitConfigParseError();
     InitServerConfigInfo(server_config_info_);
     ParseServer();
+#if DG
     Print("--------------- server parse finish --------------", BOLDBLUE, 1);
-
+#endif
     if (!CheckDuplicatePort(server_config_info_.port))
       server_config_infos_.push_back(server_config_info_);
   }
+#if DG
   Print("Config parsing finish", BOLDMAGENTA, 1);
+#endif
 }
 
 void Config::ParseServer(void) {
