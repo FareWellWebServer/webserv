@@ -87,6 +87,14 @@ ClientMetaData::~ClientMetaData() {}
 // #include "config"
 // #include "http parser"
 
+class ReqHandler;
+// 테스트 끝나면 주석풀기 0130_0019
+
+// typedef struct entity {
+//   char* entity_;
+//   size_t entity_length_;
+// } entity;
+
 typedef struct Data  // struct로
 {
   int litsen_fd_;  // 어느 listen fd에 연결됐는지
@@ -94,10 +102,11 @@ typedef struct Data  // struct로
   // int client_fd_;
   struct kevent* event_;  // fd(ident), flag들
   ServerConfigInfo* config_;
-  // struct HTTPMessage* req_message_;  // HTTP 요청/응답 헤더 구분 어떻게?
-  // struct HTTPMessage* res_message_;  // 같은 클래스로? 다른 클래스로?
-  int status_code_;  // 상태코드 enum 정의 필요
-  char* entity_;     // 응답 본문
+  ReqHandler* req_message_;
+  struct HTTPMessage* res_message_;  // 같은 클래스로? 다른 클래스로?
+  int status_code_;                  // 상태코드 enum 정의 필요
+
+  struct entity* entity_;
 } Data;
 
 class ClientMetaData {
@@ -108,11 +117,11 @@ class ClientMetaData {
   std::map<fd, Data> datas_;
   int current_fd_;
   void ValidCheckToAccessData();
-  void InitializeData(Data* data);
   class WrongFd : public std::exception {
    public:
     const char* what() const throw();
   };
+  void InitializeData(Data* data);
 
  public:
   ClientMetaData();
@@ -129,10 +138,10 @@ class ClientMetaData {
   void DeleteByFd(const fd& client_fd);
 
   // reqHandler에서 요청헤더 파싱 후
-  // void SetReqMessage(struct HTTPMessage* header);
+  void SetReqMessage(struct HTTPMessage* header);
 
   // MsgComposer에서
-  // void SetResMessage(struct HTTPMessage* header);
+  void SetResMessage(struct HTTPMessage* header);
 
   // core에서 처리 후
   void SetEntity(char* entitiy);
@@ -141,10 +150,10 @@ class ClientMetaData {
   Data& GetData();
 
   // core에서 요청 헤더 데이터 필요할 때
-  // struct HTTPMessage* GetReqHeader();
+  struct HTTPMessage* GetReqHeader();
 
   // core에서 응답 헤더 데이터 필요할 때
-  // struct HTTPMessage* GetResHeader();
+  struct HTTPMessage* GetResHeader();
 
   // core에서 헤더 데이터 필요할 때
   ServerConfigInfo* GetConfig();
@@ -161,12 +170,12 @@ class ClientMetaData {
   int GetStatusCode();
 
   // Method 전체 리턴
-  // std::vector<std::string> GetMethods();
+  std::vector<std::string> GetMethods();
 
   // Method 있는지 확인
-  // bool FindMethods(std::string method);
+  bool FindMethods(std::string method);
 
-  // char* GetURL();
+  char* GetURL();
 };
 
 #endif

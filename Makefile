@@ -1,10 +1,12 @@
 NAME = farewell_webserv
+RH_NAME = Req_handle
 # Compiler
 CXX = c++
 
 # Compiler flags
-CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
+CXXFLAGS = -std=c++98  -pedantic
 # CXXFLAGS = -g3 -fsanitize=address
+
 
 # Colors
 GREEN = \033[32m
@@ -13,6 +15,9 @@ RESET = \033[0m
 
 SERVER_SRC	=	$(wildcard ./src/*.cpp) $(wildcard ./src/*/*.cpp)
 SERVER_OBJ	=	$(SERVER_SRC:.cpp=.o)
+
+REQHANDLE_SRC = $(wildcard ./src/ReqHandler/*.cpp) $(wildcard ./src/gnl/*.cpp) ./src/rq_main.cpp
+REQHANDLE_OBJ = $(REQHANDLE_SRC:.cpp=.o)
 
 # Default target
 all: server
@@ -23,16 +28,21 @@ server: $(SERVER_OBJ)
 	@$(CXX) $(CXXFLAGS) $(SERVER_OBJ) -o $(NAME)
 	@echo "$(GREEN)Done.$(RESET)"
 
-
+rp: $(REQHANDLE_OBJ)
+	@echo "$(YELLOW)Req_Handle_Building $@...$(RESET)"
+	@$(CXX) $(CXXFLAGS) $(REQHANDLE_OBJ) -o $(RH_NAME)
+	@echo "$(GREEN)Done.$(RESET)"
 # Clean up
 clean:
 	@echo "$(YELLOW)Cleaning up...$(RESET)"
 	@rm -rf $(SERVER_OBJ)
+	@rm -rf $(REQHANDLE_OBJ)
 	@echo "$(GREEN)Done.$(RESET)"
 
 fclean:
 	make clean
 	@rm -f $(NAME)
+	@rm -f $(RH_NAME)
 
 re:
 	make fclean

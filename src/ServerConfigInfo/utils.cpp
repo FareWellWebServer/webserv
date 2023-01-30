@@ -52,18 +52,24 @@ std::vector<std::string> Config::Split(const std::string& str,
   size_t start = str.find_first_not_of(charset);
   size_t end = str.find_first_of(charset, start);
 
+  // 아무것도 안들어있을 때 그냥 전부 넣어서 반환.
   if (end == std::string::npos) res.push_back(str.substr(start, str.size()));
 
+  //:    :
+  // aaaaa bbbbb ccccc ddddd
   while (end != std::string::npos) {
+    // a 를 push back
     res.push_back(str.substr(start, end - start));
+    //:    :
+    //    bbbbb  ccccc ddddd
+    // end 시점부터 charset이 아닌 것을 찾음.
     start = str.find_first_not_of(charset, end);
+    // start 시점부터 공백인 것을 찾음.
     end = str.find(charset, start);
     if (start == std::string::npos) break;
-    if (once) {
-      res.push_back(str.substr(start, end - start));
-      break;
-    }
     res.push_back(str.substr(start, end - start));
+    // once -> 몇번 하고싶은지에 따라. 무조건 1만 들어오는 경우
+    if (once) break;
   }
   return res;
 }

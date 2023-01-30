@@ -7,12 +7,23 @@
 #define BLUE "\033[34m"
 #define WHITE "\033[37m"
 
-#include <iostream>
+#define BUFFER_SIZE 1024
 
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+
+#include "ClientMetaData.hpp"
 #include "Config/Config.hpp"
 #include "Config/ServerConfigInfo.hpp"
 #include "ErrorHandler.hpp"
+#include "GetNextLine.hpp"
 #include "Logger.hpp"
+#include "ReqHandler.hpp"
 #include "WebServException.hpp"
-
 #endif
