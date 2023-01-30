@@ -4,14 +4,14 @@ ClientMetaData::ClientMetaData() : current_fd_(-1) {}
 
 ClientMetaData::~ClientMetaData() {}
 
-const char *ClientMetaData::WrongFd::what() const throw() {
+const char* ClientMetaData::WrongFd::what() const throw() {
   return "Wrong File Descriptor";
 }
 
 void ClientMetaData::ValidCheckToAccessData() {
   if (datas_.find(current_fd_) == datas_.end()) {
     throw WrongFd();
-    }
+  }
 }
 
 void ClientMetaData::InitializeData(Data* data) {
@@ -38,7 +38,7 @@ void ClientMetaData::AddData(const int& listen_fd, const int& client_fd,
   new_data.litsen_fd_ = listen_fd;
   // new_data.client_fd_ = client_fd;
   new_data.port_ = port;
-  datas_.insert( std::pair<int, Data>(client_fd, new_data) );
+  datas_.insert(std::pair<int, Data>(client_fd, new_data));
   current_fd_ = client_fd;
 }
 
@@ -66,10 +66,10 @@ void ClientMetaData::DeleteByFd(const int& client_fd) {
 //   datas_[current_fd_].res_message_ = header;
 // }
 
-void ClientMetaData::SetEntity(char* entitiy) {
-  ValidCheckToAccessData();
-  datas_[current_fd_].entity_ = entitiy;
-}
+// void ClientMetaData::SetEntity(char* entitiy) {
+//   ValidCheckToAccessData();
+//   datas_[current_fd_].entity_ = entitiy;
+// }
 
 Data& ClientMetaData::GetData() {
   ValidCheckToAccessData();

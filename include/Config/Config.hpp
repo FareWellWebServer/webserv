@@ -99,8 +99,9 @@ class Config {
 
 template <typename T>
 void PrintVector(const std::vector<T> &vec) {
-  for (size_t i = 0; i < vec.size(); ++i) std::cout << " " << vec[i];
-  std::cout << std::endl;
+  std::cout << BLUE << "[[PRINT VECTOR]]" << RESET << std::endl;
+  for (size_t i = 0; i < vec.size(); ++i)
+    std::cout << "index :" << i << " ||  value  ||\n" << vec[i] << std::endl;
 }
 
 #endif

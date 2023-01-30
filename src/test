@@ -1,0 +1,13 @@
+GET / HTTP/1.1#@
+Host: localhost:4000#@
+ Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8#@
+ Accept-Encoding: gzip, deflate, br#@
+ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7#@
+ Cookie: hblid=gupPzH3lCNmZhozG3m39N0GYB8Br6rH4; olfsk=olfsk957851537899227; connect.sid=s%3Adx8XBNTOX08FkVT8c2WsATIvIESlGujp.aH3cDWPLxXPV6pkFyI3AAAGi5zLTmmmxgPmgf%2FNOaJ4; key=eyJpc0xvZ2dlZEluIjp0cnVlLCJ1c2VybmFtZSI6IjExMTEifQ==#@
+ Upgrade-Insecure-Requests: 1#@
+ User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36#@
+ X-DevTools-Emulate-Network-Conditions-Client-Id: 2829E8CC4902FCCF69EF66EA4993993E#@
+#@
+licenseID=string&content=string&/paramsXML=string
+GNLTEST
+GNLTESTGNLTESTGNLTESTGNLTEST
