@@ -1,7 +1,6 @@
 #include <iostream>
 #include "../../include/MsgComposer.hpp"
 
-// MsgComposer::MsgComposer(ClientMetaData* client) : client_(client) {
 MsgComposer::MsgComposer(Data* client) : client_(client) {
     Clear();
 }
@@ -142,13 +141,11 @@ void MsgComposer::SetHeaders(void) {
     ss << res_msg_.body_data_->entity_length_;
     res_msg_.headers_["Content-length"] = ss.str();
     // content-type
-    res_msg_.headers_["Content-type"] = "text/plain";
     // .headers_["Content-type"] = .body_data_->type;
+    res_msg_.headers_["Content-type"] = "text/plain";
     // Connection -> keep-alive
     res_msg_.headers_["Connection"] = "keep-alive";
-    // 헤더 필요하면 여기서 더 추가하기
-    // set-cookie 도 여기서
-    
+    // 헤더 필요하면 여기서 더 추가하기(set-cookie or ...)
 }
 
 void MsgComposer::InitResMsg() {
@@ -203,6 +200,3 @@ void MsgComposer::Clear() {
     res_msg_.headers_.clear();
     res_msg_.body_data_ = NULL;
 }
-
-
-
