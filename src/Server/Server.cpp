@@ -18,7 +18,7 @@ void Server::Run(void) {
   }
 }
 
-void Server::Init(const std::vector<ServerConfigInfo> server_infos) {
+void Server::Init(const std::vector<ServerConfigInfo>& server_infos) {
   for (int i = 0; i < server_infos.size(); ++i) {
     SetHostPortAvaiable(server_infos[i].host, server_infos[i].port);
   }
@@ -68,9 +68,11 @@ void Server::AcceptNewClient(int idx) {
   if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("Error: kevent()");
   }
+  // TODO: to_string is c++11, should be replaced other method
   getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr), client_len,
               host, MAXBUF, const_cast<char*>(std::to_string(port).c_str()),
               MAXBUF, 0);
+  // TODO: port must be server's port
   clients_.AddData(events_[idx].ident, connfd, port);
 #if DG
   std::cout << "Connected to (" << host << ", " << port << ")\n";
