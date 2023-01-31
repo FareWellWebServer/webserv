@@ -37,7 +37,7 @@ class Server {
   ~Server(void);
 
   void Run(void);
-  void Init(const std::vector<ServerConfigInfo>);
+  void Init(const std::vector<ServerConfigInfo>& server_infos);
 
  private:
   int kq_;
