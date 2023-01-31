@@ -4,7 +4,7 @@
 
 Server::Server() : kq_(kqueue()) {}
 
-Server::~Server(void) {}
+Server::~Server(void) { close(kq_); }
 
 void Server::Run(void) {
   if (servers_.size() == 0) {
