@@ -156,7 +156,6 @@ void MsgComposer::InitResMsg() {
     SetHeaders();
 }
 
-// 받아간놈이 
 const char* MsgComposer::GetResponse(void) {
     std::stringstream ss;
     std::string status_code;
@@ -166,6 +165,9 @@ const char* MsgComposer::GetResponse(void) {
     ss >> status_code;
     std::string str = res_msg_.http_version_ + " " + status_code + " " \
                     + res_msg_.status_text_ + "\r\n";
+
+    std::size_t first_len = str.size();
+    std::cout << "first_line len: " << first_len << std::endl;
         
     // headers 채우기
     std::map<std::string, std::string>::const_iterator it = res_msg_.headers_.begin();
@@ -173,11 +175,16 @@ const char* MsgComposer::GetResponse(void) {
 		str.append(it->first + ": " + it->second + "\r\n");
 	str.append("\r\n");
 
+    std::size_t headers_len = str.size() - first_len;
+    std::cout << "headers len: " << headers_len << std::endl;
+
     // response 생성
+    std::cout << "entity len: " << res_msg_.body_data_->entity_length_ << std::endl;
     response_length_ = str.length() + res_msg_.body_data_->entity_length_;
-    char* res = (char *)malloc(sizeof(char) * response_length_);
+    std::cout << "response len: " << response_length_ << std::endl << std::endl;
 
     // response에 붙여넣기
+    char* res = (char *)malloc(sizeof(char) * response_length_);
     size_t str_len = str.length();
     for (std::size_t i = 0; i < str_len; ++i) {
         res[i] = str[i];
@@ -185,7 +192,6 @@ const char* MsgComposer::GetResponse(void) {
     for (std::size_t i = 0; i < res_msg_.body_data_->entity_length_; ++i) {
         res[str_len + i] = res_msg_.body_data_->entity_[i];
     }
-    
     return res;
 }
 

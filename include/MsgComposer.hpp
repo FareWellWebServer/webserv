@@ -16,8 +16,6 @@ typedef struct s_res_msg { // 버전, 상태코드, 사유구절
   t_entity *body_data_;
 } t_res_msg;
 
-// struct Data;
-
 class MsgComposer {
 private:
 	t_res_msg res_msg_;
