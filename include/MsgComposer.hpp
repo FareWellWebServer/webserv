@@ -21,6 +21,7 @@ private:
 	t_res_msg res_msg_;
 	Data* client_;
   std::size_t response_length_;
+  std::map<int, std::string> status_infos_;
 
   void SetHeaders(void);
 	void SetStatusText(void); 
