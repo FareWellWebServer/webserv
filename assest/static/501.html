@@ -28,12 +28,17 @@
         height: 42vh;
         position: absolute;
       }
-
+      #number {
+        transform-origin: top left;
+        animation: rotation 10s ease forwards alternate;
+      }
+      #error {
+        animation: drop_error 1s ease forwards;
+      }
       #not {
         transform-origin: top left;
         animation: rotation 4s ease forwards alternate;
       }
-
       #page {
         transform-origin: top right;
         animation: rotation-reverse 2s ease forwards alternate;
@@ -68,13 +73,22 @@
           transform: translateY(60vh);
         }
       }
+
+      @keyframes drop_error {
+        from {
+          transform: translate(0px);
+        }
+        to {
+          transform: translate(-22vw, 75vh);
+        }
+      }
     </style>
   </head>
 
   <body>
     <div class="describe_wrapper">
-      <h1>501</h1>
-      <h1>ERROR</h1>
+      <h1 id="number">501</h1>
+      <h1 id="error">ERROR</h1>
       <h1 id="page">PAGE</h1>
     </div>
     <div class="describe_wrapper">
