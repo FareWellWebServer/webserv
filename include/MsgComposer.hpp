@@ -1,11 +1,7 @@
 #ifndef MSGCOMPOSER_HPP
 #define MSGCOMPOSER_HPP
 
-#include <stdlib.h>
-#include <sstream>
-#include <string>
-
-#include "./ClientMetaData.hpp"
+#include "./WebServ.hpp
 
 typedef struct s_res_msg { // 버전, 상태코드, 사유구절
   std::string http_version_; // HTTP/1.1
