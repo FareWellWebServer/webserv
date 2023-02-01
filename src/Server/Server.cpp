@@ -46,7 +46,7 @@ void Server::AcceptNewClient(int idx) {
   struct sockaddr_storage client_addr;
   int flags;
   char host[MAXBUF];
-  int port;
+  char port[MAXBUF];
   struct kevent event;
 
   client_len = sizeof(client_addr);
@@ -68,12 +68,9 @@ void Server::AcceptNewClient(int idx) {
   if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("Error: kevent()");
   }
-  // TODO: to_string is c++11, should be replaced other method
   getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr), client_len,
-              host, MAXBUF, const_cast<char*>(std::to_string(port).c_str()),
-              MAXBUF, 0);
-  // TODO: port must be server's port
-  clients_.AddData(events_[idx].ident, connfd, port);
+              host, MAXBUF, port, MAXBUF, 0);
+  clients_.AddData(events_[idx].ident, connfd, atoi(port));
 #if DG
   std::cout << "Connected to (" << host << ", " << port << ")\n";
 #endif
