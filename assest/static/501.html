@@ -30,12 +30,12 @@
       <h1>NOT&nbsp;</h1>
       <h1>IMPLEMENTED</h1>
     </div>
-    <img class="ghost" src="./ghost.png" /><img />
+    <img class="ghost" src="./ghost.png" />
     <script>
       const change_ghost_location = () => {
         const ghost = document.querySelector(".ghost");
         const tempX = window.innerWidth * Math.random() * 0.8 + "px";
-        const tempY = window.innerHeight * Math.random() + "px";
+        const tempY = window.innerHeight * Math.random() * 0.8 + "px";
         ghost.style.left = tempX;
         ghost.style.top = tempY;
       };
