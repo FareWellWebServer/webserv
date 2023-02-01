@@ -13,7 +13,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: setting
-    - run: sudo apt-get install libevent-dev
     - name: make all
-      run: make all
+      run: sudo apt-get install libevent-dev && make all
