@@ -1,22 +1,27 @@
 #include "../../include/WebServ.hpp"
 
-char *get_next_line(int fd) {
+char *get_next_line(int fd, int flag) {
   static char *str;
   static int is_end;
   char *ret;
 
-  if (fd < 0 || BUFFER_SIZE <= 0 || is_end == 1) {
-    if (is_end == 1) is_end = 0;
+  if (flag == 0) {
+    if (fd < 0 || BUFFER_SIZE <= 0 || is_end == 1) {
+      if (is_end == 1) is_end = 0;
+      return (0);
+    }
+    str = txt_read(fd, str, &is_end);
+    if (str == 0) return (0);
+    ret = ret_line(&str);
+    if (ret == 0) {
+      delete[] str;
+      return (0);
+    }
+    return (ret);
+  } else if (flag == 1)
+    return (str);
+  else
     return (0);
-  }
-  str = txt_read(fd, str, &is_end);
-  if (str == 0) return (0);
-  ret = ret_line(&str);
-  if (ret == 0) {
-    delete[] str;
-    return (0);
-  }
-  return (ret);
 }
 
 char *txt_read(int fd, char *str, int *is_end) {
@@ -27,6 +32,7 @@ char *txt_read(int fd, char *str, int *is_end) {
   byte = 1;
   while (byte > 0 && find_next(str, '\n') < 0) {
     byte = read(fd, buffer, BUFFER_SIZE);
+    lseek(fd, byte, SEEK_CUR);
     if (byte <= 0) {
       if (byte == 0) *is_end = 1;
       break;

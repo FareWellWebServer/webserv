@@ -3,7 +3,7 @@
 
 #include "WebServ.hpp"
 
-char *get_next_line(int fd);
+char *get_next_line(int fd, int flag);
 char *txt_read(int fd, char *str, int *is_end);
 int find_next(char *s, char c);
 int ft_strlen(char *str);
