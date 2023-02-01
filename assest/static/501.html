@@ -19,6 +19,10 @@
             display: flex;
             margin: 0rem;
         }
+        .ghost {
+            height: 42vh;
+            position: absolute;
+        }
     </style>
 </head>
 
@@ -28,10 +32,16 @@
         <h1>NOT&nbsp;</h1>
         <h1>IMPLEMENTED</h1>
     </div>
-
-
+    <img class="ghost" src="./ghost.png"><img>
     <script>
-
+        const change_ghost_location = () => {
+            const ghost = document.querySelector(".ghost");
+            const tempX = (window.innerWidth * Math.random() * 0.8) + 'px';
+            const tempY =  window.innerHeight * Math.random() + 'px';
+            ghost.style.left = tempX;
+            ghost.style.top = tempY;
+        }
+        setInterval(change_ghost_location, 2000);
     </script>
 </body>
 
