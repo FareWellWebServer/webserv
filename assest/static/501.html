@@ -28,6 +28,46 @@
         height: 42vh;
         position: absolute;
       }
+
+      #not {
+        transform-origin: top left;
+        animation: rotation 4s ease forwards alternate;
+      }
+
+      #page {
+        transform-origin: top right;
+        animation: rotation-reverse 2s ease forwards alternate;
+      }
+
+      #implemented {
+        animation: drop 1s ease forwards;
+      }
+
+      @keyframes rotation {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(45deg);
+        }
+      }
+      @keyframes rotation-reverse {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(-42deg);
+        }
+      }
+
+      @keyframes drop {
+        from {
+          transform: translate(0px);
+        }
+        to {
+          transform: translateY(60vh);
+        }
+      }
     </style>
   </head>
 
@@ -35,11 +75,11 @@
     <div class="describe_wrapper">
       <h1>501</h1>
       <h1>ERROR</h1>
-      <h1>PAGE</h1>
+      <h1 id="page">PAGE</h1>
     </div>
     <div class="describe_wrapper">
-      <h1>NOT</h1>
-      <h1>IMPLEMENTED</h1>
+      <h1 id="not">NOT</h1>
+      <h1 id="implemented">IMPLEMENTED</h1>
     </div>
     <img class="ghost1" src="./ghost.png" />
     <img class="ghost2" src="./ghost.png" />
