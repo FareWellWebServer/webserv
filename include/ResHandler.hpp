@@ -1,8 +1,9 @@
 #ifndef RESHANDLER_HPP
 #define RESHANDLER_HPP
 
-#include <iostream>
-#include "unistd.h"
+//#include <iostream>
+//#include "unistd.h"
+#include "./WebServ.hpp"
 
 class ResHandler {
 private:
