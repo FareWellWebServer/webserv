@@ -4,6 +4,7 @@ std::vector<ServerConfigInfo> config_process(int ac, char** av);
 void main_process(int ac, char** av);
 int main(int ac, char** av);
 
+extern char** environ;
 // 누수 잡는 용
 void CheckLeaks(void) { system("leaks farewell_webserv | grep leaked"); }
 
