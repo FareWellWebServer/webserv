@@ -17,7 +17,12 @@
       .describe_wrapper {
         display: flex;
       }
-      .ghost {
+      .ghost1 {
+        height: 42vh;
+        position: absolute;
+      }
+
+      .ghost2 {
         height: 42vh;
         position: absolute;
       }
@@ -30,16 +35,21 @@
       <h1>NOT&nbsp;</h1>
       <h1>IMPLEMENTED</h1>
     </div>
-    <img class="ghost" src="./ghost.png" />
+    <img class="ghost1" src="./ghost.png" />
+    <img class="ghost2" src="./ghost.png" />
     <script>
       const change_ghost_location = () => {
-        const ghost = document.querySelector(".ghost");
-        const tempX = window.innerWidth * Math.random() * 0.8 + "px";
-        const tempY = window.innerHeight * Math.random() * 0.8 + "px";
-        ghost.style.left = tempX;
-        ghost.style.top = tempY;
+        const ghostTotalNum = 2;
+        for (let i = 1; i <= ghostTotalNum; i++) {
+          const ghost = document.querySelector(`.ghost${i}`);
+          const tempX = window.innerWidth * Math.random() * 0.8 + "px";
+          const tempY = window.innerHeight * Math.random() * 0.8 + "px";
+          ghost.style.left = tempX;
+          ghost.style.top = tempY;
+          ghost.style.visibility = Math.random() > 0.1 ? "visible" : "hidden";
+        }
       };
-      setInterval(change_ghost_location, 2000);
+      setInterval(change_ghost_location, 1500);
     </script>
   </body>
 </html>
