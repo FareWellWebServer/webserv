@@ -227,3 +227,25 @@ void Print_Map(std::map<std::string, std::string>& map) {
               << std::endl;
   }
 }
+
+//content length 가 들어왔다면.
+int CheckSeqCRLF(char * buf)
+{
+  int i = 0;
+  int len = 0;
+
+  while (buf[len] != 0)
+    len++;
+    
+std::cout << len << std::endl;
+  while (buf[i] && i < len - 4) {
+    std::cout << i << std::endl;
+    if(buf[i] == '\r')
+        if(buf[i + 1] == '\n')
+            if(buf[i + 2] == '\r')
+                if(buf[i + 3] == '\n')
+                    return (i + 3);
+    i++;
+  }
+  return (0);
+}
