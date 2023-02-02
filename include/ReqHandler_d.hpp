@@ -1,5 +1,5 @@
-#ifndef ReqHandler_HPP
-#define ReqHandler_HPP
+#ifndef ReqHandler_D_HPP
+#define ReqHandler_D_HPP
 
 #include "WebServ.hpp"
 #include <cstring>
@@ -21,10 +21,10 @@ typedef struct s_req_msg {
   t_entity body_data_;
 } t_req_msg;
 
-class ReqHandler {
+class ReqHandlerd {
  public:
-  ReqHandler(void);
-  ~ReqHandler(void); // buf 확인하고 해제
+  ReqHandlerd(void);
+  ~ReqHandlerd(void); // buf 확인하고 해제
   void SetClient(Data* client);
   void SetReadLen(int64_t kevent_data);
   void RecvFromSocket();

@@ -26,5 +26,6 @@
 #include "Logger.hpp"
 #include "Server.hpp"
 #include "ReqHandler.hpp"
+#include "ReqHandler_d.hpp"
 #include "WebServException.hpp"
 #endif

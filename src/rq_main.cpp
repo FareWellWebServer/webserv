@@ -11,8 +11,10 @@ int main() {
     std::cout << strerror(errno) << std::endl;
     return 0;
   }
-  ReqHandler reqhandle;
+  ReqHandlerd req;
 
-  Parse_Req_Msg(fd, reqhandle);
+  req.ParseRecv();
+
+  // Parse_Req_Msg(fd, reqhandle);
   system("leaks Req_handle");
 }
