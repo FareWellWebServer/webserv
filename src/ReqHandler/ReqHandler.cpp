@@ -62,7 +62,7 @@ void Parse_Req_Msg(int c_socket, ReqHandler& reqhandle) {
   
   // TODO : key : value~~~~~~\nvalue 이런 식으로 value 내에 개행이 들어가는 경우는?
 
-  for (int i = 0; (ctmp = get_next_line(c_socket)) != 0; ++i)
+  for (int i = 0; (ctmp = get_next_line(c_socket, 0)) != 0; ++i)
   {
     if (strncmp(ctmp, "#@\n",3 ) == 0) {
       delete[] ctmp;
@@ -244,3 +244,4 @@ std::cout << len << std::endl;
   }
   return (0);
 }
+//buffer에 온전한 데이터가 char*타입으로 옴,
