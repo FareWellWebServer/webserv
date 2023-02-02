@@ -6,7 +6,9 @@ ResHandler::ResHandler(const char* response, std::size_t response_length)
 ResHandler::~ResHandler(void) {}
 
 void ResHandler::SendToClient(int client_fd) {
-  std::cout << "=== send response to client ===" << std::endl;
+  #if RES_HANDLER
+    std::cout << "=== send response to client ===" << std::endl;
+  #endif
   int r = write(client_fd, response_, response_length_);
   if (r < 0)
     std::cout << "Error Code: 500" << std::endl;

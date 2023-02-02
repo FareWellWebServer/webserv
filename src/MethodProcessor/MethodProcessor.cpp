@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/MethodProcessor.hpp"
 
 MethodProcessor::MethodProcessor(void) {}
 
@@ -12,7 +12,7 @@ MethodProcessor::~MethodProcessor(void) {
 }
 
 void MethodProcessor::MethodProcessorInput(ClientMetaData *clients) {
-  struct Data *client;
+  Data *client;
   client = &clients->GetData();
   if (client->req_message_->req_msg_.method_ == "GET")
     MethodGET(client);
@@ -26,7 +26,7 @@ void MethodProcessor::MethodProcessorInput(ClientMetaData *clients) {
     MethodDELETE(client);
 }
 
-void MethodProcessor::MakeErrorStatus(struct Data &client, int code) {
+void MethodProcessor::MakeErrorStatus(Data &client, int code) {
   client.status_code_ = code;
   if (client.entity_->data_) {
     delete[] client.entity_->data_;
@@ -104,7 +104,7 @@ char *MethodProcessor::CopyCstr(const char *cstr, size_t length) {
   return ret;
 }
 
-void MethodProcessor::MethodGETCgi(struct Data *client) {
+void MethodProcessor::MethodGETCgi(Data *client) {
   int cgi_stream[2];
   int pid = 0;
 
@@ -178,7 +178,7 @@ void MethodProcessor::MethodGETCgi(struct Data *client) {
   }
 }
 
-void MethodProcessor::MethodGETFile(struct Data *client) {
+void MethodProcessor::MethodGETFile(Data *client) {
   t_entity *ret;
   ret = new t_entity();
   if (ret == NULL) {
@@ -199,7 +199,7 @@ void MethodProcessor::MethodGETFile(struct Data *client) {
   client->entity_->data_ = ret->data_;
   return;
 }
-void MethodProcessor::MethodGET(struct Data *client) {
+void MethodProcessor::MethodGET(Data *client) {
   if (!IsFetched(client->req_message_->req_msg_.req_url_))
     FetchOiginalPath(client->req_message_->req_msg_.req_url_);
   if (!IsExistFile(client->req_message_->req_msg_.req_url_)) {
@@ -261,7 +261,7 @@ void MethodProcessor::MethodGET(struct Data *client) {
   return;
 }
 
-void MethodProcessor::MethodHEAD(struct Data *client) {
+void MethodProcessor::MethodHEAD(Data *client) {
   MethodGET(client);
   delete[] client->entity_->data_;
   client->entity_->data_ = NULL;
@@ -269,14 +269,14 @@ void MethodProcessor::MethodHEAD(struct Data *client) {
   return;
 }
 
-void MethodProcessor::MethodPOST(struct Data *client) {
+void MethodProcessor::MethodPOST(Data *client) {
   static_cast<void>(client);
 }
 
-void MethodProcessor::MethodPUT(struct Data *client) {
+void MethodProcessor::MethodPUT(Data *client) {
   static_cast<void>(client);
 }
 
-void MethodProcessor::MethodDELETE(struct Data *client) {
+void MethodProcessor::MethodDELETE(Data *client) {
   static_cast<void>(client);
 }

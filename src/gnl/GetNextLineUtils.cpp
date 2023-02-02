@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/GetNextLine.hpp"
 
 char *ft_strjoin(char *str, char *buffer) {
   int sum;

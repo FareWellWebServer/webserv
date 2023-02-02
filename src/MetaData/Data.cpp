@@ -1,5 +1,4 @@
 #include "../../include/Data.hpp"
-#define NULL 0
 
 Data::Data() {
   litsen_fd_ = -1;

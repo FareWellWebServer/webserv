@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/Config.hpp"
 
 /* ======================= ServerConfigInfo Init ======================= */
 void Config::InitServerConfigInfo(ServerConfigInfo &info) {

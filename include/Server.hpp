@@ -1,7 +1,6 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "WebServ.hpp"
 #include "ClientMetaData.hpp"
 
 #include <arpa/inet.h> /* htons, htonl, ntohs, ntohl */

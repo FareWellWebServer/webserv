@@ -87,7 +87,7 @@ void Server::ActCoreLogic(int idx) {
 }
 
 void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
-#if DG
+#if SERVER
   if (servers_.size() == MAXLISTEN) {
     std::cerr << "Error: full of listening\n";
     return;
@@ -102,7 +102,7 @@ void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
     throw std::runtime_error("Error: kevent()");
   }
   servers_.insert(CreateListening(host, port, listenfd));
-#if DG
+#if SERVER
   std::cout << host << " is listening port on " << port << "\n";
 #endif
 }

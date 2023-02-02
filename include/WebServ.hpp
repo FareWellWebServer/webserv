@@ -1,8 +1,6 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-
-
 #define BUFFER_SIZE 1024
 
 #include <stdlib.h>
@@ -15,7 +13,9 @@
 #include <string>
 
 #include "Color.hpp"
-#include "HTTPMassage.hpp"
+#include "Types.hpp"
+#include "HTTPMessage.hpp"
+#include "Data.hpp"
 #include "ClientMetaData.hpp"
 #include "ServerConfigInfo.hpp"
 #include "Config.hpp"
@@ -28,6 +28,4 @@
 #include "MethodProcessor.hpp"
 #include "MsgComposer.hpp"
 
-
-// #include "Data.hpp"
 #endif

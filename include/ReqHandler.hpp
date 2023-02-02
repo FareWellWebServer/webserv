@@ -1,7 +1,12 @@
-#ifndef ReqHandler_HPP
-#define ReqHandler_HPP
+#ifndef REQ_HANDLER_HPP
+#define REQ_HANDLER_HPP
 
-#include "WebServ.hpp"
+#include "Data.hpp"
+#include "HTTPMessage.hpp"
+#include "GetNextLine.hpp"
+#include "Color.hpp"
+
+class Data;
 
 // 테스트 끝나면 지우기
 class ReqHandler {
@@ -13,11 +18,11 @@ class ReqHandler {
 
  private:
 };
-
+ 
 // void Parse_Req_msg(int c_socket);
 void Parse_Req_Msg(int c_socket, ReqHandler& reqhandle);
 
-void Parse_Req_Msg(int c_socket, struct Data& m_data);
+void Parse_Req_Msg(int c_socket, Data& m_data);
 
 std::vector<std::string> split(const std::string& s, char delimiter, int cnt);
 std::vector<std::string> s_split(std::string& s, const std::string& delimiter,
