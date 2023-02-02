@@ -33,17 +33,17 @@ void MethodProcessor::MakeErrorStatus(struct Data &client, int code) {
   client.entity_->length_ = 0;
 }
 
-void MethodProcessor::FetchOiginalPath(std::string &uri) {
+void MethodProcessor::FetchOiginalPath(std::string &uri, struct Data &client) {
   uri.erase(0);
-  uri.insert(0, INSTALLPATH);
+  uri.insert(0, client.config_->file_path);
   return;
 }
 
-bool MethodProcessor::IsFetched(std::string &uri) {
+bool MethodProcessor::IsFetched(std::string &uri, struct Data &client) {
   size_t i = 0;
 
-  while (INSTALLPATH[i]) {
-    if (INSTALLPATH[i] == uri[i]) {
+  while (client.config_->file_path[i]) {
+    if (client.config_->file_path[i] == uri[i]) {
       i++;
     } else {
       return (false);
@@ -101,7 +101,7 @@ char *MethodProcessor::CopyCstr(const char *cstr, size_t length) {
   return ret;
 }
 
-void MethodProcessor::MethodGETCgi(struct Data *client) {
+void MethodProcessor::GETSecondCgi(struct Data *client) {
   int cgi_stream[2];
   int pid = 0;
 
@@ -176,7 +176,7 @@ void MethodProcessor::MethodGETCgi(struct Data *client) {
   }
 }
 
-void MethodProcessor::MethodGETFile(struct Data *client) {
+void MethodProcessor::GETSecondFile(struct Data *client) {
   t_entity *ret;
   ret = new t_entity();
   if (ret == NULL) {
@@ -198,15 +198,26 @@ void MethodProcessor::MethodGETFile(struct Data *client) {
   return;
 }
 
-void MethodProcessor::MethodGET(struct Data *client) {
-  if (!IsFetched(client->req_message_->req_msg_.req_url_))
-    FetchOiginalPath(client->req_message_->req_msg_.req_url_);
+int MethodProcessor::FileSize(const char *filepath) {
+  struct stat file_info;
+  int ret;
+
+  ret = stat(filepath, &file_info);
+  if (ret < 0) {
+    return (-1);
+  }
+  return (file_info.st_size);
+}
+
+void MethodProcessor::GETSecond(struct Data *client) {
+  if (!IsFetched(client->req_message_->req_msg_.req_url_, *client))
+    FetchOiginalPath(client->req_message_->req_msg_.req_url_, *client);
   if (!IsExistFile(client->req_message_->req_msg_.req_url_)) {
     MakeErrorStatus(*client, 404);
     return;
   }
   if (IsCgi(client->req_message_->req_msg_.req_url_)) {
-    MethodGETCgi(client);
+    GETSecondCgi(client);
     return;
   }
   if (IsFile(client->req_message_->req_msg_.req_url_, PNG) ||
@@ -239,18 +250,16 @@ void MethodProcessor::MethodGET(struct Data *client) {
     MakeErrorStatus(*client, 500);
     return;
   }
-  std::ifstream entityFile;
-
-  entityFile.open(client->req_message_->req_msg_.req_url_, std::ifstream::in);
-  entityFile.seekg(0, entityFile.end);
-  ret->length_ = entityFile.tellg();
-  entityFile.seekg(0, entityFile.beg);
+  ret->length_ = FileSize(client->req_message_->req_msg_.req_url_.c_str());
 
   ret->data_ = new char[ret->length_];
   if (!ret->data_) {
     MakeErrorStatus(*client, 500);
     return;
   }
+
+  std::ifstream entityFile;
+  entityFile.open(client->req_message_->req_msg_.req_url_, std::ifstream::in);
 
   entityFile.read(ret->data_, ret->length_);
 
@@ -260,7 +269,17 @@ void MethodProcessor::MethodGET(struct Data *client) {
   return;
 }
 
-void MethodProcessor::MethodPOST(struct Data *client) {
+void MethodProcessor::GETFirst(struct Data *client) {}
+
+void MethodProcessor::POSTThird(struct Data *client) {
+  static_cast<void>(client);
+}
+
+void MethodProcessor::POSTSecond(struct Data *client) {
+  static_cast<void>(client);
+}
+
+void MethodProcessor::POSTFirst(struct Data *client) {
   static_cast<void>(client);
 }
 

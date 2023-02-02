@@ -6,6 +6,7 @@ enum stage {
   REQ_READY,
   REQ_FINISHED,
   GET_READY,
+  GET_FILE,
   GET_CGI,
   GET_FINISHED,
   POST_READY,

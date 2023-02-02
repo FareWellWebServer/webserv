@@ -77,12 +77,13 @@ ClientMetaData::~ClientMetaData() {}
 /* fd 없는 버전 */
 #ifndef CLIENTMETADATA_HPP
 #define CLIENTMETADATA_HPP
-#include "WebServ.hpp"
-
 #include <sys/event.h>
+
 #include <algorithm>
 #include <exception>
 #include <map>
+
+#include "WebServ.hpp"
 
 // #include "config"
 // #include "http parser"
@@ -97,6 +98,25 @@ class ReqHandler;
 
 class ServerConfigInfo;
 
+/**
+ * @brief leaks!!
+ *
+ */
+enum stage {
+  READY,
+  REQ_READY,
+  REQ_FINISHED,
+  GET_READY,
+  GET_FILE,
+  GET_CGI,
+  GET_FINISHED,
+  POST_READY,
+  POST_PROCESSING,
+  POST_CHECKED,
+  DELETE,
+  RESPONSE
+};
+
 typedef struct Data  // struct로
 {
   int litsen_fd_;  // 어느 listen fd에 연결됐는지
@@ -109,6 +129,7 @@ typedef struct Data  // struct로
   int status_code_;                  // 상태코드 enum 정의 필요
 
   t_entity* entity_;
+  stage e_stage;
 } Data;
 
 class ClientMetaData {

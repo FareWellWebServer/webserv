@@ -16,7 +16,6 @@
 #include <vector>
 
 #define CGI ".py"
-#define INSTALLPATH "/original/path"
 #define INDEX "index.html"
 #define PNG ".png"
 #define JPG ".jpg"
@@ -33,34 +32,32 @@
 
 extern char** environ;
 
-enum METHOD {
-  GET,
-  POST,
-  DELETE
-}
+enum METHOD { GET, POST, DELETE };
 
 class MethodProcessor {
  private:
   std::map<int, t_entity*> cache_entity_;
   void MakeErrorStatus(struct Data& client, int code);
-  void FetchOiginalPath(std::string& uri);
-  bool IsFetched(std::string& uri);
+  void FetchOiginalPath(std::string& uri, struct Data& client);
+  bool IsFetched(std::string& uri, struct Data& client);
   bool IsExistFile(std::string& uri);
   bool IsCgi(std::string& uri);
   bool IsFile(std::string& uri, const char* identifier);
   char* CopyCstr(const char* cstr, size_t length);
-  void MethodGETCgi(struct Data* client);
-  void MethodGETFile(struct Data* client);
-  void MethodGET(struct Data* client);
-  //   void MethodHEAD(struct Data* client);
-  void MethodPOST(struct Data* client);
-  void MethodPUT(struct Data* client);
-  void MethodDELETE(struct Data* client);
+  void GETSecondCgi(struct Data* client);
+  void GETSecondFile(struct Data* client);
+  void GETSecond(struct Data* client);
+  void POSTSecond(struct Data* client);
+  void POSTThird(struct Data* client);
+  int FileSize(const char* filepath);
 
  public:
   MethodProcessor(void);
   ~MethodProcessor(void);
   int MethodProcessorInput(ClientMetaData* clients);
+  void GETFirst(struct Data* client);
+  void POSTFirst(struct Data* client);
+  void DELETE(struct Data* client);
 };
 
 #endif
