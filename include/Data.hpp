@@ -5,7 +5,7 @@
 #include "ReqHandler.hpp"
 #include "ResHandler.hpp"
 #include "ServerConfigInfo.hpp"
-#include "Types.hpp"
+#include "Stage.hpp"
 
 class ResHandler;
 class ReqHandler;

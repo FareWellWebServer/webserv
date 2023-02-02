@@ -25,7 +25,7 @@
 #include "ReqHandler.hpp"
 #include "Server.hpp"
 #include "ServerConfigInfo.hpp"
-#include "Types.hpp"
+#include "Stage.hpp"
 #include "WebServException.hpp"
 
 #endif

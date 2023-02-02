@@ -2,7 +2,7 @@
 #define MSG_COMPOSER_HPP
 
 #include "Data.hpp"
-#include "Types.hpp"
+#include "Stage.hpp"
 
 class MsgComposer {
  public:

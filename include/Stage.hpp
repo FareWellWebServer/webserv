@@ -1,7 +1,5 @@
-#ifndef TYPES_HPP
-#define TYPES_HPP
-
-#include <iostream>
+#ifndef STAGE_HPP
+#define STAGE_HPP
 
 enum stage {
   READY,
