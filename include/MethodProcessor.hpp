@@ -31,30 +31,36 @@
 
 #include <unistd.h>
 
-extern char **environ;
+extern char** environ;
+
+enum METHOD {
+  GET,
+  POST,
+  DELETE
+}
 
 class MethodProcessor {
-private:
-  std::map<int, t_entity *> cache_entity_;
-  void MakeErrorStatus(struct Data &client, int code);
-  void FetchOiginalPath(std::string &uri);
-  bool IsFetched(std::string &uri);
-  bool IsExistFile(std::string &uri);
-  bool IsCgi(std::string &uri);
-  bool IsFile(std::string &uri, const char *identifier);
-  char *CopyCstr(const char *cstr, size_t length);
-  void MethodGETCgi(struct Data *client);
-  void MethodGETFile(struct Data *client);
-  void MethodGET(struct Data *client);
-  void MethodHEAD(struct Data *client);
-  void MethodPOST(struct Data *client);
-  void MethodPUT(struct Data *client);
-  void MethodDELETE(struct Data *client);
+ private:
+  std::map<int, t_entity*> cache_entity_;
+  void MakeErrorStatus(struct Data& client, int code);
+  void FetchOiginalPath(std::string& uri);
+  bool IsFetched(std::string& uri);
+  bool IsExistFile(std::string& uri);
+  bool IsCgi(std::string& uri);
+  bool IsFile(std::string& uri, const char* identifier);
+  char* CopyCstr(const char* cstr, size_t length);
+  void MethodGETCgi(struct Data* client);
+  void MethodGETFile(struct Data* client);
+  void MethodGET(struct Data* client);
+  //   void MethodHEAD(struct Data* client);
+  void MethodPOST(struct Data* client);
+  void MethodPUT(struct Data* client);
+  void MethodDELETE(struct Data* client);
 
-public:
+ public:
   MethodProcessor(void);
   ~MethodProcessor(void);
-  void MethodProcessorInput(ClientMetaData *clients); 
+  int MethodProcessorInput(ClientMetaData* clients);
 };
 
 #endif

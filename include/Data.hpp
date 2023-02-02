@@ -4,13 +4,15 @@
 enum stage {
   READY,
   REQ_READY,
-  REQ_FINISHED, 
+  REQ_FINISHED,
   GET_READY,
-  GET_CGI, 
+  GET_CGI,
   GET_FINISHED,
-  POST_READY, 
+  POST_READY,
   POST_PROCESSING,
-  POST_
+  POST_CHECKED,
+  DELETE,
+  RESPONSE
 };
 
 /* 포인터로 갖고있는 녀석들의 메모리 관리는 어디서 해줄지? */

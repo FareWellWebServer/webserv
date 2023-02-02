@@ -11,19 +11,16 @@ MethodProcessor::~MethodProcessor(void) {
   cache_entity_.clear();
 }
 
-void MethodProcessor::MethodProcessorInput(ClientMetaData *clients) {
+int MethodProcessor::MethodProcessorInput(ClientMetaData *clients) {
   struct Data *client;
+
   client = &clients->GetData();
-  if (client->req_message_->req_msg_.method_ == "GET")
-    MethodGET(client);
-  else if (client->req_message_->req_msg_.method_ == "HEAD")
-    MethodHEAD(client);
-  else if (client->req_message_->req_msg_.method_ == "POST")
-    MethodPOST(client);
-  else if (client->req_message_->req_msg_.method_ == "PUT")
-    MethodPUT(client);
-  else
-    MethodDELETE(client);
+  if (client->req_message_->req_msg_.method_ == "GET") {
+    return (GET);
+  } else if (client->req_message_->req_msg_.method_ == "POST") {
+    return (POST);
+  } else
+    return (DELETE);
 }
 
 void MethodProcessor::MakeErrorStatus(struct Data &client, int code) {
@@ -31,7 +28,7 @@ void MethodProcessor::MakeErrorStatus(struct Data &client, int code) {
   if (client.entity_->data_) {
     delete[] client.entity_->data_;
   }
-  client.entity_->data_= NULL;
+  client.entity_->data_ = NULL;
   client.entity_->type_ = NULL;
   client.entity_->length_ = 0;
 }
@@ -73,7 +70,7 @@ bool MethodProcessor::IsCgi(std::string &uri) {
         return (true);
       }
     }
-  } 
+  }
   return (false);
 }
 
@@ -113,6 +110,8 @@ void MethodProcessor::MethodGETCgi(struct Data *client) {
     return;
   }
   pid = fork();
+  if (pid == -1) {
+  }
   if (pid == 0) {
     /* CGI handling*/
     close(cgi_stream[0]);
@@ -167,8 +166,7 @@ void MethodProcessor::MethodGETCgi(struct Data *client) {
         }
         size_t temp_length = temp_data.size();
         client->entity_->length_ = temp_length;
-        client->entity_->data_ =
-            CopyCstr(temp_data.c_str(), temp_length);
+        client->entity_->data_ = CopyCstr(temp_data.c_str(), temp_length);
       } else if (WIFSIGNALED(waitloc)) {
         MakeErrorStatus(*client, 500);
       }
@@ -199,6 +197,7 @@ void MethodProcessor::MethodGETFile(struct Data *client) {
   client->entity_->data_ = ret->data_;
   return;
 }
+
 void MethodProcessor::MethodGET(struct Data *client) {
   if (!IsFetched(client->req_message_->req_msg_.req_url_))
     FetchOiginalPath(client->req_message_->req_msg_.req_url_);
@@ -215,9 +214,9 @@ void MethodProcessor::MethodGET(struct Data *client) {
       IsFile(client->req_message_->req_msg_.req_url_, ICO)) {
     MethodGETFile(client);
     if (IsFile(client->req_message_->req_msg_.req_url_, PNG))
-      client->entity_->type_ = strdup("image/png");
+      client->entity_->type_ = strdup(TYPE_PNG);
     else if (IsFile(client->req_message_->req_msg_.req_url_, JPG))
-      client->entity_->type_ = strdup("image/jpge");
+      client->entity_->type_ = strdup(TYPE_JPEG);
     else if (IsFile(client->req_message_->req_msg_.req_url_, ICO))
       client->entity_->type_ = strdup(TYPE_ICON);
     else
@@ -228,8 +227,8 @@ void MethodProcessor::MethodGET(struct Data *client) {
       cache_entity_.find(client->port_);
   if (check_cache != cache_entity_.end()) {
     client->entity_->length_ = check_cache->second->length_;
-    client->entity_->data_ = CopyCstr(check_cache->second->data_,
-                                             client->entity_->length_);
+    client->entity_->data_ =
+        CopyCstr(check_cache->second->data_, client->entity_->length_);
     client->entity_->type_ = check_cache->second->type_;
     return;
   }
@@ -261,19 +260,7 @@ void MethodProcessor::MethodGET(struct Data *client) {
   return;
 }
 
-void MethodProcessor::MethodHEAD(struct Data *client) {
-  MethodGET(client);
-  delete[] client->entity_->data_;
-  client->entity_->data_ = NULL;
-  //TODO : type 넣어줘야함
-  return;
-}
-
 void MethodProcessor::MethodPOST(struct Data *client) {
-  static_cast<void>(client);
-}
-
-void MethodProcessor::MethodPUT(struct Data *client) {
   static_cast<void>(client);
 }
 
