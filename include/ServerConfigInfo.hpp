@@ -1,6 +1,7 @@
 #ifndef SERVERCONFIGINFO_HPP
 #define SERVERCONFIGINFO_HPP
 
+#include "WebServ.hpp"
 #include <iostream>
 #include <map>
 #include <vector>

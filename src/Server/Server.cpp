@@ -19,7 +19,7 @@ void Server::Run(void) {
 }
 
 void Server::Init(const std::vector<ServerConfigInfo>& server_infos) {
-  for (int i = 0; i < server_infos.size(); ++i) {
+  for (size_t i = 0; i < server_infos.size(); ++i) {
     SetHostPortAvaiable(server_infos[i].host, server_infos[i].port);
   }
 }
@@ -53,9 +53,9 @@ void Server::AcceptNewClient(int idx) {
   connfd =
       accept(events_[idx].ident,
              reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
-  if (connfd == -1 || errno != EWOULDBLOCK) {
-    throw std::runtime_error("Error: accept()");
-  }
+  // if (connfd == -1) {
+  //   throw std::runtime_error("Error: accept()");
+  // }
   flags = fcntl(connfd, F_GETFL, 0);
   if (flags == -1) {
     throw std::runtime_error("Error: fcntl()");
@@ -71,9 +71,7 @@ void Server::AcceptNewClient(int idx) {
   getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr), client_len,
               host, MAXBUF, port, MAXBUF, 0);
   clients_.AddData(events_[idx].ident, connfd, atoi(port));
-#if DG
-  std::cout << "Connected to (" << host << ", " << port << ")\n";
-#endif
+  std::cout << "Connected to (" << host << ", " << port << "). socket : " << connfd << std::endl;
 }
 
 void Server::ActCoreLogic(int idx) {

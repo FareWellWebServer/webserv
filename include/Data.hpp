@@ -1,6 +1,18 @@
 #ifndef DATA_HPP
 #define DATA_HPP
 
+enum stage {
+  READY,
+  REQ_READY,
+  REQ_FINISHED, 
+  GET_READY,
+  GET_CGI, 
+  GET_FINISHED,
+  POST_READY, 
+  POST_PROCESSING,
+  POST_
+};
+
 /* 포인터로 갖고있는 녀석들의 메모리 관리는 어디서 해줄지? */
 class Data {
  public:
@@ -15,6 +27,7 @@ class Data {
   // struct HTTPMessage* res_message_;  // 같은 클래스로? 다른 클래스로?
   int status_code_;  // 상태코드 enum 정의 필요
   char* entity_;     // 응답 본문
+  stage e_stage;
 };
 
 #endif

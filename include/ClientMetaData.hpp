@@ -77,13 +77,13 @@ ClientMetaData::~ClientMetaData() {}
 /* fd 없는 버전 */
 #ifndef CLIENTMETADATA_HPP
 #define CLIENTMETADATA_HPP
-#include <sys/event.h>
+#include "WebServ.hpp"
 
+#include <sys/event.h>
 #include <algorithm>
 #include <exception>
 #include <map>
 
-#include "./Config/Config.hpp"
 // #include "config"
 // #include "http parser"
 
@@ -94,6 +94,8 @@ class ReqHandler;
 //   char* entity_;
 //   size_t entity_length_;
 // } entity;
+
+class ServerConfigInfo;
 
 typedef struct Data  // struct로
 {
@@ -106,7 +108,7 @@ typedef struct Data  // struct로
   struct HTTPMessage* res_message_;  // 같은 클래스로? 다른 클래스로?
   int status_code_;                  // 상태코드 enum 정의 필요
 
-  struct entity* entity_;
+  t_entity* entity_;
 } Data;
 
 class ClientMetaData {

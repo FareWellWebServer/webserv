@@ -1,16 +1,7 @@
 #ifndef MSGCOMPOSER_HPP
 #define MSGCOMPOSER_HPP
 
-#include "./WebServ.hpp
-
-typedef struct s_res_msg { // 버전, 상태코드, 사유구절
-  std::string http_version_; // HTTP/1.1
-  int status_code_; // metadata에서 받아오기
-  std::string status_text_;  // 상태코드에 따라 값 넣어주기
-
-  std::map<std::string, std::string> headers_;
-  t_entity *body_data_;
-} t_res_msg;
+#include "WebServ.hpp"
 
 class MsgComposer {
 private:
@@ -32,6 +23,5 @@ public:
   std::size_t getLength(void) const;
 	void Clear(void);
 };
-
 
 #endif

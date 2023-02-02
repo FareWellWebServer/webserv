@@ -96,9 +96,10 @@ void Config::SetServerConfigInfo(const std::string& key,
 
 /* ======================== Validate Server ======================== */
 void Config::CheckValidation(void) const {
+  #if DG
   std::cout << BOLDCYAN
             << "======== Validation Check Start ========" << std::endl;
-
+  #endif
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
     ServerConfigInfo info = server_config_infos_[i];
     if (info.port == -1 || info.body_size == 0 || info.root_path.empty() ||
@@ -109,7 +110,9 @@ void Config::CheckValidation(void) const {
     for (size_t i = 0; i < info.locations.size(); ++i)
       CheckLocation(info.locations[i]);
   }
+  #if DG
   std::cout << "======= Validation Check Finish ========" << RESET << std::endl;
+  #endif
 }
 
 bool Config::CheckDuplicatePort(int port) const {

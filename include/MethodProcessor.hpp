@@ -15,21 +15,6 @@
 #include <sstream>
 #include <vector>
 
-#define RESET "\033[0m"
-#define BOLDRED "\033[1m\033[31m"
-#define BOLDGREEN "\033[1m\033[32m"
-#define BOLDYELLOW "\033[1m\033[33m"
-#define BOLDBLUE "\033[1m\033[34m"
-#define BOLDMAGENTA "\033[1m\033[35m"
-#define BOLDCYAN "\033[1m\033[36m"
-#define BOLDWHITE "\033[1m\033[37m"
-
-typedef struct s_entity {
-  char *entity_data_;
-  size_t entity_length_;
-  char *entity_type_;
-} t_entity;
-
 #define CGI ".py"
 #define INSTALLPATH "/original/path"
 #define INDEX "index.html"
@@ -50,7 +35,7 @@ extern char **environ;
 
 class MethodProcessor {
 private:
-  static std::map<int, t_entity *> cache_entity_;
+  std::map<int, t_entity *> cache_entity_;
   void MakeErrorStatus(struct Data &client, int code);
   void FetchOiginalPath(std::string &uri);
   bool IsFetched(std::string &uri);
@@ -71,4 +56,5 @@ public:
   ~MethodProcessor(void);
   void MethodProcessorInput(ClientMetaData *clients); 
 };
+
 #endif

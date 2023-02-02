@@ -1,6 +1,5 @@
-#include "../../include/MsgComposer.hpp"
+#include "../../include/WebServ.hpp"
 
-#include <iostream>
 
 MsgComposer::MsgComposer(Data* client) : client_(client) {
   Clear();
@@ -60,7 +59,7 @@ void MsgComposer::SetStatusText(void) {
 void MsgComposer::SetHeaders(void) {
   // content-length
   std::stringstream ss;
-  ss << res_msg_.body_data_->entity_length_;
+  ss << res_msg_.body_data_->length_;
   res_msg_.headers_["Content-length"] = ss.str();
   // content-type
   // .headers_["Content-type"] = .body_data_->type;
@@ -102,9 +101,9 @@ const char* MsgComposer::GetResponse(void) {
   std::cout << "headers len: " << headers_len << std::endl;
 
   // response 생성
-  std::cout << "entity len: " << res_msg_.body_data_->entity_length_
+  std::cout << "entity len: " << res_msg_.body_data_->length_
             << std::endl;
-  response_length_ = str.length() + res_msg_.body_data_->entity_length_;
+  response_length_ = str.length() + res_msg_.body_data_->length_;
   std::cout << "response len: " << response_length_ << std::endl << std::endl;
 
   // response에 붙여넣기
@@ -113,8 +112,8 @@ const char* MsgComposer::GetResponse(void) {
   for (std::size_t i = 0; i < str_len; ++i) {
     res[i] = str[i];
   }
-  for (std::size_t i = 0; i < res_msg_.body_data_->entity_length_; ++i) {
-    res[str_len + i] = res_msg_.body_data_->entity_[i];
+  for (std::size_t i = 0; i < res_msg_.body_data_->length_; ++i) {
+    res[str_len + i] = res_msg_.body_data_->data_[i];
   }
   return res;
 }

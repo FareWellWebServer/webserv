@@ -55,7 +55,7 @@ ReqHandler::~ReqHandler(void) {}
 //       break;}
 //     Remove_Tab_Space(head_line[0]);
 //     if (head_line[0] == "Content-Length")
-//       reqhandle.req_msg_.body_data_.entity_length_ = atoi(head_line[1].c_str());
+//       reqhandle.req_msg_.body_data_.length_ = atoi(head_line[1].c_str());
 //     std::pair<std::string, std::string> tmp =
 //         std::pair<std::string, std::string>(head_line[0], head_line[1]);
 //     reqhandle.req_msg_.headers_.insert(tmp);
@@ -67,7 +67,7 @@ ReqHandler::~ReqHandler(void) {}
 //   size_t total_len = 0;
 //   reqhandle.req_msg_.body_data_.entity_ = "";
 //   for (int i = 0; (ctmp =  get_next_line(c_socket)) != 0 ||
-//                   total_len < reqhandle.req_msg_.body_data_.entity_length_;
+//                   total_len < reqhandle.req_msg_.body_data_.length_;
 //        i++) {
 //         //TODO : 0000이 들어가는 경우 문제가 생길수도. char buffer로 한번에 받아서 처리.
 //     total_len += strlen(ctmp);
@@ -124,7 +124,7 @@ void Parse_Req_Msg(int c_socket, Data& m_data) {
     if (head_line.size() == 1) break;
     Remove_Tab_Space(head_line[0]);
     if (head_line[0] == "Content-Length")
-      m_data.entity_->entity_length_ = atoi(head_line[1].c_str());
+      m_data.entity_->length_ = atoi(head_line[1].c_str());
 
     std::pair<std::string, std::string> t =
         std::pair<std::string, std::string>(head_line[0], head_line[1]);
@@ -135,21 +135,21 @@ void Parse_Req_Msg(int c_socket, Data& m_data) {
 
   //------------body parsing-----------------------
   size_t total_len = 0;
-  m_data.entity_->entity_ = "";
+  m_data.entity_->data_ = NULL;
   for (int i = 0; (ctmp = get_next_line(c_socket)) != 0 ||
-                  total_len < m_data.entity_->entity_length_;
+                  total_len < m_data.entity_->length_;
        i++) {
     total_len += strlen(ctmp);
     if (i == 0)
-      m_data.entity_->entity_ = strdup(ctmp);
+      m_data.entity_->data_ = strdup(ctmp);
     else
-      m_data.entity_->entity_ = ft_strjoin(m_data.entity_->entity_, ctmp);
+      m_data.entity_->data_ = ft_strjoin(m_data.entity_->data_, ctmp);
     delete[] ctmp;
   }
 }
 
 void Remove_Tab_Space(std::string& str) {
-  for (int i = 0; i < str.length(); i++) {
+  for (size_t i = 0; i < str.length(); i++) {
     if (str[i] == '\t' || str[i] == ' ') {
       str.erase(i, 1);
       i--;
