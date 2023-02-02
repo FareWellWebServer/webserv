@@ -71,12 +71,18 @@ void MsgComposer::SetHeaders(void) {
 
 void MsgComposer::InitResMsg() {
   res_msg_.http_version_ = "HTTP/1.1";
-  res_msg_.status_code_ = client_->status_code_;
+  res_msg_.status_code_ = client_->GetStatusCode();
   SetStatusText();
-  res_msg_.body_data_ = client_->entity_;
+  res_msg_.body_data_ = client_->GetResEntity();
   SetHeaders();
+  client_->SetResMassage(&res_msg_);
 }
 
+/**
+ * @brief Response Handler 에서 요청해가서 출력해주면 됨
+ * 
+ * @return const char* 가져가서 free까지 책임져줘야 함
+ */
 const char* MsgComposer::GetResponse(void) {
   std::stringstream ss;
   std::string status_code;
