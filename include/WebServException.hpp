@@ -12,7 +12,7 @@ class WebServException : public std::exception {
   ~WebServException() throw() {}
 
  private:
-  // 안써서 주석 처리 
+  // 안써서 주석 처리
   // const char* file_;
   // const char* fun_;
   // int line_;

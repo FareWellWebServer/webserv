@@ -1,8 +1,6 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "ClientMetaData.hpp"
-
 #include <arpa/inet.h> /* htons, htonl, ntohs, ntohl */
 #include <fcntl.h>     /* fcntl */
 #include <netdb.h>     /* getprotobyname */
@@ -13,9 +11,12 @@
 #include <sys/socket.h> /* AF_INET, SOCK_STREAM, gai_strerror, socket, accept, listen, send, recv, bind, connect, getaddrinfo, freeaddrinfo, setsockopt, getsockname */
 #include <sys/types.h>  /* kqueue kevent */
 #include <unistd.h>     /* execve, dup, dup2, pipe */
+
 #include <cstring> /* memset, strerror */
 #include <iostream>
 #include <set>
+
+#include "ClientMetaData.hpp"
 
 #define MAXLINE 1000000
 #define MAXBUF 1000000

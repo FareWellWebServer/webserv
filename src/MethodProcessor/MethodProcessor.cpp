@@ -31,7 +31,7 @@ void MethodProcessor::MakeErrorStatus(Data &client, int code) {
   if (client.entity_->data_) {
     delete[] client.entity_->data_;
   }
-  client.entity_->data_= NULL;
+  client.entity_->data_ = NULL;
   client.entity_->type_ = NULL;
   client.entity_->length_ = 0;
 }
@@ -73,7 +73,7 @@ bool MethodProcessor::IsCgi(std::string &uri) {
         return (true);
       }
     }
-  } 
+  }
   return (false);
 }
 
@@ -167,8 +167,7 @@ void MethodProcessor::MethodGETCgi(Data *client) {
         }
         size_t temp_length = temp_data.size();
         client->entity_->length_ = temp_length;
-        client->entity_->data_ =
-            CopyCstr(temp_data.c_str(), temp_length);
+        client->entity_->data_ = CopyCstr(temp_data.c_str(), temp_length);
       } else if (WIFSIGNALED(waitloc)) {
         MakeErrorStatus(*client, 500);
       }
@@ -228,8 +227,8 @@ void MethodProcessor::MethodGET(Data *client) {
       cache_entity_.find(client->port_);
   if (check_cache != cache_entity_.end()) {
     client->entity_->length_ = check_cache->second->length_;
-    client->entity_->data_ = CopyCstr(check_cache->second->data_,
-                                             client->entity_->length_);
+    client->entity_->data_ =
+        CopyCstr(check_cache->second->data_, client->entity_->length_);
     client->entity_->type_ = check_cache->second->type_;
     return;
   }
@@ -265,18 +264,12 @@ void MethodProcessor::MethodHEAD(Data *client) {
   MethodGET(client);
   delete[] client->entity_->data_;
   client->entity_->data_ = NULL;
-  //TODO : type 넣어줘야함
+  // TODO : type 넣어줘야함
   return;
 }
 
-void MethodProcessor::MethodPOST(Data *client) {
-  static_cast<void>(client);
-}
+void MethodProcessor::MethodPOST(Data *client) { static_cast<void>(client); }
 
-void MethodProcessor::MethodPUT(Data *client) {
-  static_cast<void>(client);
-}
+void MethodProcessor::MethodPUT(Data *client) { static_cast<void>(client); }
 
-void MethodProcessor::MethodDELETE(Data *client) {
-  static_cast<void>(client);
-}
+void MethodProcessor::MethodDELETE(Data *client) { static_cast<void>(client); }

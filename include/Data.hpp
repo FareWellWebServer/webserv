@@ -1,11 +1,11 @@
 #ifndef DATA_HPP
 #define DATA_HPP
 
-#include "Types.hpp"
-#include "ServerConfigInfo.hpp"
-#include "ResHandler.hpp"
-#include "ReqHandler.hpp"
 #include "HTTPMessage.hpp"
+#include "ReqHandler.hpp"
+#include "ResHandler.hpp"
+#include "ServerConfigInfo.hpp"
+#include "Types.hpp"
 
 class ResHandler;
 class ReqHandler;
@@ -22,8 +22,8 @@ class Data {
   ServerConfigInfo* config_;
   ReqHandler* req_message_;
   ResHandler* res_message_;
-  int status_code_;  // 상태코드 enum 정의 필요
-  t_entity* entity_;     // 응답 본문
+  int status_code_;   // 상태코드 enum 정의 필요
+  t_entity* entity_;  // 응답 본문
   stage e_stage;
 };
 

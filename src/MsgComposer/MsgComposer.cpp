@@ -1,6 +1,5 @@
 #include "../../include/MsgComposer.hpp"
 
-
 MsgComposer::MsgComposer(Data* client) : client_(client) {
   Clear();
   status_infos_.insert(std::make_pair(100, "Continue"));
@@ -101,8 +100,7 @@ const char* MsgComposer::GetResponse(void) {
   std::cout << "headers len: " << headers_len << std::endl;
 
   // response 생성
-  std::cout << "entity len: " << res_msg_.body_data_->length_
-            << std::endl;
+  std::cout << "entity len: " << res_msg_.body_data_->length_ << std::endl;
   response_length_ = str.length() + res_msg_.body_data_->length_;
   std::cout << "response len: " << response_length_ << std::endl << std::endl;
 

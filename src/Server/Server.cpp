@@ -71,7 +71,8 @@ void Server::AcceptNewClient(int idx) {
   getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr), client_len,
               host, MAXBUF, port, MAXBUF, 0);
   clients_.AddData(events_[idx].ident, connfd, atoi(port));
-  std::cout << "Connected to (" << host << ", " << port << "). socket : " << connfd << std::endl;
+  std::cout << "Connected to (" << host << ", " << port
+            << "). socket : " << connfd << std::endl;
 }
 
 void Server::ActCoreLogic(int idx) {

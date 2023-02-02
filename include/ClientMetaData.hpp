@@ -2,11 +2,13 @@
 #define CLIENTMETADATA_HPP
 
 #include <sys/event.h>
+
 #include <algorithm>
 #include <exception>
 #include <map>
-#include "ServerConfigInfo.hpp"
+
 #include "Data.hpp"
+#include "ServerConfigInfo.hpp"
 
 class ClientMetaData {
  public:

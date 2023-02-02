@@ -12,20 +12,20 @@
 #include <map>
 #include <string>
 
-#include "Color.hpp"
-#include "Types.hpp"
-#include "HTTPMessage.hpp"
-#include "Data.hpp"
 #include "ClientMetaData.hpp"
-#include "ServerConfigInfo.hpp"
+#include "Color.hpp"
 #include "Config.hpp"
+#include "Data.hpp"
 #include "ErrorHandler.hpp"
 #include "GetNextLine.hpp"
+#include "HTTPMessage.hpp"
 #include "Logger.hpp"
-#include "Server.hpp"
-#include "ReqHandler.hpp"
-#include "WebServException.hpp"
 #include "MethodProcessor.hpp"
 #include "MsgComposer.hpp"
+#include "ReqHandler.hpp"
+#include "Server.hpp"
+#include "ServerConfigInfo.hpp"
+#include "Types.hpp"
+#include "WebServException.hpp"
 
 #endif

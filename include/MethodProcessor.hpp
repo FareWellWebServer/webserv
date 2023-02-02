@@ -29,20 +29,21 @@
 #define TYPE_PNG "image/png"
 #define TYPE_DEFAULT "text/plain"
 
-#include "HTTPMessage.hpp"
-#include "Data.hpp"
-#include "ClientMetaData.hpp"
 #include <unistd.h>
+
+#include "ClientMetaData.hpp"
+#include "Data.hpp"
+#include "HTTPMessage.hpp"
 
 extern char **environ;
 
 class MethodProcessor {
-public:
+ public:
   MethodProcessor(void);
   ~MethodProcessor(void);
-  void MethodProcessorInput(ClientMetaData *clients); 
+  void MethodProcessorInput(ClientMetaData *clients);
 
-private:
+ private:
   std::map<int, t_entity *> cache_entity_;
   void MakeErrorStatus(Data &client, int code);
   void FetchOiginalPath(std::string &uri);
@@ -58,7 +59,6 @@ private:
   void MethodPOST(Data *client);
   void MethodPUT(Data *client);
   void MethodDELETE(Data *client);
-
 };
 
 #endif

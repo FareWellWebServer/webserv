@@ -1,10 +1,10 @@
 #ifndef REQ_HANDLER_HPP
 #define REQ_HANDLER_HPP
 
-#include "Data.hpp"
-#include "HTTPMessage.hpp"
-#include "GetNextLine.hpp"
 #include "Color.hpp"
+#include "Data.hpp"
+#include "GetNextLine.hpp"
+#include "HTTPMessage.hpp"
 
 class Data;
 
@@ -18,7 +18,7 @@ class ReqHandler {
 
  private:
 };
- 
+
 // void Parse_Req_msg(int c_socket);
 void Parse_Req_Msg(int c_socket, ReqHandler& reqhandle);
 

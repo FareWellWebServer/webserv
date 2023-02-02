@@ -2,6 +2,7 @@
 #define CONFIG_HPP
 
 #include <sys/stat.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -9,8 +10,8 @@
 #include <sstream>
 #include <vector>
 
-#include "ServerConfigInfo.hpp"
 #include "Color.hpp"
+#include "ServerConfigInfo.hpp"
 
 class Config {
  public:
