@@ -37,11 +37,18 @@ bool ServerConfigInfo::IsInLocation(const std::string& location_path,
     return true;
 }
 
-// bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
-//                                             const std::string method) const {
-//   ;
-//   ;
-// }
+bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
+                                            const std::string& method) const {
+  t_location* loc = GetCurrentLocation(req_uri);
+  std::vector<std::string>::const_iterator begin =
+      (loc) ? loc->methods_.begin() : methods_.begin();
+  std::vector<std::string>::const_iterator end =
+      (loc) ? loc->methods_.end() : methods_.end();
+  if (std::find(begin, end, method) != end) {
+    return true;
+  }
+  return false;
+}
 
 std::string ServerConfigInfo::GetCurrentDate(void) const {
   time_t raw_time;

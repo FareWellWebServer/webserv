@@ -25,8 +25,9 @@ class ServerConfigInfo {
   // request url에 매칭되는 location 반환해주는 함수
   t_location* GetCurrentLocation(const std::string& req_uri) const;
 
-  // bool CheckAvailableMethod(const std::string& req_uri,
-  //                           const std::string method) const;
+  // 메서드 권한 체크해주는 함수
+  bool CheckAvailableMethod(const std::string& req_uri,
+                            const std::string& method) const;
 
   std::string GetCurrentDate(void) const;
 

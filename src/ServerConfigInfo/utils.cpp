@@ -98,11 +98,11 @@ void Config::PrintLocation(const t_location& l) const {
     std::cout << "file_path: " << l.file_path_ << std::endl;
     if (!l.redir_path_.empty())
       std::cout << "redirection_path: " << l.redir_path_ << std::endl;
-    std::cout << "methods:";
-    for (size_t i = 0; i < l.methods_.size(); ++i)
-      std::cout << " " << l.methods_[i];
-    std::cout << std::endl;
   }
+  std::cout << "methods:";
+  for (size_t i = 0; i < l.methods_.size(); ++i)
+    std::cout << " " << l.methods_[i];
+  std::cout << std::endl;
 }
 
 void Config::PrintLocations(
