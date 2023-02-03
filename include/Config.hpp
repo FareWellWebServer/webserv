@@ -56,7 +56,7 @@ class Config {
 
   /* ======================== Validation ======================== */
   bool CheckDuplicatePort(int port) const;
-  void CheckValidation(void) const;
+  void CheckValidation(void);
   void CheckLocation(const t_location &l) const;
 
   /* ======================== Utils ======================== */
@@ -92,9 +92,10 @@ class Config {
 
 template <typename T>
 void PrintVector(const std::vector<T> &vec) {
-  std::cout << BLUE << "[[PRINT VECTOR]]" << std::endl;
-  for (size_t i = 0; i < vec.size(); ++i)
-    std::cout << "index :" << i << " ||  value  ||\n" << vec[i] << std::endl;
+  for (size_t i = 0; i < vec.size(); ++i) {
+    std::cout << " " << vec[i];
+  }
+  std::cout << std::endl;
 }
 
 #endif

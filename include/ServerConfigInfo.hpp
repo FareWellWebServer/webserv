@@ -22,12 +22,14 @@ class ServerConfigInfo {
   // host, port가 같은지 확인해주는 함수
   bool CheckHostPortMatching(const std::string& host, const int& port) const;
 
-  // request url에 매칭되는 location 반환해주는 함수
+  // request uri에 매칭되는 location 반환해주는 함수
   t_location* GetCurrentLocation(const std::string& req_uri) const;
 
-  // 메서드 권한 체크해주는 함수
+  // request uri에 매칭 되는 서버의 메서드에 포함되는지 확인해주는 함수
   bool CheckAvailableMethod(const std::string& req_uri,
                             const std::string& method) const;
+
+  // std::string GetRequestFilePath(const std::string& req_uri) const;
 
   std::string GetCurrentDate(void) const;
 
