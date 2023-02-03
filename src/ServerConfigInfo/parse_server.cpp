@@ -52,12 +52,7 @@ void Config::ParseRoot(const std::vector<std::string> &vec) {
 void Config::ParseFilePath(const std::vector<std::string> &vec) {
   if (vec.size() != 1) ExitConfigParseError();
 
-  std::string file_path = vec[0];
-  struct stat sb;
-  if (stat(file_path.c_str(), &sb) == 0)
-    server_config_info_.file_path_ = file_path;
-  else
-    ExitConfigParseError();
+  server_config_info_.file_path_ = vec[0];
 }
 
 void Config::ParseUploadPath(const std::vector<std::string> &vec) {
@@ -97,8 +92,9 @@ void Config::ParseMethods(const std::vector<std::string> &vec) {
   for (size_t i = 0; i < vec.size(); ++i) {
     method = vec[i];
     if (!(method == "GET" || method == "HEAD" || method == "POST" ||
-          method == "PUT" || method == "DELETE"))
+          method == "PUT" || method == "DELETE")) {
       ExitConfigParseError();
+    }
     server_config_info_.methods_.push_back(method);
   }
 }

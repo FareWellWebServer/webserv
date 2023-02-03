@@ -96,17 +96,24 @@ void Config::SetServerConfigInfo(const std::string& key,
 }
 
 /* ======================== Validate Server ======================== */
-void Config::CheckValidation(void) const {
+void Config::CheckValidation(void) {
 #if CONFIG
   std::cout << BOLDCYAN
             << "======== Validation Check Start ========" << std::endl;
 #endif
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
-    ServerConfigInfo info = server_config_infos_[i];
+    ServerConfigInfo& info = server_config_infos_[i];
     if (info.port_ == -1 || info.body_size_ == 0 || info.root_path_.empty() ||
-        info.upload_path_.empty() || info.methods_.empty() ||
-        info.error_pages_.empty())
+        info.file_path_.empty() || info.upload_path_.empty() ||
+        info.methods_.empty() || info.error_pages_.empty()) {
       ExitConfigValidateError("Missing Server Elements");
+    }
+
+    std::string file_path = info.root_path_ + info.file_path_;
+    struct stat sb;
+    if (stat(file_path.c_str(), &sb) == 0) {
+      info.file_path_ = file_path;
+    }
 
     std::map<std::string, t_location>::const_iterator it =
         info.locations_.begin();

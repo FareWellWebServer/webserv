@@ -76,8 +76,9 @@ void Config::ParseLocationMethods(t_location& l,
   for (size_t i = 0; i < vec.size(); ++i) {
     method = vec[i];
     if (!(method == "GET" || method == "HEAD" || method == "POST" ||
-          method == "PUT" || method == "DELETE"))
+          method == "PUT" || method == "DELETE")) {
       ExitConfigParseError();
+    }
     l.methods_.push_back(method);
   }
 }

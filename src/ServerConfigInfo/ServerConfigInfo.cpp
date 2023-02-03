@@ -50,6 +50,13 @@ bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
   return false;
 }
 
+// std::string ServerConfigInfo::GetRequestFilePath(
+//     const std::string& req_uri) const {
+//   (void)req_uri;
+
+//   return NULL;
+// }
+
 std::string ServerConfigInfo::GetCurrentDate(void) const {
   time_t raw_time;
   struct tm* pm;
