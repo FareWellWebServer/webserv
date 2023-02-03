@@ -108,8 +108,11 @@ void Config::CheckValidation(void) const {
         info.error_pages_.empty())
       ExitConfigValidateError("Missing Server Elements");
 
-    for (size_t i = 0; i < info.locations_.size(); ++i)
-      CheckLocation(info.locations_[i]);
+    std::map<std::string, t_location>::const_iterator it =
+        info.locations_.begin();
+    for (; it != info.locations_.end(); ++it) {
+      CheckLocation(it->second);
+    }
   }
 #if CONFIG
   std::cout << "======= Validation Check Finish ========" << RESET << std::endl;

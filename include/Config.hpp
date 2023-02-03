@@ -77,7 +77,7 @@ class Config {
   void PrintKeyVal(const std::string &key, const std::string &val) const;
   void PrintConfigInfos(void) const;
   void PrintConfigInfo(const ServerConfigInfo &info) const;
-  void PrintLocations(const std::vector<t_location> &locations) const;
+  void PrintLocations(const std::map<std::string, t_location> &locations) const;
   void PrintLocation(const t_location &l) const;
 
  private:

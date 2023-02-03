@@ -14,13 +14,11 @@ t_location* ServerConfigInfo::GetCurrentLocation(
     const std::string& req_uri) const {
   if (locations_.empty()) return NULL;
 
-  std::vector<t_location>::const_iterator res;
-
-  for (std::vector<t_location>::const_iterator it = locations_.begin();
-       it != locations_.end(); ++it) {
-    std::string location_path = it->uri_;
+  std::map<std::string, t_location>::const_iterator it = locations_.begin();
+  for (; it != locations_.end(); ++it) {
+    const std::string location_path = it->first;
     if (IsInLocation(location_path, req_uri)) {
-      return const_cast<t_location*>(&*it);
+      return const_cast<t_location*>(&it->second);
     }
   }
   return NULL;
@@ -38,6 +36,12 @@ bool ServerConfigInfo::IsInLocation(const std::string& location_path,
   } else
     return true;
 }
+
+// bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
+//                                             const std::string method) const {
+//   ;
+//   ;
+// }
 
 std::string ServerConfigInfo::GetCurrentDate(void) const {
   time_t raw_time;

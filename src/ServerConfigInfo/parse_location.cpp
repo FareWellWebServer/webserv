@@ -2,7 +2,6 @@
 
 /* ========================== Location Init ========================== */
 void Config::InitLocation(t_location& l, const std::string& uri) {
-  l.uri_ = uri;
   l.is_cgi_ = (uri == ".py") ? true : false;
   l.cgi_pass_ = "";
 
@@ -22,7 +21,8 @@ void Config::ParseLocation(const std::string& key, const std::string& val) {
   if (!IsOpenLocationBracket(vec)) ExitConfigParseError();
 
   t_location l;
-  InitLocation(l, vec[0]);
+  std::string location_path = vec[0];
+  InitLocation(l, location_path);
   while (true) {
     ++line_num_;
     std::getline(config_stream_, line_, '\n');
@@ -34,7 +34,7 @@ void Config::ParseLocation(const std::string& key, const std::string& val) {
 
     SetLocation(l, vec[0], vec[1]);
   }
-  server_config_info_.locations_.push_back(l);
+  server_config_info_.locations_[location_path] = l;
   Print("-------------- location parse finish -------------", BOLDYELLOW, 1);
 }
 

@@ -93,12 +93,11 @@ void Config::PrintKeyVal(const std::string& key, const std::string& val) const {
 
 void Config::PrintLocation(const t_location& l) const {
   if (l.is_cgi_) {
-    std::cout << "uri: " << l.uri_ << std::endl;
     std::cout << "cgi_pass: " << l.cgi_pass_ << std::endl;
   } else {
-    std::cout << "uri: " << l.uri_ << std::endl;
     std::cout << "file_path: " << l.file_path_ << std::endl;
-    std::cout << "redirection_path: " << l.redir_path_ << std::endl;
+    if (!l.redir_path_.empty())
+      std::cout << "redirection_path: " << l.redir_path_ << std::endl;
     std::cout << "methods:";
     for (size_t i = 0; i < l.methods_.size(); ++i)
       std::cout << " " << l.methods_[i];
@@ -106,13 +105,17 @@ void Config::PrintLocation(const t_location& l) const {
   }
 }
 
-void Config::PrintLocations(const std::vector<t_location>& locations) const {
-  for (size_t i = 0; i < locations.size(); ++i) {
+void Config::PrintLocations(
+    const std::map<std::string, t_location>& locations) const {
+  std::map<std::string, t_location>::const_iterator it = locations.begin();
+  int i = 0;
+  for (; it != locations.end(); ++it) {
     std::cout << std::endl;
-    std::cout << "------ [locations " << i << " -> cgi ";
-    (locations[i].is_cgi_) ? std::cout << "O" : std::cout << "X";
+    std::cout << "------ [locations " << i++ << " -> cgi ";
+    (it->second.is_cgi_) ? std::cout << "O" : std::cout << "X";
     std::cout << "] ------" << std::endl;
-    PrintLocation(locations[i]);
+    std::cout << "uri: " << it->first << std::endl;
+    PrintLocation(it->second);
   }
 }
 
