@@ -1,5 +1,4 @@
-#include "../../include/WebServ.hpp"
-
+#include "../../include/MsgComposer.hpp"
 
 MsgComposer::MsgComposer(Data* client) : client_(client) {
   Clear();
@@ -71,18 +70,12 @@ void MsgComposer::SetHeaders(void) {
 
 void MsgComposer::InitResMsg() {
   res_msg_.http_version_ = "HTTP/1.1";
-  res_msg_.status_code_ = client_->GetStatusCode();
+  res_msg_.status_code_ = client_->status_code_;
   SetStatusText();
   res_msg_.body_data_ = client_->GetResEntity();
   SetHeaders();
-  client_->SetResMassage(&res_msg_);
 }
 
-/**
- * @brief Response Handler 에서 요청해가서 출력해주면 됨
- * 
- * @return const char* 가져가서 free까지 책임져줘야 함
- */
 const char* MsgComposer::GetResponse(void) {
   std::stringstream ss;
   std::string status_code;
@@ -107,8 +100,7 @@ const char* MsgComposer::GetResponse(void) {
   std::cout << "headers len: " << headers_len << std::endl;
 
   // response 생성
-  std::cout << "entity len: " << res_msg_.body_data_->length_
-            << std::endl;
+  std::cout << "entity len: " << res_msg_.body_data_->length_ << std::endl;
   response_length_ = str.length() + res_msg_.body_data_->length_;
   std::cout << "response len: " << response_length_ << std::endl << std::endl;
 

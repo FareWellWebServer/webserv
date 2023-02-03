@@ -5,7 +5,7 @@
  * 
  */
 Data::Data() : \
-litsen_fd_(-1), port_(-1), client_fd_(-1), config_(NULL), timeout_(false), event_(NULL) {
+litsen_fd_(-1), port_(-1), client_fd_(-1), timeout_(false), event_(NULL), config_(NULL) {
   req_message_ = NULL;
   res_entity_ = NULL;
   Clear();
@@ -17,7 +17,7 @@ Data::~Data() {
 
 /**
  * @brief 새로운 요청 들어올때마다 초기화할 값
- * delete : ReqMassage, res_entity_
+ * delete : ReqMessage, res_entity_
  */
 void Data::Clear() {
   status_code_ = 200;
@@ -52,6 +52,11 @@ int Data::GetStatusCode() const {
   return status_code_;
 }
 
+void Data::SetStatusCode(int status_code)
+{
+  status_code_ = status_code;
+}
+
 bool Data::IsTimeout() const {
   return timeout_;
 }
@@ -68,7 +73,7 @@ int Data::GetPipeRead() const {
 return pipe_[READ];
 }
 
-t_req_msg* Data::GetReqMassage() const {
+t_req_msg* Data::GetReqMessage() const {
   return req_message_;
 }
 
@@ -95,20 +100,20 @@ std::string Data::GetReqHeaderByKey(std::string &key) const {
 }
 
 char* Data::GetReqBodyData() const {
-  return req_message_->body_data_->data_;
+  return req_message_->body_data_.data_;
 }
 
 char* Data::GetReqBodyType() const {
-  return req_message_->body_data_->type_;
+  return req_message_->body_data_.type_;
 }
 
 size_t Data::GetReqBodyLength() const {
-  return req_message_->body_data_->length_;
+  return req_message_->body_data_.length_;
 }
 
 
-/* Get about Response Massage */
-t_res_msg* Data::GetResMassage() const {
+/* Get about Response Message */
+t_res_msg* Data::GetResMessage() const {
   return res_message_;
 }
 
@@ -146,7 +151,7 @@ size_t Data::GetResBodyLength() const {
   return res_message_->body_data_->length_;
 }
 
-void Data::SetResMassage(t_res_msg* res_msg) {
+void Data::SetResMessage(t_res_msg* res_msg) {
   res_message_ = res_msg;
 }
 
@@ -156,4 +161,29 @@ void Data::SetResEntity(t_entity* entity) {
 
 t_entity* Data::GetResEntity() const {
   return res_entity_;
+}
+
+char* Data::GetResEntitData() const {
+  return res_entity_->data_;
+}
+
+size_t Data::GetResEntityLength() const {
+  return res_entity_->length_;
+}
+
+char* Data::GetResEntityType() const {
+  return res_entity_->type_;
+}
+
+
+void Data::SetResEntityData(char* data) {
+  res_entity_->data_ = data;
+}
+
+void Data::SetResEntityLength(size_t length) {
+  res_entity_->length_ = length;
+}
+
+void Data::SetResEntityType(char *type) {
+  res_entity_->type_ = type;
 }

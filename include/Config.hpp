@@ -1,9 +1,8 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include "WebServ.hpp"
-
 #include <sys/stat.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -11,7 +10,8 @@
 #include <sstream>
 #include <vector>
 
-struct location;
+#include "Color.hpp"
+#include "ServerConfigInfo.hpp"
 
 class Config {
  public:

@@ -1,11 +1,14 @@
 #ifndef CLIENTMETADATA_HPP
 #define CLIENTMETADATA_HPP
-#include "Data.hpp"
 
 #include <sys/event.h>
+
 #include <algorithm>
 #include <exception>
 #include <map>
+
+#include "Data.hpp"
+#include "ServerConfigInfo.hpp"
 
 class ReqHandler;
 class ServerConfigInfo;
@@ -45,7 +48,7 @@ class ClientMetaData {
     void SetReqMessage(t_req_msg* header);
 
     // MsgComposer에서
-    void SetResEntity(char* res_enetity);
+    void SetResEntity(t_entity* res_enetity);
 
     // core에서 처리 후
     void SetEntity(char* entitiy);

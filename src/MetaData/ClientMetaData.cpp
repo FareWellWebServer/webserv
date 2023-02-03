@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/ClientMetaData.hpp"
 
 ClientMetaData::ClientMetaData() : current_fd_(-1) {}
 
@@ -77,7 +77,7 @@ void ClientMetaData::SetReqMessage(t_req_msg* req_message)
   datas_[current_fd_].req_message_ = req_message;
 }
 
-void ClientMetaData::SetResEntity(char* res_enetity)
+void ClientMetaData::SetResEntity(t_entity* res_enetity)
 {
   ValidCheckToAccessData();
   datas_[current_fd_].res_entity_ = res_enetity;

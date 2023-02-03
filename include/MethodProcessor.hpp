@@ -1,5 +1,5 @@
-#ifndef MethodProcessor_hpp_
-#define MethodProcessor_hpp_
+#ifndef METHOD_PROCESSOR_HPP
+#define METHOD_PROCESSOR_HPP
 
 #include <sys/event.h>
 #include <sys/stat.h>
@@ -31,30 +31,34 @@
 
 #include <unistd.h>
 
+#include "ClientMetaData.hpp"
+#include "Data.hpp"
+#include "HTTPMessage.hpp"
+
 extern char **environ;
 
 class MethodProcessor {
-private:
-  std::map<int, t_entity *> cache_entity_;
-  void MakeErrorStatus(struct Data &client, int code);
-  void FetchOiginalPath(std::string &uri);
-  bool IsFetched(std::string &uri);
-  bool IsExistFile(std::string &uri);
-  bool IsCgi(std::string &uri);
-  bool IsFile(std::string &uri, const char *identifier);
-  char *CopyCstr(const char *cstr, size_t length);
-  void MethodGETCgi(struct Data *client);
-  void MethodGETFile(struct Data *client);
-  void MethodGET(struct Data *client);
-  void MethodHEAD(struct Data *client);
-  void MethodPOST(struct Data *client);
-  void MethodPUT(struct Data *client);
-  void MethodDELETE(struct Data *client);
-
-public:
+ public:
   MethodProcessor(void);
   ~MethodProcessor(void);
-  void MethodProcessorInput(ClientMetaData *clients); 
+  void MethodProcessorInput(ClientMetaData* clients);
+
+ private:
+  std::map<int, t_entity *> cache_entity_;
+  void MakeErrorStatus(Data *client, int code);
+  void FetchOiginalPath(std::string uri);
+  bool IsFetched(std::string uri);
+  bool IsExistFile(std::string uri);
+  bool IsCgi(std::string uri);
+  bool IsFile(std::string uri, const char *identifier);
+  char *CopyCstr(const char *cstr, size_t length);
+  void MethodGETCgi(Data *client);
+  void MethodGETFile(Data *client);
+  void MethodGET(Data *client);
+  void MethodHEAD(Data *client);
+  void MethodPOST(Data *client);
+  void MethodPUT(Data *client);
+  void MethodDELETE(Data *client);
 };
 
 #endif

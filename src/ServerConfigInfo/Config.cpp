@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/Config.hpp"
 
 Config::Config(const char* file_path) {
   std::cout << "Config file path: " << file_path << std::endl;
@@ -32,19 +32,19 @@ void Config::Parse(int print_mode) {
     if (config_stream_.eof()) break;
     if (IsWhiteLine()) continue;
 
-#if DG
+#if CONFIG
     Print("--------------- server parse start ---------------", BOLDBLUE);
 #endif
     if (!IsOpenServerBracket()) ExitConfigParseError();
     InitServerConfigInfo(server_config_info_);
     ParseServer();
-#if DG
+#if CONFIG
     Print("--------------- server parse finish --------------", BOLDBLUE, 1);
 #endif
     if (!CheckDuplicatePort(server_config_info_.port))
       server_config_infos_.push_back(server_config_info_);
   }
-#if DG
+#if CONFIG
   Print("Config parsing finish", BOLDMAGENTA, 1);
 #endif
 }
@@ -69,6 +69,7 @@ void Config::SetServerConfigInfo(const std::string& key,
   PrintKeyVal(key, val);
 
   if (key == "listen") {
+    vec = Split(val, ":");
     ParseListen(vec);
   } else if (key == "body_size") {
     ParseBodySize(vec);
@@ -96,10 +97,10 @@ void Config::SetServerConfigInfo(const std::string& key,
 
 /* ======================== Validate Server ======================== */
 void Config::CheckValidation(void) const {
-  #if DG
+#if CONFIG
   std::cout << BOLDCYAN
             << "======== Validation Check Start ========" << std::endl;
-  #endif
+#endif
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
     ServerConfigInfo info = server_config_infos_[i];
     if (info.port == -1 || info.body_size == 0 || info.root_path.empty() ||
@@ -110,9 +111,9 @@ void Config::CheckValidation(void) const {
     for (size_t i = 0; i < info.locations.size(); ++i)
       CheckLocation(info.locations[i]);
   }
-  #if DG
+#if CONFIG
   std::cout << "======= Validation Check Finish ========" << RESET << std::endl;
-  #endif
+#endif
 }
 
 bool Config::CheckDuplicatePort(int port) const {

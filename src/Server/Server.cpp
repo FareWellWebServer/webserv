@@ -71,7 +71,8 @@ void Server::AcceptNewClient(int idx) {
   getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr), client_len,
               host, MAXBUF, port, MAXBUF, 0);
   clients_.AddData(events_[idx].ident, connfd, atoi(port));
-  std::cout << "Connected to (" << host << ", " << port << "). socket : " << connfd << std::endl;
+  std::cout << "Connected to (" << host << ", " << port
+            << "). socket : " << connfd << std::endl;
 }
 
 void Server::ActCoreLogic(int idx) {
@@ -87,7 +88,7 @@ void Server::ActCoreLogic(int idx) {
 }
 
 void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
-#if DG
+#if SERVER
   if (servers_.size() == MAXLISTEN) {
     std::cerr << "Error: full of listening\n";
     return;
@@ -102,7 +103,7 @@ void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
     throw std::runtime_error("Error: kevent()");
   }
   servers_.insert(CreateListening(host, port, listenfd));
-#if DG
+#if SERVER
   std::cout << host << " is listening port on " << port << "\n";
 #endif
 }

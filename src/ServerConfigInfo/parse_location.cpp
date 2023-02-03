@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/Config.hpp"
 
 /* ========================== Location Init ========================== */
 void Config::InitLocation(location& l, const std::string& uri) {

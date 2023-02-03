@@ -1,28 +1,37 @@
-#ifndef ReqHandler_HPP
-#define ReqHandler_HPP
+#ifndef REQ_HANDLER_HPP
+#define REQ_HANDLER_HPP
 
-#include "WebServ.hpp"
+#include "Color.hpp"
+#include "Data.hpp"
+#include "HTTPMessage.hpp"
 
-// 테스트 끝나면 지우기
+#include <sys/socket.h>
+#include <unistd.h>
+#include <sstream>
+
 class ReqHandler {
  public:
-  t_req_msg req_msg_;
-  void print_structure();
   ReqHandler(void);
-  ~ReqHandler(void);
+  ~ReqHandler(void); // buf 확인하고 해제
+  void SetClient(Data* client);
+  void SetReadLen(int64_t kevent_data);
+  void RecvFromSocket();
+  void ParseRecv(int fd);
+  t_req_msg* PopReqMassage(); // 동적할당해서 나가고, 받은 쪽에서 delete 처리해주기
+  void Clear();
+  t_req_msg* req_msg_;
 
  private:
+  char* buf_; // 동적할당 / 해제
+  int64_t read_len_;
+  Data* client_;
+  int64_t ParseFirstLine();
+  int64_t ParseHeaders(int start_idx);
+  void ParseHeadersSetKeyValue(char *line);
+  void ParseEntity(int start_idx);
 };
 
-// void Parse_Req_msg(int c_socket);
-void Parse_Req_Msg(int c_socket, ReqHandler& reqhandle);
-
-void Parse_Req_Msg(int c_socket, struct Data& m_data);
-
-std::vector<std::string> split(const std::string& s, char delimiter, int cnt);
-std::vector<std::string> s_split(std::string& s, const std::string& delimiter,
-                                 int cnt);
-void Remove_Tab_Space(std::string& str);
 void Print_Map(std::map<std::string, std::string>& map);
-
+void Remove_Tab_Space(std::string& str);
+std::vector<std::string> split(const std::string& s, char delimiter, int cnt);
 #endif
