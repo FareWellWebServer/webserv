@@ -69,6 +69,7 @@ void Config::SetServerConfigInfo(const std::string& key,
   PrintKeyVal(key, val);
 
   if (key == "listen") {
+    vec = Split(val, ":");
     ParseListen(vec);
   } else if (key == "body_size") {
     ParseBodySize(vec);

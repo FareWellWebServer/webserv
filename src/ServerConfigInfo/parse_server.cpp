@@ -18,11 +18,16 @@ void Config::InitServerConfigInfo(ServerConfigInfo &info) {
 
 /* =========================== Parsing Server =========================== */
 void Config::ParseListen(const std::vector<std::string> &vec) {
-  if (vec.size() != 1 || !IsNumber(vec[0])) ExitConfigParseError();
-
-  int port = atoi(vec[0].c_str());
-  if (port < 0 || port > 65535) ExitConfigParseError();
-  server_config_info_.port = port;
+  if (vec.size() == 1 && IsNumber(vec[0])) {
+    server_config_info_.port = atoi(vec[0].c_str());
+  } else if (vec.size() == 2 && IsNumber(vec[1])) {
+    server_config_info_.host = vec[0];
+    server_config_info_.port = atoi(vec[1].c_str());
+  } else
+    ExitConfigParseError();
+  if (server_config_info_.port < 0 || server_config_info_.port > 65535) {
+    ExitConfigParseError();
+  }
 }
 
 void Config::ParseBodySize(const std::vector<std::string> &vec) {
