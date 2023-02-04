@@ -20,7 +20,7 @@ int MethodProcessor::MethodProcessorInput(ClientMetaData *clients) {
   } else if (client->req_message_->req_msg_.method_ == "POST") {
     return (POST);
   } else
-    return (DELETE);
+    return (11);
 }
 
 void MethodProcessor::MakeErrorStatus(struct Data &client, int code) {
@@ -111,6 +111,7 @@ void MethodProcessor::GETSecondCgi(struct Data *client) {
   }
   pid = fork();
   if (pid == -1) {
+    // TODO : error handling
   }
   if (pid == 0) {
     /* CGI handling*/

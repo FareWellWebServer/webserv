@@ -106,14 +106,15 @@ enum stage {
   READY,
   REQ_READY,
   REQ_FINISHED,
-  GET_READY,
-  GET_FILE,
-  GET_CGI,
-  GET_FINISHED,
-  POST_READY,
-  POST_PROCESSING,
-  POST_CHECKED,
-  DELETE,
+  GET_READY,        // GET 시작 전 세팅
+  GET_HTML,         // GET HTML 문서 읽기 상태
+  GET_FILE,         // GET FILE 읽기 상태
+  GET_CGI,          // GET CGI 읽기 상태
+  GET_FINISHED,     // read 마무리 상태
+  POST_READY,       // POST 시작 전 세팅
+  POST_PROCESSING,  // POST write 작업후
+  POST_CHECKED,     // 유효성 검사 파트 및 마무리
+  DELETE,           // 그냥 삭제만 하면 됨
   RESPONSE
 };
 

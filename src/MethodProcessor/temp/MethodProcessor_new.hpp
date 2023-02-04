@@ -32,6 +32,8 @@
 
 extern char** environ;
 
+enum METHOD { GET, POST, DELETE };
+
 class MethodProcessor {
  private:
   std::map<int, t_entity*> cache_entity_;
@@ -50,7 +52,7 @@ class MethodProcessor {
   int FileSize(const char* filepath);
 
  public:
-  MethodProcessor(void);
+  MethodProcessor(const std::vector<ServerConfigInfo>& serverList);
   ~MethodProcessor(void);
   int MethodProcessorInput(ClientMetaData* clients);
   void GETFirst(struct Data* client);
