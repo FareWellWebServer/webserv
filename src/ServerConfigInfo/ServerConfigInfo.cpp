@@ -53,7 +53,6 @@ bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
 // std::string ServerConfigInfo::GetRequestFilePath(
 //     const std::string& req_uri) const {
 //   t_location* loc = GetCurrentLocation(req_uri);
-
 //   if (loc) {
 //     return NULL;
 //   }
