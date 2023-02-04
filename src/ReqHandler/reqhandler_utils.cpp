@@ -1,21 +1,5 @@
 #include "../../include/ReqHandler.hpp"
 
-std::vector<std::string> split(const std::string& s, char delimiter, int cnt) {
-  std::vector<std::string> tokens;
-  std::string token;
-  std::stringstream tokenStream(s);
-
-  while (std::getline(tokenStream, token, delimiter)) {
-    tokens.push_back(token);
-    if (cnt == 1) {
-      token = tokenStream.str();
-      tokens.push_back(token);
-      break;
-    }
-  }
-  return tokens;
-}
-
 std::vector<std::string> s_split(std::string& s, const std::string& delimiter,
                                  int cnt) {
   std::vector<std::string> tokens;

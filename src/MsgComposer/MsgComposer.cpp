@@ -72,7 +72,7 @@ void MsgComposer::InitResMsg() {
   res_msg_.http_version_ = "HTTP/1.1";
   res_msg_.status_code_ = client_->status_code_;
   SetStatusText();
-  res_msg_.body_data_ = client_->entity_;
+  res_msg_.body_data_ = client_->GetResEntity();
   SetHeaders();
 }
 

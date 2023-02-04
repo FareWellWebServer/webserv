@@ -10,73 +10,79 @@
 #include "Data.hpp"
 #include "ServerConfigInfo.hpp"
 
+class ReqHandler;
+class ServerConfigInfo;
+
 class ClientMetaData {
- public:
-  typedef int fd;
+  public:
+    typedef int fd;
 
- private:
+  private:
   std::map<fd, Data> datas_;
-  int current_fd_;
-  void ValidCheckToAccessData();
-  class WrongFd : public std::exception {
-   public:
-    const char* what() const throw();
-  };
-  void InitializeData(Data* data);
+    int current_fd_;
+    void ValidCheckToAccessData();
+    class WrongFd : public std::exception {
+    public:
+      const char* what() const throw();
+    };
+    void InitializeData(Data* data);
 
- public:
-  ClientMetaData();
-  ~ClientMetaData();
-  // accept 된 client 의 kevent 발생시 설정
-  void SetCurrentFd(const fd& client_fd);
+  public:
+    ClientMetaData();
+    ~ClientMetaData();
+    // accept 된 client 의 kevent 발생시 설정
+    void SetCurrentFd(const fd& client_fd);
 
-  // kevent에서 listen fd가 read 했을 때, accept할 때, listen_fd저장, port번호
-  // 저장
-  void AddData(const fd& listen_fd, const fd& client_fd, const fd& port);
-  void SetConfig(struct kevent& event);
+    // kevent에서 listen fd가 read 했을 때, accept할 때, listen_fd저장, port번호
+    // 저장
+    void AddData(const fd& listen_fd, const fd& client_fd, const fd& port);
+    void SetEvent(struct kevent* event);
+    void SetConfig();
+    void SetFileFd(int file_fd);
+    void SetPipeFd(int pipe[2]);
 
-  // accept 된 fd를 close할때, map에서 지워줌
-  void DeleteByFd(const fd& client_fd);
+    // accept 된 fd를 close할때, map에서 지워줌
+    void DeleteByFd(const fd& client_fd);
 
-  // reqHandler에서 요청헤더 파싱 후
-  void SetReqMessage(struct HTTPMessage* header);
+    // reqHandler에서 요청헤더 파싱 후
+    void SetReqMessage(t_req_msg* header);
 
-  // MsgComposer에서
-  void SetResMessage(struct HTTPMessage* header);
+    // MsgComposer에서
+    void SetResEntity(t_entity* res_enetity);
 
-  // core에서 처리 후
-  void SetEntity(char* entitiy);
+    // core에서 처리 후
+    void SetEntity(char* entitiy);
 
-  // data 통채로 원할 때
-  Data& GetData();
+    // data 통채로 원할 때
+    Data& GetData();
 
-  // core에서 요청 헤더 데이터 필요할 때
-  struct HTTPMessage* GetReqHeader();
+    // core에서 요청 헤더 데이터 필요할 때
+    struct HTTPMessage* GetReqHeader();
 
-  // core에서 응답 헤더 데이터 필요할 때
-  struct HTTPMessage* GetResHeader();
+    // core에서 응답 헤더 데이터 필요할 때
+    struct HTTPMessage* GetResHeader();
 
-  // core에서 헤더 데이터 필요할 때
-  ServerConfigInfo* GetConfig();
+    // core에서 헤더 데이터 필요할 때
+    ServerConfigInfo* GetConfig();
 
-  int GetPort();
+    int GetPort();
 
-  int GetDataCount(void);  // return data_.size();
+    int GetDataCount(void);  // return data_.size();
 
-  // 루프 처음시작할때 errorHandler에 *나& 로 넣어주면서 인스턴스화 해도 될듯?
-  // 그러면 한번만 호출해도 되니까
+    // 루프 처음시작할때 errorHandler에 *나& 로 넣어주면서 인스턴스화 해도 될듯?
+    // 그러면 한번만 호출해도 되니까
 
-  void SetStatusCode(int status_code);
+    void SetStatusCode(int status_code);
 
-  int GetStatusCode();
+    int GetStatusCode();
 
-  // Method 전체 리턴
-  std::vector<std::string> GetMethods();
+    // Method 전체 리턴
+    std::vector<std::string> GetMethods();
 
-  // Method 있는지 확인
-  bool FindMethods(std::string method);
+    // Method 있는지 확인
+    bool FindMethods(std::string method);
 
-  char* GetURL();
+    char* GetURL();
 };
 
 #endif

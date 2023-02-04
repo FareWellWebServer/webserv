@@ -1,154 +1,233 @@
 #include "../../include/ReqHandler.hpp"
 
-ReqHandler::ReqHandler(void) {}
-
-void ReqHandler::print_structure() {
-  std::cout << GREEN << "METHOD | " << RESET << req_msg_.method_ << std::endl;
-  std::cout << GREEN << "URL | " << RESET << req_msg_.req_url_ << std::endl;
-  std::cout << GREEN << "PROTOCAL | " << RESET << req_msg_.protocol_
-            << std::endl;
-
-  std::cout << "HEADERS | " << std::endl;
+//kevent->data에 읽어야 하는 byte 수가 들어옴. 
+//한번에 읽으면 될듯.
+ReqHandler::ReqHandler(void) : buf_(NULL), read_len_(0), client_(0)
+{
+  Clear();
 }
 
-ReqHandler::~ReqHandler(void) {}
-// 테스트용 코드
-// void Parse_Req_Msg(int c_socket, ReqHandler& reqhandle) {
-//   char* ctmp;
-//   std::string stmp;
-//   std::string contents;
+ReqHandler::~ReqHandler(void)
+{
+  Clear();
+}
 
-//   // gnl현재는 개행을 기준으로 잘라 값을string에 저장했지만
-//   // 실제 요청 메세지가 온다면 개행 기준이 아니라 \r\n을 기준으로 나눠야한다.
-//   // TODO : append에 인자로 Stmp가 아닌 ctmp로 변경
-//   // TODO : 유효성 검사가 필요. CRLF가 연속적으로 올 경우엔 어떻게
-//   처리해야할까?
-//   // TODO : key : value~~~~~~\nvalue 이런 식으로 value 내에 개행이 들어가는
-//   경우는? while ((ctmp = get_next_line(c_socket)) != 0) {
-//     stmp = ctmp;
-//     if (stmp == "#@\n") {
-//       stmp.clear();
-//       delete[] ctmp;
-//       break;
-//     }
-//     contents.append(stmp);
-//     stmp.clear();
-//     delete[] ctmp;
-//   }
-//   // data에 요청메세지 전체가 들어가있음.
-//   std::vector<std::string> data = s_split(contents, "#@\n", 0);
+void ReqHandler::SetClient(Data* client)
+{
+  client_ = client;
+}
 
-//   // //--------------start line parsing -----------------
-//   std::vector<std::string> start_line = split(data[0], ' ', 0);
-//   //시작줄에 옵션..?
-//   // 공백으로 3개가 이상 들어오는 경우
-//   // TODO : unvalid protocol case 처리.
-//   reqhandle.req_msg_.method_ = start_line[0];
-//   reqhandle.req_msg_.req_url_ = start_line[1];
-//   reqhandle.req_msg_.protocol_ = start_line[2];
-//   start_line.clear();
-//   data.erase(data.begin());
+void ReqHandler::SetReadLen(int64_t kevent_data)
+{
+  read_len_ = kevent_data;
+}
 
-//   //---------------header parsing -------------------
-//   while (1) {
-//     std::vector<std::string> head_line = s_split(data[0], ": ", 1);
-//     if (head_line.size() == 1) {
-//       break;}
-//     Remove_Tab_Space(head_line[0]);
-//     if (head_line[0] == "Content-Length")
-//       reqhandle.req_msg_.body_data_.length_ = atoi(head_line[1].c_str());
-//     std::pair<std::string, std::string> tmp =
-//         std::pair<std::string, std::string>(head_line[0], head_line[1]);
-//     reqhandle.req_msg_.headers_.insert(tmp);
-//     data.erase(data.begin());
-//     head_line.clear();
-//   }
-//   //TODO : 필수적으로 알아야 하는 것에 대해 판단하는 녀석. validation 과정이
-//   필요할듯. content length랑 content type이 없으면 에러
-//   //------------body parsing-----------------------
-//   size_t total_len = 0;
-//   reqhandle.req_msg_.body_data_.entity_ = "";
-//   for (int i = 0; (ctmp =  get_next_line(c_socket)) != 0 ||
-//                   total_len < reqhandle.req_msg_.body_data_.length_;
-//        i++) {
-//         //TODO : 0000이 들어가는 경우 문제가 생길수도. char buffer로 한번에
-//         받아서 처리.
-//     total_len += strlen(ctmp);
-//     if (i == 0)
-//       reqhandle.req_msg_.body_data_.entity_ = strdup(ctmp);
-//     else
-//       reqhandle.req_msg_.body_data_.entity_ =
-//           ft_strjoin(reqhandle.req_msg_.body_data_.entity_, ctmp);
-//     delete[] ctmp;
-//   }
+void ReqHandler::RecvFromSocket()
+{
+  if (client_ == NULL || read_len_ == 0) {
+    #if REQ_HANDLER
+      std::cout << "[ReqHandler] Recv error. Need client data. call SetClient() or SetReadLen()" << std::endl;
+    #endif
+    return;
+  }
 
-//   reqhandle.print_structure();
-//   Print_Map(reqhandle.req_msg_.headers_);
-//   std::cout << std::endl;
-//   std::cout << "entity value :" << reqhandle.req_msg_.body_data_.entity_
-//             << std::endl;
-// }
+  //req msg를 읽어오는 과정. recv로.
+  ssize_t recv_return(0);
+  buf_ = new char[sizeof(char) * read_len_];
+  recv_return = recv(client_->GetClientFd(), buf_, read_len_, 0);
+  if (recv_return == -1)
+  {
+    #if REQ_HANDLER
+    std::cout << "[ReqHandler] recv return -1. socket : " << client_->GetClientFd() << std::endl;
+    #endif
+    // EV_SET;
+    // return ; ?? 어디로 돌아가야되지
+  }
+  else if (recv_return != read_len_)
+  {
+    #if REQ_HANDLER
+    std::cout << "[ReqHandler] recv return != kevent->data : \
+    loss data?" << std::endl;
+    #endif
+  }
+}
 
-// 실제 사용할 함수. client 소켓은 어떻게되는지..?
-void Parse_Req_Msg(int c_socket, Data& m_data) {
-  char* ctmp;
-  std::string stmp;
-  std::string contents;
-
-  // gnl현재는 개행을 기준으로 잘라 값을string에 저장했지만
-  // 실제 요청 메세지가 온다면 개행 기준이 아니라 \r\n을 기준으로 나눠야한다.
-  while ((ctmp = get_next_line(c_socket)) != 0) {
-    stmp = ctmp;
-    if (stmp == "#@\n") {
-      stmp.clear();
-      delete[] ctmp;
-      break;
+void ReqHandler::ParseEntity(int start_idx) {
+  while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
+    start_idx++;
+    if (start_idx == read_len_) {
+      #if REQ_HANDLER
+        std::cout << "[ReqHandler] There is no entity(body)" << std::endl;
+      #endif
+      return ;
     }
-    contents.append(stmp);
-    stmp.clear();
-    delete[] ctmp;
+  }
+  char *entity = new char[req_msg_->body_data_.length_ + 1];
+  memcpy(entity,&buf_[start_idx], req_msg_->body_data_.length_);
+  req_msg_->body_data_.data_ = entity;
+}
+
+
+int64_t ReqHandler::ParseHeaders(int start_idx) {
+  /* buf_[start_idx]를 헤더의 첫줄로 만들기 */
+  while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
+    start_idx++;
+    if (start_idx == read_len_) {
+      return(start_idx);
+    }
+  }
+  int64_t curr_idx(start_idx), end_idx(start_idx);
+
+  std::cout << start_idx << std::endl;
+
+  /* buf_에서 한줄씩 찾아서 key-value로 만들어서 넣어주기 */
+  int i(0);
+  while (start_idx + i < read_len_) {
+    if (buf_[start_idx + i] == '\r') {
+      if (start_idx + i + 3 >= read_len_ || \
+        strncmp(&buf_[start_idx + i], "\r\n\r\n", 4) == 0) {
+        break ;
+      }
+      buf_[start_idx + i] = '\0';
+      ParseHeadersSetKeyValue(&buf_[curr_idx]);
+      curr_idx = start_idx + i + 2;
+    }
+    i++;
+  }
+  end_idx += i;
+  return (end_idx);
+}
+
+void ReqHandler::ParseHeadersSetKeyValue(char *line) {
+  std::string tmp;
+  tmp = line;
+  std::vector<std::string> kv_tmp;
+  kv_tmp = split(tmp, ':', 0);
+  Remove_Tab_Space(kv_tmp[0]);
+  Remove_Tab_Space(kv_tmp[1]);
+  if (kv_tmp[0] == "Content-Length"){
+    req_msg_->body_data_.length_ = atoi(kv_tmp[1].c_str());
+  }
+  req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
+}
+
+int64_t ReqHandler::ParseFirstLine() { // end_idx = '\n'
+  int64_t curr_idx(0), find_idx(0), end_idx(0);
+  /* 첫 줄 찾기 */
+  find_idx = strcspn(buf_, "\n"); // buf 에서 "\n"의 인덱스 찾는 함수
+  while (find_idx != read_len_ && buf_[find_idx - 1] != '#')
+    find_idx += strcspn(&buf_[find_idx + 1], "\n");
+  end_idx = find_idx;
+
+  /* 첫 줄 유형 확인 */
+  find_idx = 0;
+
+  /* 첫 단어 Method 쪼개기 */
+  find_idx = strcspn(buf_, " ");
+  char* tmp = new char[end_idx + 1];
+  if (find_idx >= end_idx)
+  {
+    // client_->SetStatusCode(400); // bad request
+    return (read_len_);
+  }
+  strncpy(tmp, buf_, find_idx);
+  tmp[find_idx] = '\0';
+  /* 메소드 유효성 확인 필요 */
+  req_msg_->method_.append(tmp);
+  curr_idx = find_idx;
+  /* 두번 째 URL 쪼개기 */ 
+  find_idx = strcspn(&buf_[curr_idx + 1], " ");
+  if (find_idx >= end_idx)
+  {
+    // client_->SetStatusCode(400); // bad request
+    return (read_len_);
+  }
+  strncpy(tmp, &buf_[curr_idx + 1], find_idx);
+  tmp[find_idx] = '\0';
+  /* 올바른 URL 인지 확인 필요 */
+  req_msg_->req_url_ = tmp;
+  curr_idx = find_idx;
+
+  /* 버전확인 406 Not Acceptable */ 
+  find_idx = strcspn(&buf_[curr_idx + 1], "#");
+  if (find_idx >= end_idx)
+  {
+    // client_->SetStatusCode(400); // bad request
+    return (read_len_);
+  }
+  strncpy(tmp, &buf_[curr_idx + 1], find_idx);
+  tmp[find_idx] = '\0';
+
+  if (strncmp(tmp, "HTTP/1.1", 8) == 0)
+  {
+    // client_->SetStatusCode(400); // bad request
+    return (read_len_);
   }
 
-  // data에 요청메세지 전체가 들어가있음.
-  std::vector<std::string> data = s_split(contents, "#@\n", 0);
+  delete[] tmp;
+  return (end_idx);
+}
 
-  // //--------------start line parsing -----------------
-  std::vector<std::string> start_line = split(data[0], ' ', 0);
-  m_data.req_message_->req_msg_.method_ = start_line[0];
-  m_data.req_message_->req_msg_.req_url_ = start_line[1];
-  m_data.req_message_->req_msg_.protocol_ = start_line[2];
+t_req_msg* ReqHandler::PopReqMassage()
+{
+  t_req_msg* req(req_msg_);
+  #if REQ_HANDLER
+    if (req_msg_ == NULL)
+      std::cout << "ReqHanlder is empty" << std::endl;
+  #endif
+  req_msg_ = NULL;
+  return (req);
+}
 
-  start_line.clear();
-  data.erase(data.begin());
-
-  //---------------header parsing -------------------
-  while (1) {
-    std::vector<std::string> head_line = s_split(data[0], ": ", 1);
-    if (head_line.size() == 1) break;
-    Remove_Tab_Space(head_line[0]);
-    if (head_line[0] == "Content-Length")
-      m_data.entity_->length_ = atoi(head_line[1].c_str());
-
-    std::pair<std::string, std::string> t =
-        std::pair<std::string, std::string>(head_line[0], head_line[1]);
-    m_data.req_message_->req_msg_.headers_.insert(t);
-    data.erase(data.begin());
-    head_line.clear();
+void ReqHandler::Clear()
+{
+  if (buf_ != NULL)
+  {
+    delete[] buf_;
+    buf_ = NULL;
   }
-
-  //------------body parsing-----------------------
-  size_t total_len = 0;
-  m_data.entity_->data_ = NULL;
-  for (int i = 0; (ctmp = get_next_line(c_socket)) != 0 ||
-                  total_len < m_data.entity_->length_;
-       i++) {
-    total_len += strlen(ctmp);
-    if (i == 0)
-      m_data.entity_->data_ = strdup(ctmp);
-    else
-      m_data.entity_->data_ = ft_strjoin(m_data.entity_->data_, ctmp);
-    delete[] ctmp;
+  read_len_ = 0;
+  client_ = NULL;
+  if (req_msg_ != NULL)
+  {
+    delete req_msg_;
+    req_msg_ = NULL;
   }
+}
+
+void ReqHandler::ParseRecv(int fd)
+{
+  if (buf_ == NULL) {
+    #if REQ_HANDLER
+      std::cout << "[ReqHandler] Parse error. Need buf_. call RecvFromSocket()" << std::endl;
+    #endif
+    return;
+  }
+  if (req_msg_ == NULL)
+    req_msg_ = new t_req_msg;
+
+  int64_t idx(0);
+  buf_ = new char[sizeof(char) * read_len_];
+
+  /* 첫줄 파싱 */
+  if (read(fd, buf_, read_len_) != read_len_) {
+    #if REQ_HANDLER
+      std::cout << "[ReqHandler] read error in ParseRecv()" << std::endl;
+    #endif
+  };
+
+  idx = ParseFirstLine(); // buf[idx] = 첫줄의 \n
+  /* 헤더 파싱 */
+  idx = ParseHeaders(idx); // buf[idx] = 마지막 헤더줄의 /r
+  // entity 넣기
+  #if REQ_HANDLER
+  // Print_Map(req_msg_->headers_);
+  std::cout << "content length :" << req_msg_->body_data_.length_ << std::endl;
+  #endif
+
+  ParseEntity(idx);
+  delete[] buf_;
+  buf_ = NULL;
 }
 
 void Remove_Tab_Space(std::string& str) {
@@ -160,11 +239,18 @@ void Remove_Tab_Space(std::string& str) {
   }
 }
 
-void Print_Map(std::map<std::string, std::string>& map) {
-  std::cout << RED << "[[PRINT MAP]]" << RESET << std::endl;
-  for (std::map<std::string, std::string>::iterator it = map.begin();
-       it != map.end(); ++it) {
-    std::cout << "key : " << it->first << " || value : " << it->second
-              << std::endl;
+std::vector<std::string> split(const std::string& s, char delimiter, int cnt) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::stringstream tokenStream(s);
+
+  while (std::getline(tokenStream, token, delimiter)) {
+    tokens.push_back(token);
+    if (cnt == 1) {
+      token = tokenStream.str();
+      tokens.push_back(token);
+      break;
+    }
   }
+  return tokens;
 }

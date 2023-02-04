@@ -41,16 +41,16 @@ class MethodProcessor {
  public:
   MethodProcessor(void);
   ~MethodProcessor(void);
-  void MethodProcessorInput(ClientMetaData *clients);
+  void MethodProcessorInput(ClientMetaData* clients);
 
  private:
   std::map<int, t_entity *> cache_entity_;
-  void MakeErrorStatus(Data &client, int code);
-  void FetchOiginalPath(std::string &uri);
-  bool IsFetched(std::string &uri);
-  bool IsExistFile(std::string &uri);
-  bool IsCgi(std::string &uri);
-  bool IsFile(std::string &uri, const char *identifier);
+  void MakeErrorStatus(Data *client, int code);
+  void FetchOiginalPath(std::string uri);
+  bool IsFetched(std::string uri);
+  bool IsExistFile(std::string uri);
+  bool IsCgi(std::string uri);
+  bool IsFile(std::string uri, const char *identifier);
   char *CopyCstr(const char *cstr, size_t length);
   void MethodGETCgi(Data *client);
   void MethodGETFile(Data *client);
