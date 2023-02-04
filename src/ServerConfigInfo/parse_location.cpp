@@ -87,8 +87,6 @@ void Config::ParseLocationFilePath(t_location& l,
                                    const std::vector<std::string>& vec) {
   if (vec.size() != 1) ExitConfigParseError();
 
-  std::ifstream fs(vec[0]);
-  if (fs.fail()) ExitConfigParseError();
   l.file_path_ = vec[0];
 }
 

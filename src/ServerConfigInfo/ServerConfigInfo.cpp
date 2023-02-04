@@ -52,9 +52,12 @@ bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
 
 // std::string ServerConfigInfo::GetRequestFilePath(
 //     const std::string& req_uri) const {
-//   (void)req_uri;
+//   t_location* loc = GetCurrentLocation(req_uri);
 
-//   return NULL;
+//   if (loc) {
+//     return NULL;
+//   }
+//   return file_path_;
 // }
 
 std::string ServerConfigInfo::GetCurrentDate(void) const {

@@ -29,7 +29,7 @@ class ServerConfigInfo {
   bool CheckAvailableMethod(const std::string& req_uri,
                             const std::string& method) const;
 
-  // std::string GetRequestFilePath(const std::string& req_uri) const;
+  std::string GetRequestFilePath(const std::string& req_uri) const;
 
   std::string GetCurrentDate(void) const;
 

@@ -96,6 +96,13 @@ void Config::SetServerConfigInfo(const std::string& key,
 }
 
 /* ======================== Validate Server ======================== */
+bool Config::CheckDuplicatePort(int port) const {
+  for (size_t i = 0; i < server_config_infos_.size(); ++i) {
+    if (port == server_config_infos_[i].port_) return true;
+  }
+  return false;
+}
+
 void Config::CheckValidation(void) {
 #if CONFIG
   std::cout << BOLDCYAN
@@ -113,12 +120,14 @@ void Config::CheckValidation(void) {
     struct stat sb;
     if (stat(file_path.c_str(), &sb) == 0) {
       info.file_path_ = file_path;
+    } else {
+      ExitConfigValidateError("Wrong File Path\n-> " + info.root_path_ +
+                              info.file_path_);
     }
 
-    std::map<std::string, t_location>::const_iterator it =
-        info.locations_.begin();
+    std::map<std::string, t_location>::iterator it = info.locations_.begin();
     for (; it != info.locations_.end(); ++it) {
-      CheckLocation(it->second);
+      CheckLocation(it->second, info);
     }
   }
 #if CONFIG
@@ -126,22 +135,25 @@ void Config::CheckValidation(void) {
 #endif
 }
 
-bool Config::CheckDuplicatePort(int port) const {
-  for (size_t i = 0; i < server_config_infos_.size(); ++i) {
-    if (port == server_config_infos_[i].port_) return true;
-  }
-  return false;
-}
-
-void Config::CheckLocation(const t_location& l) const {
-  if (!l.is_cgi_) {  // cgi가 아닌 경우
-    if (l.file_path_.empty())
+void Config::CheckLocation(t_location& loc, const ServerConfigInfo& info) {
+  if (!loc.is_cgi_) {  // cgi가 아닌 경우
+    if (loc.file_path_.empty()) {
       ExitConfigValidateError(
           "Missing Location Elements(status_code or file_path)");
+    }
+    std::string file_path = info.root_path_ + loc.file_path_;
+    struct stat sb;
+    if (stat(file_path.c_str(), &sb) == 0) {
+      loc.file_path_ = file_path;
+    } else {
+      ExitConfigValidateError("Wrong Location File Path\n-> " +
+                              info.root_path_ + loc.file_path_);
+    }
   } else {  // cgi인 경우
-    if (l.cgi_pass_.empty())
+    if (loc.cgi_pass_.empty()) {
       ExitConfigValidateError(
           "Missing Location Elements(status_code or cgi_pass)");
+    }
   }
 }
 

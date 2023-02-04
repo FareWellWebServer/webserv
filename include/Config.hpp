@@ -57,7 +57,7 @@ class Config {
   /* ======================== Validation ======================== */
   bool CheckDuplicatePort(int port) const;
   void CheckValidation(void);
-  void CheckLocation(const t_location &l) const;
+  void CheckLocation(t_location &loc, const ServerConfigInfo &info);
 
   /* ======================== Utils ======================== */
   // Error
