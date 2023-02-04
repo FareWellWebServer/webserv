@@ -1,9 +1,9 @@
 #ifndef MSG_COMPOSER_HPP
 #define MSG_COMPOSER_HPP
 
+#include <sstream>
 #include "Data.hpp"
 #include "Stage.hpp"
-#include <sstream>
 
 class MsgComposer {
  public:

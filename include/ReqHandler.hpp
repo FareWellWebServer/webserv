@@ -1,13 +1,13 @@
 #ifndef REQ_HANDLER_HPP
 #define REQ_HANDLER_HPP
 
-#include "Color.hpp"
-#include "Data.hpp"
-#include "HTTPMessage.hpp"
-
 #include <sys/socket.h>
 #include <unistd.h>
 #include <sstream>
+
+#include "Color.hpp"
+#include "Data.hpp"
+#include "HTTPMessage.hpp"
 
 class ReqHandler {
  public:
