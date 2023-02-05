@@ -48,14 +48,17 @@ class MethodProcessor {
   void POSTSecond(struct Data* client);
   void POSTThird(struct Data* client);
   int FileSize(const char* filepath);
+  void ChangeEvents(std::vector<struct kevent> change_list, uintptr_t ident,
+                    int16_t filter, uint16_t flags, uint32_t fflags,
+                    intptr_t data, void* udata);
 
  public:
-  MethodProcessor(void);
+  MethodProcessor(const std::vector<ServerConfigInfo>& server_list);
   ~MethodProcessor(void);
-  int MethodProcessorInput(ClientMetaData* clients);
-  void GETFirst(struct Data* client);
-  void POSTFirst(struct Data* client);
-  void DELETE(struct Data* client);
+  void GETFirst(int curfd, ClientMetaData* clients,
+                std::vector<struct kevent>& change_list);
+  void POSTFirst(int curfd, ClientMetaData* clients);
+  void DELETE(int curfd, ClientMetaData* clients);
 };
 
 #endif

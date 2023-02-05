@@ -6,7 +6,8 @@ MethodProcessor::~MethodProcessor(void) {
   std::map<int, t_entity *>::iterator it = cache_entity_.begin();
   while (it != cache_entity_.end()) {
     delete[] it.operator->()->second->data_;
-    it = cache_entity_.begin();
+    it = cache_config.PrintConfigInfos();
+    entity_.begin();
   }
   cache_entity_.clear();
 }
