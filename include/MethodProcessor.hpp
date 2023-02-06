@@ -15,6 +15,8 @@
 #include <sstream>
 #include <vector>
 
+#include "WebServ.hpp"
+
 #define CGI ".py"
 #define INDEX "index.html"
 #define PNG ".png"
@@ -32,26 +34,6 @@
 extern char** environ;
 
 class MethodProcessor {
- private:
-  std::map<int, t_entity*> cache_entity_;
-  void MakeErrorStatus(struct Data& client, int code);
-  void FetchOiginalPath(std::string& uri, struct Data& client);
-  bool IsFetched(std::string& uri, struct Data& client);
-  bool IsExistFile(std::string& uri);
-  bool IsCgi(std::string& uri);
-  bool IsFile(std::string& uri, const char* identifier);
-  char* CopyCstr(const char* cstr, size_t length);
-  void GETSecondCgi(int curfd, ClientMetaData* clients,
-                    struct kevent& cur_event);
-  void GETSecondFile(int curfd, ClientMetaData* clients,
-                     struct kevent& cur_event);
-  void GETSecond(int curfd, ClientMetaData* clients, struct kevent& cur_event);
-  void POSTSecond(int curfd, ClientMetaData* clients, struct kevent& cur_event);
-  void POSTThird(int curfd, ClientMetaData* clients, struct kevent& cur_event);
-  int FileSize(const char* filepath);
-  void ChangeEvents(uintptr_t ident, int16_t filter, uint16_t flags,
-                    uint32_t fflags, intptr_t data, void* udata);
-
  public:
   /**
    * @brief Construct a new Method Processor:: Method Processor object
@@ -85,6 +67,25 @@ class MethodProcessor {
    */
   void DELETE(int curfd, ClientMetaData* clients, struct kevent& cur_event);
 
+ private:
+  std::map<int, t_entity*> cache_entity_;
+  void MakeErrorStatus(Data& client, int code);
+  void FetchOiginalPath(std::string& uri, Data& client);
+  bool IsFetched(std::string& uri, Data& client);
+  bool IsExistFile(std::string& uri);
+  bool IsCgi(std::string& uri);
+  bool IsFile(std::string& uri, const char* identifier);
+  char* CopyCstr(const char* cstr, size_t length);
+  void GETSecondCgi(int curfd, ClientMetaData* clients,
+                    struct kevent& cur_event);
+  void GETSecondFile(int curfd, ClientMetaData* clients,
+                     struct kevent& cur_event);
+  void GETSecond(int curfd, ClientMetaData* clients, struct kevent& cur_event);
+  void POSTSecond(int curfd, ClientMetaData* clients, struct kevent& cur_event);
+  void POSTThird(int curfd, ClientMetaData* clients, struct kevent& cur_event);
+  int FileSize(const char* filepath);
+  void ChangeEvents(unsigned long ident, short filter, short flags,
+                    unsigned int fflags, long data, void* udata);
 };
 
 #endif
