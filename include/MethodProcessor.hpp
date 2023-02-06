@@ -45,7 +45,8 @@ class MethodProcessor {
   MethodProcessor(const std::vector<ServerConfigInfo>& server_list);
   ~MethodProcessor(void);
   /**
-   * @brief
+   * @brief kevent 발생 시 무조건 해당 함수만 호출하면 됩니다. 메서드 구분만
+   * 해주시면 됩니다.
    * @param curfd
    * @param clients
    * @param change_list
@@ -53,14 +54,16 @@ class MethodProcessor {
   void GETFirst(int curfd, ClientMetaData* clients, struct kevent& cur_event);
 
   /**
-   * @brief
+   * @brief kevent 발생 시 무조건 해당 함수만 호출하면 됩니다. 메서드 구분만
+   * 해주시면 됩니다.
    * @param curfd
    * @param clients
    */
   void POSTFirst(int curfd, ClientMetaData* clients, struct kevent& cur_event);
 
   /**
-   * @brief
+   * @brief kevent 발생 시 무조건 해당 함수만 호출하면 됩니다. 메서드 구분만
+   해주시면 됩니다.
 
    * @param curfd
    * @param clients
