@@ -44,10 +44,8 @@ void ReqHandler::SetBuf(int fd) {
 void ReqHandler::RecvFromSocket() {
   if (client_ == NULL || read_len_ == 0) {
 #if REQ_HANDLER
-    std::cout << "[ReqHandler] Recv error. Need client data. call SetClient()
-                 "
-                 "or SetReadLen()"
-              << std::endl;
+    std::cout << " [ReqHandler] Recv error. Need client data. call SetClient() "
+              << "or SetReadLen() " << std::endl;
 #endif
     return;
   }
