@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/ReqHandler.hpp"
 
 ReqHandler::ReqHandler(void) : req_msg_(0), buf_(0), read_len_(0), client_(0) {}
 
@@ -23,7 +23,7 @@ void ReqHandler::Clear() {
 
 t_req_msg* ReqHandler::PopReqMassage() {
   t_req_msg* req(req_msg_);
-#if DG
+#if REQ_HANDLER
   if (req_msg_ == NULL) std::cout << "ReqHanlder is empty" << std::endl;
 #endif
   req_msg_ = NULL;
@@ -36,12 +36,14 @@ void ReqHandler::SetBuf(int fd) {
   int byte = 0;
   buf_ = new char[read_len_ * sizeof(char)];
   byte = read(fd, buf_, read_len_);
-  if (byte < 0) std::cout << "ERROR IN SET BUF" << std::endl;
+  if (byte < 0) {
+    std::cout << "ERROR IN SET BUF" << std::endl;
+  }
 }
 
 void ReqHandler::RecvFromSocket() {
   if (client_ == NULL || read_len_ == 0) {
-#if DG
+#if REQ_HANDLER
     std::cout << "[ReqHandler] Recv error. Need client data. call SetClient()
                  "
                  "or SetReadLen()"
@@ -54,14 +56,14 @@ void ReqHandler::RecvFromSocket() {
   buf_ = new char[sizeof(char) * read_len_];
   recv_return = recv(client_->GetClientFd(), buf_, read_len_, 0);
   if (recv_return == -1) {
-#if DG
-    std::cout << "[ReqHandler] recv return -1. socket : " << client_->GetFd()
-              << std::endl;
+#if REQ_HANDLER
+    std::cout << "[ReqHandler] recv return -1. socket : "
+              << client_->GetClientFd() << std::endl;
 #endif
     // EV_SET;
     // return ; ?? 어디로 돌아가야되지
   } else if (recv_return != read_len_) {
-#if DG
+#if REQ_HANDLER
     std::cout << "[ReqHandler] recv return != kevent->data : \
     loss data?"
               << std::endl;
@@ -120,7 +122,7 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   req_msg_->protocol_ = tmp;
 
   delete[] tmp;
-  Remove_Tab_Space(req_msg_->protocol_);
+  RemoveTabSpace(req_msg_->protocol_);
   return (end_idx);
 }
 
@@ -131,8 +133,8 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
   std::vector<std::string> kv_tmp;
 
   kv_tmp = split(tmp, ':', 0);
-  Remove_Tab_Space(kv_tmp[0]);
-  Remove_Tab_Space(kv_tmp[1]);
+  RemoveTabSpace(kv_tmp[0]);
+  RemoveTabSpace(kv_tmp[1]);
   next_loc = kv_tmp[1].find_first_of('\n', 0);
   if (next_loc != std::string::npos) {
     kv_tmp[1].erase(next_loc, 1);

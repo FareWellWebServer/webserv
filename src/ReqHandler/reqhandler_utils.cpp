@@ -15,11 +15,11 @@ std::vector<std::string> s_split(std::string& s, const std::string& delimiter,
   return tokens;
 }
 
-void Remove_Tab_Space(std::string& str) {
+void RemoveTabSpace(std::string& str) {
   for (size_t i = 0; i < str.length(); i++) {
     if (str[i] == '\t' || str[i] == ' ') {
       str.erase(i, 1);
-      i--;
+      --i;
     }
   }
 }
@@ -40,7 +40,7 @@ std::vector<std::string> split(const std::string& s, char delimiter, int cnt) {
   return tokens;
 }
 
-void Print_Map(std::map<std::string, std::string>& map) {
+void PrintMap(std::map<std::string, std::string>& map) {
   std::cout << RED << "[[PRINT MAP]]" << RESET << std::endl;
   for (std::map<std::string, std::string>::iterator it = map.begin();
        it != map.end(); ++it) {

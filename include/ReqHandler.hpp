@@ -31,7 +31,7 @@ class ReqHandler {
   void ParseEntity(int start_idx);
 };
 
-void Print_Map(std::map<std::string, std::string>& map);
-void Remove_Tab_Space(std::string& str);
+void PrintMap(std::map<std::string, std::string>& map);
+void RemoveTabSpace(std::string& str);
 std::vector<std::string> split(const std::string& s, char delimiter, int cnt);
 #endif
