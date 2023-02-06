@@ -8,11 +8,11 @@
 // 테스트 끝나면 지우기
 
 // TODO : type 추가
-typedef struct s_entity {
-  char* entity_;
-  size_t entity_length_;
-  std::string type_;
-} t_entity;
+// typedef struct s_entity {
+//   char* entity_;
+//   size_t entity_length_;
+//   std::string type_;
+// } t_entity;
 
 typedef struct s_req_msg {
   std::string method_;

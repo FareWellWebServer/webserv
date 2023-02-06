@@ -67,10 +67,10 @@ void ReqHandler::ParseEntity(int start_idx) {
       return;
     }
   }
-  req_msg_->body_data_.entity_length_ = read_len_ - start_idx;
-  char* entity = new char[req_msg_->body_data_.entity_length_];
-  strncpy(entity, &buf_[start_idx], req_msg_->body_data_.entity_length_);
-  req_msg_->body_data_.entity_ = entity;
+  req_msg_->body_data_.length_ = read_len_ - start_idx;
+  char* entity = new char[req_msg_->body_data_.length_];
+  strncpy(entity, &buf_[start_idx], req_msg_->body_data_.length_);
+  req_msg_->body_data_.data_ = entity;
 }
 
 void ReqHandler::ParseHeadersSetKeyValue(char* line) {
@@ -91,10 +91,10 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
   Remove_Tab_Space(kv_tmp[0]);
   Remove_Tab_Space(kv_tmp[1]);
   if (kv_tmp[0] == "Content-Length") {
-    req_msg_->body_data_.entity_length_ = atoi(kv_tmp[1].c_str());
+    req_msg_->body_data_.length_ = atoi(kv_tmp[1].c_str());
   }
   if (kv_tmp[0] == "Content-type") {
-    req_msg_->body_data_.type_ = kv_tmp[1];
+    req_msg_->body_data_.type_ = strdup(kv_tmp[1].c_str());
   }
   req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
 }
