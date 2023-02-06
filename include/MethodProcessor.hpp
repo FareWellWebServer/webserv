@@ -1,5 +1,5 @@
-#ifndef MethodProcessor_hpp_
-#define MethodProcessor_hpp_
+#ifndef METHOD_PROCESSOR_HPP
+#define METHOD_PROCESSOR_HPP
 
 #include <sys/event.h>
 #include <sys/stat.h>
@@ -29,7 +29,6 @@
 #define TYPE_DEFAULT "text/plain"
 
 #include <unistd.h>
-
 extern char** environ;
 
 class MethodProcessor {
@@ -85,6 +84,7 @@ class MethodProcessor {
    * @param clients
    */
   void DELETE(int curfd, ClientMetaData* clients, struct kevent& cur_event);
+
 };
 
 #endif

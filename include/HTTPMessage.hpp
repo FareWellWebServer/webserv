@@ -1,5 +1,5 @@
-#ifndef HTTPMASSAGE_HPP
-#define HTTPMASSAGE_HPP
+#ifndef HTTP_MESSAGE_HPP
+#define HTTP_MESSAGE_HPP
 
 #include <iostream>
 #include <map>

@@ -1,19 +1,21 @@
-#ifndef RESHANDLER_HPP
-#define RESHANDLER_HPP
+#ifndef RES_HANDLER_HPP
+#define RES_HANDLER_HPP
 
-//#include <iostream>
-//#include "unistd.h"
-#include "./WebServ.hpp"
+#include <unistd.h>
+
+#include <iostream>
+#include <sstream>
+#include <vector>
 
 class ResHandler {
-private:
-	const char* response_;
-	std::size_t response_length_;
+ public:
+  ResHandler(const char* response, std::size_t response_length);
+  ~ResHandler(void);
+  void SendToClient(int client_fd);
 
-public:
-	ResHandler(const char* response, std::size_t response_length);
-    ~ResHandler(void);
-	void SendToClient(int client_fd);
+ private:
+  const char* response_;
+  std::size_t response_length_;
 };
 
 #endif

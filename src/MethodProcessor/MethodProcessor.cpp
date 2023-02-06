@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/MethodProcessor.hpp"
 
 //  Public
 MethodProcessor::MethodProcessor(
@@ -180,6 +180,7 @@ void MethodProcessor::MakeErrorStatus(struct Data& client, int code) {
 }
 
 void MethodProcessor::FetchOiginalPath(std::string& uri, struct Data& client) {
+
   uri.erase(0);
   uri.insert(0, client.config_->file_path);
   return;
@@ -198,6 +199,7 @@ bool MethodProcessor::IsFetched(std::string& uri, struct Data& client) {
   return (true);
 }
 
+
 bool MethodProcessor::IsExistFile(std::string& uri) {
   const char* temp = uri.c_str();
 
@@ -208,7 +210,9 @@ bool MethodProcessor::IsExistFile(std::string& uri) {
   return (true);
 }
 
+
 bool MethodProcessor::IsCgi(std::string& uri) {
+
   std::string::reverse_iterator it = uri.rbegin();
   if (it[0] == CGI[2]) {
     if (it[1] == CGI[1]) {
@@ -220,6 +224,7 @@ bool MethodProcessor::IsCgi(std::string& uri) {
   return (false);
 }
 
+
 bool MethodProcessor::IsFile(std::string& uri, const char* identifier) {
   const char* temp = uri.c_str();
 
@@ -230,8 +235,10 @@ bool MethodProcessor::IsFile(std::string& uri, const char* identifier) {
   return (true);
 }
 
+
 char* MethodProcessor::CopyCstr(const char* cstr, size_t length) {
   char* ret = new char[length + 1];
+
   if (ret == NULL) {
     /*error handling*/;
   }
@@ -243,6 +250,7 @@ char* MethodProcessor::CopyCstr(const char* cstr, size_t length) {
   return ret;
 }
 
+
 void MethodProcessor::GETSecondCgi(int curfd, ClientMetaData* clients,
                                    struct kevent& cur_event) {
   // TODO : CGI 읽기 구현
@@ -252,6 +260,7 @@ void MethodProcessor::GETSecondCgi(int curfd, ClientMetaData* clients,
   client->entity_->data_ = new char[client->entity_->length_];
   if (client->entity_->data_ == NULL) {
     // TODO : error handling;
+
   }
   int ret = read(curfd, client->entity_->data_, client->entity_->length_);
   ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);

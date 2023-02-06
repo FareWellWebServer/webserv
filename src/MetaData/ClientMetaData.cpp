@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/ClientMetaData.hpp"
 
 ClientMetaData::ClientMetaData() : current_fd_(-1) {}
 
@@ -23,7 +23,6 @@ void ClientMetaData::InitializeData(Data* data) {
   // data->req_message_ = NULL;
   // data->res_message_ = NULL;
   data->status_code_ = 200;
-  data->entity_ = NULL;
 }
 
 void ClientMetaData::SetCurrentFd(const fd& client_fd) {
@@ -36,40 +35,53 @@ void ClientMetaData::AddData(const int& listen_fd, const int& client_fd,
 
   InitializeData(&new_data);
   new_data.litsen_fd_ = listen_fd;
-  // new_data.client_fd_ = client_fd;
+  new_data.client_fd_ = client_fd;
   new_data.port_ = port;
   datas_.insert(std::pair<int, Data>(client_fd, new_data));
   current_fd_ = client_fd;
 }
 
-void ClientMetaData::SetConfig(struct kevent& event) {
-  ValidCheckToAccessData();
-  datas_[current_fd_].event_ = &event;
-  datas_[current_fd_].config_ =
-      reinterpret_cast<ServerConfigInfo*>(event.udata);
+void ClientMetaData::SetEvent(struct kevent* event) {
+  datas_[current_fd_].event_ = event;
 }
+
+void ClientMetaData::SetConfig() {
+  ValidCheckToAccessData();
+  if (datas_[current_fd_].event_ == NULL)
+    return ;
+  datas_[current_fd_].config_ =
+      reinterpret_cast<ServerConfigInfo*>(datas_[current_fd_].event_->udata);
+}
+
+void ClientMetaData::SetFileFd(int file_fd) {
+  ValidCheckToAccessData();
+  datas_[current_fd_].client_fd_ = file_fd;
+}
+
+void ClientMetaData::SetPipeFd(int pipe[2]) {
+  ValidCheckToAccessData();
+  datas_[current_fd_].pipe_[READ] = pipe[READ];
+  datas_[current_fd_].pipe_[WRITE] = pipe[WRITE];
+}
+
 
 void ClientMetaData::DeleteByFd(const int& client_fd) {
   ValidCheckToAccessData();
+  datas_[client_fd].Clear();
   datas_.erase(client_fd);
 }
 
-// void ClientMetaData::SetReqMessage(struct HTTPMessage* header)
-// {
-//   ValidCheckToAccessData();
-//   datas_[current_fd_].req_message_ = header;
-// }
+void ClientMetaData::SetReqMessage(t_req_msg* req_message)
+{
+  ValidCheckToAccessData();
+  datas_[current_fd_].req_message_ = req_message;
+}
 
-// void ClientMetaData::SetResMessage(struct HTTPMessage* header)
-// {
-//   ValidCheckToAccessData();
-//   datas_[current_fd_].res_message_ = header;
-// }
-
-// void ClientMetaData::SetEntity(char* entitiy) {
-//   ValidCheckToAccessData();
-//   datas_[current_fd_].entity_ = entitiy;
-// }
+void ClientMetaData::SetResEntity(t_entity* res_enetity)
+{
+  ValidCheckToAccessData();
+  datas_[current_fd_].res_entity_ = res_enetity;
+}
 
 Data& ClientMetaData::GetData() {
   ValidCheckToAccessData();

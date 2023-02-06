@@ -4,7 +4,7 @@ RH_NAME = Req_handle
 CXX = c++
 
 # Compiler flags
-CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
+CXXFLAGS = -g3 -std=c++98 -Wall -Wextra -Werror -pedantic -D SERVER=1 -D REQ_HANDLER=1 -D RES_HANDLER=1 -D CONFIG=1
 #  CXXFLAGS = -g3 -fsanitize=address -D DG=1
 
 

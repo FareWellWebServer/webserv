@@ -18,7 +18,7 @@ int main(int ac, char** av) {
     // error handler
     ErrorHandler error_handler(custom_error);
   } catch (const std::exception& error) {
-    // 미쳐 처리하지 못한 에러 잡기
+    // 미처 처리하지 못한 에러 잡기
     std::cerr << RED << error.what() << std::endl;
   };
 }

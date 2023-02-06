@@ -1,9 +1,6 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "WebServ.hpp"
-#include "ClientMetaData.hpp"
-
 #include <arpa/inet.h> /* htons, htonl, ntohs, ntohl */
 #include <fcntl.h>     /* fcntl */
 #include <netdb.h>     /* getprotobyname */
@@ -14,9 +11,12 @@
 #include <sys/socket.h> /* AF_INET, SOCK_STREAM, gai_strerror, socket, accept, listen, send, recv, bind, connect, getaddrinfo, freeaddrinfo, setsockopt, getsockname */
 #include <sys/types.h>  /* kqueue kevent */
 #include <unistd.h>     /* execve, dup, dup2, pipe */
+
 #include <cstring> /* memset, strerror */
 #include <iostream>
 #include <set>
+
+#include "ClientMetaData.hpp"
 
 #define MAXLINE 1000000
 #define MAXBUF 1000000
@@ -24,6 +24,18 @@
 #define BACKLOG 128
 #define DISABLE 0
 #define ENABLE 1
+
+#define LISTEN_FD 255
+#define CLIENT_FD 256
+#define FILE_FD 257
+#define PIPE_FD 258
+
+
+typedef struct s_fd_info {
+	int which_fd;
+	Data *parent;
+} t_fd_info;
+
 
 typedef struct s_litening {
   std::string host;

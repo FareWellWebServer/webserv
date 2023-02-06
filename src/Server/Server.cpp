@@ -20,7 +20,7 @@ void Server::Run(void) {
 
 void Server::Init(const std::vector<ServerConfigInfo>& server_infos) {
   for (size_t i = 0; i < server_infos.size(); ++i) {
-    SetHostPortAvaiable(server_infos[i].host, server_infos[i].port);
+    SetHostPortAvaiable(server_infos[i].host_, server_infos[i].port_);
   }
 }
 
@@ -32,44 +32,51 @@ void Server::Act(void) {
     throw std::runtime_error("Error: kevent()");
   }
   for (int idx = 0; idx < n; ++idx) {
-    if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ) {
+		int which_fd = reinterpret_cast<t_fd_info *>(events_[idx].udata)->which_fd;
+		int16_t filter = events_[idx].filter;
+
+    if (which_fd == LISTEN_FD) {
       AcceptNewClient(idx);
-    } else {
-      ActCoreLogic(idx);
-    }
-  }
+    } else if (which_fd == CLIENT_FD && filter == EVFILT_READ) { 
+			DisConnect(events_[idx].ident);
+    } else if (which_fd == CLIENT_FD && filter == EVFILT_WRITE) {
+			DisConnect(events_[idx].ident);
+		} else if (which_fd == CLIENT_FD && events_[idx].flags == EV_EOF) {
+			DisConnect(events_[idx].ident);
+		} else if (which_fd == CLIENT_FD && filter == EVFILT_TIMER) {
+			DisConnect(events_[idx].ident);
+		} else if ((which_fd == FILE_FD || which_fd == PIPE_FD) && EVFILT_READ) {
+			DisConnect(events_[idx].ident);
+		} else if ((which_fd == FILE_FD || which_fd == PIPE_FD) && EVFILT_WRITE) {
+			DisConnect(events_[idx].ident);
+		}
+	}
 }
 
 void Server::AcceptNewClient(int idx) {
   int connfd;
   socklen_t client_len;
   struct sockaddr_storage client_addr;
-  int flags;
   char host[MAXBUF];
   char port[MAXBUF];
   struct kevent event;
 
   client_len = sizeof(client_addr);
-  connfd =
-      accept(events_[idx].ident,
-             reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
-  // if (connfd == -1) {
-  //   throw std::runtime_error("Error: accept()");
-  // }
-  flags = fcntl(connfd, F_GETFL, 0);
-  if (flags == -1) {
-    throw std::runtime_error("Error: fcntl()");
+  connfd = accept(events_[idx].ident, reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
+  if (connfd == -1) {
+    throw std::runtime_error("Error: accept()");
   }
-  flags |= O_NONBLOCK;
-  if (fcntl(connfd, F_SETFL, flags) == -1) {
-    throw std::runtime_error("Error: fcntl()");
-  }
-  EV_SET(&event, connfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+
+	t_fd_info udata;
+	udata.parent = NULL;
+	udata.which_fd = CLIENT_FD;
+
+  EV_SET(&event, connfd, EVFILT_READ, EV_ADD, 0, 0, &udata);
   if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("Error: kevent()");
   }
-  getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr), client_len,
-              host, MAXBUF, port, MAXBUF, 0);
+
+  getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr), client_len, host, MAXBUF, port, MAXBUF, 0);
   clients_.AddData(events_[idx].ident, connfd, atoi(port));
   std::cout << "Connected to (" << host << ", " << port << "). socket : " << connfd << std::endl;
 }
@@ -87,7 +94,7 @@ void Server::ActCoreLogic(int idx) {
 }
 
 void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
-#if DG
+#if SERVER
   if (servers_.size() == MAXLISTEN) {
     std::cerr << "Error: full of listening\n";
     return;
@@ -97,30 +104,33 @@ void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
   int listenfd;
 
   BindListen(host, port, listenfd);
-  EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+
+	t_fd_info udata;
+	udata.parent = NULL;
+	udata.which_fd = LISTEN_FD;
+  EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, &udata);
   if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("Error: kevent()");
   }
   servers_.insert(CreateListening(host, port, listenfd));
-#if DG
+#if SERVER
   std::cout << host << " is listening port on " << port << "\n";
 #endif
 }
 
-void Server::BindListen(const std::string& host, const int& port,
-                        int& listenfd) {
+void Server::BindListen(const std::string& host, const int& port, int& listenfd) {
   struct addrinfo* listp;
   struct addrinfo* p;
   int optval = ENABLE;
 
-  GetAddrInfo(host, port, &listp);
+
+	GetAddrInfo(host, port, &listp);
   for (p = listp; p; p = p->ai_next) {
     listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
     if (listenfd < 0) {
       throw std::runtime_error("failed at socket create");
     }
-    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
-               reinterpret_cast<const void*>(&optval), sizeof(int));
+    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const void*>(&optval), sizeof(int));
     if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0) {
       break;
     }
@@ -136,8 +146,7 @@ void Server::BindListen(const std::string& host, const int& port,
   }
 }
 
-void Server::GetAddrInfo(const std::string& host, const int& port,
-                         struct addrinfo** listp) {
+	void Server::GetAddrInfo(const std::string& host, const int& port, struct addrinfo** listp) {
   struct addrinfo hints;
   int status;
 
@@ -147,15 +156,13 @@ void Server::GetAddrInfo(const std::string& host, const int& port,
   hints.ai_flags |= AI_ADDRCONFIG;
   hints.ai_flags |= AI_NUMERICSERV;
   hints.ai_flags |= AI_NUMERICHOST;
-  status =
-      getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, listp);
+  status = getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, listp);
   if (status != 0) {
     throw std::runtime_error(gai_strerror(status));
   }
 }
 
-t_listening* Server::CreateListening(const std::string& host, const int& port,
-                                     const int& fd) {
+t_listening* Server::CreateListening(const std::string& host, const int& port, const int& fd) {
   t_listening* new_listening = new t_listening;
 
   new_listening->host = host;
@@ -170,7 +177,6 @@ bool Server::IsListenFd(const int& fd) {
     if (fd == (*it)->fd) {
       return true;
     }
-    return false;
   }
   return false;
 }

@@ -1,7 +1,9 @@
-#ifndef GET_NEXT_LINE_H
-#define GET_NEXT_LINE_H
+#ifndef GET_NEXT_LINE_HPP
+#define GET_NEXT_LINE_HPP
 
-#include "WebServ.hpp"
+#define BUFFER_SIZE 1024
+
+#include <unistd.h>
 
 char *get_next_line(int fd);
 char *txt_read(int fd, char *str, int *is_end);
@@ -12,4 +14,5 @@ char *ft_strcat(char *s1, char *s2);
 char *dup_loc(char *str, int loc_of_next);
 char *ft_substr(char *str, int start, int str_len);
 char *ret_line(char **str);
+
 #endif
