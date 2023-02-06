@@ -5,24 +5,6 @@
 
 #include "WebServ.hpp"
 
-// 테스트 끝나면 지우기
-
-// TODO : type 추가
-// typedef struct s_entity {
-//   char* entity_;
-//   size_t entity_length_;
-//   std::string type_;
-// } t_entity;
-
-typedef struct s_req_msg {
-  std::string method_;
-  std::string req_url_;
-  std::string protocol_;  // 프로토콜 값을 저장하지 말고 파싱딴에서 HTTP/1.1이
-                          // 아니면 에러.
-  std::map<std::string, std::string> headers_;
-  t_entity body_data_;
-} t_req_msg;
-
 class ReqHandler {
  public:
   ReqHandler(void);
