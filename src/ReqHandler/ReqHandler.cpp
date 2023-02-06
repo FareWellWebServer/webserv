@@ -20,7 +20,7 @@ void ReqHandler::RecvFromSocket() {
 
   ssize_t recv_return(0);
   buf_ = new char[sizeof(char) * read_len_];
-  recv_return = recv(client_->GetFd(), buf_, read_len_, 0);
+  recv_return = recv(client_->GetClientFd(), buf_, read_len_, 0);
   if (recv_return == -1) {
 #if DG
     std::cout << "[ReqHandler] recv return -1. socket : " << client_->GetFd()
@@ -74,14 +74,29 @@ void ReqHandler::ParseEntity(int start_idx) {
 }
 
 void ReqHandler::ParseHeadersSetKeyValue(char* line) {
-  std::string tmp, key, value;
+  /*std::string tmp, key, value;
   tmp = line;
   key = tmp;
   key.resize(tmp.find(":"));
   value = tmp.substr(tmp.find(" ") + 1);
   while (value.find("\n") != std::string::npos)
     value.erase(value.find("\n"), 1);
-  req_msg_->headers_[key] = value;
+  req_msg_->headers_[key] = value;*/
+
+  std::string tmp;
+  tmp = line;
+  std::vector<std::string> kv_tmp;
+
+  kv_tmp = split(tmp, ':', 0);
+  Remove_Tab_Space(kv_tmp[0]);
+  Remove_Tab_Space(kv_tmp[1]);
+  if (kv_tmp[0] == "Content-Length") {
+    req_msg_->body_data_.entity_length_ = atoi(kv_tmp[1].c_str());
+  }
+  if (kv_tmp[0] == "Content-type") {
+    req_msg_->body_data_.type_ = kv_tmp[1];
+  }
+  req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
 }
 
 int64_t ReqHandler::ParseHeaders(int start_idx) {
