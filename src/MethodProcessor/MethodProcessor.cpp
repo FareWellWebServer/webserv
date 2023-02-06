@@ -1,55 +1,51 @@
 #include "../../include/MethodProcessor.hpp"
 
-#include "../../include/ErrorHandler.hpp"
-#include "../../include/Logger.hpp"
-#include "../../include/WebServ.hpp"
-#include "../../include/WebServException.hpp"
-
 MethodProcessor::MethodProcessor(void) {}
 
 MethodProcessor::~MethodProcessor(void) {
   std::map<int, t_entity *>::iterator it = cache_entity_.begin();
   while (it != cache_entity_.end()) {
-    delete[] it.operator->()->second->entity_data_;
-    std::map<int, t_entity *>::iterator it = cache_entity_.begin();
+    delete[] it.operator->()->second->data_;
+    it = cache_entity_.begin();
   }
   cache_entity_.clear();
 }
 
-void MethodProcessor::MethodProcessorInput(ClientMetaData *clients) {
-  struct Data *client;
-  client = clients->GetData(clients->GetPort());
-  if (client->req_message_->method_ == "GET")
+void MethodProcessor::MethodProcessorInput(ClientMetaData* clients) {
+  Data* client = &clients->GetData();
+  if (client->GetReqMethod() == "GET")
     MethodGET(client);
-  else if (client->req_message_->method_ == "HEAD")
+  else if (client->GetReqMethod() == "HEAD")
     MethodHEAD(client);
-  else if (client->req_message_->method_ == "POST")
+  else if (client->GetReqMethod() == "POST")
     MethodPOST(client);
-  else if (client->req_message_->method_ == "PUT")
+  else if (client->GetReqMethod() == "PUT")
     MethodPUT(client);
   else
     MethodDELETE(client);
 }
 
-void MethodProcessor::MakeErrorStatus(struct Data &client, int code) {
-  client.status_code_ = code;
-  if (client.entity_->entity_data_) delete[] client.entity_->entity_data_;
-  client.entity_->entity_data_ = NULL;
-  client.entity_->entity_type_ = NULL;
-  client.entity_->entity_length_ = 0;
+void MethodProcessor::MakeErrorStatus(Data* client, int code) {
+  client->SetStatusCode(code);
+  if (client->GetResEntitData()) {
+    delete[] client->GetResEntitData();
+  }
+  client->SetResEntityData(NULL);
+  client->SetResEntityLength(0);
+  client->SetResEntityType(NULL);
 }
 
-void MethodProcessor::FetchOiginalPath(std::string &uri) {
+void MethodProcessor::FetchOiginalPath(std::string uri) {
   uri.erase(0);
   uri.insert(0, INSTALLPATH);
   return;
 }
 
-bool MethodProcessor::IsFetched(std::string &uri) {
+bool MethodProcessor::IsFetched(std::string uri) {
   size_t i = 0;
 
   while (INSTALLPATH[i]) {
-    if (INSTALLPATH[i] == uri[i]) {
+    if (INSTALLPATH[i] == uri.at(i)) {
       i++;
     } else {
       return (false);
@@ -58,7 +54,7 @@ bool MethodProcessor::IsFetched(std::string &uri) {
   return (true);
 }
 
-bool MethodProcessor::IsExistFile(std::string &uri) {
+bool MethodProcessor::IsExistFile(std::string uri) {
   const char *temp = uri.c_str();
 
   int ret = access(temp, F_OK);
@@ -68,17 +64,19 @@ bool MethodProcessor::IsExistFile(std::string &uri) {
   return (true);
 }
 
-bool MethodProcessor::IsCgi(std::string &uri) {
+bool MethodProcessor::IsCgi(std::string uri) {
   std::string::reverse_iterator it = uri.rbegin();
   if (it[0] == CGI[2]) {
     if (it[1] == CGI[1]) {
-      if (it[2] == CGI[0]) return (true);
+      if (it[2] == CGI[0]) {
+        return (true);
+      }
     }
-  } else
-    return (false);
+  }
+  return (false);
 }
 
-bool MethodProcessor::IsFile(std::string &uri, const char *identifier) {
+bool MethodProcessor::IsFile(std::string uri, const char* identifier) {
   std::string::reverse_iterator it = uri.rbegin();
 
   size_t len = strlen(identifier);
@@ -92,7 +90,7 @@ bool MethodProcessor::IsFile(std::string &uri, const char *identifier) {
   return (true);
 }
 
-char *MethodProcessor::CopyCstr(const char *cstr, size_t length) {
+char *MethodProcessor::CopyCstr(const char* cstr, size_t length) {
   char *ret = new char[length + 1];
   if (ret == NULL) {
     /*error handling*/;
@@ -105,12 +103,12 @@ char *MethodProcessor::CopyCstr(const char *cstr, size_t length) {
   return ret;
 }
 
-void MethodProcessor::MethodGETCgi(struct Data *client) {
+void MethodProcessor::MethodGETCgi(Data* client) {
   int cgi_stream[2];
   int pid = 0;
 
   if (pipe(cgi_stream) == -1) {
-    MakeErrorStatus(*client, 500);
+    MakeErrorStatus(client, 500);
     return;
   }
   pid = fork();
@@ -120,15 +118,15 @@ void MethodProcessor::MethodGETCgi(struct Data *client) {
     dup2(cgi_stream[1], 1);
 
     char **cgi_argv;
-    size_t cgi_length = client->req_message_->req_uri_.size();
+    size_t cgi_length = client->GetReqMethod().size();
 
     cgi_argv = new char *[2];
     cgi_argv[0] = new char[cgi_length + 1];
     cgi_argv[0][cgi_length] = '\0';
     for (size_t i = 0; i < cgi_length; i += 2) {
-      cgi_argv[0][i] = client->req_message_->req_uri_.at(i);
+      cgi_argv[0][i] = client->GetReqMethod().at(i);
       if (i + 1 < cgi_length)
-        cgi_argv[0][i + 1] = client->req_message_->req_uri_.at(i + 1);
+        cgi_argv[0][i + 1] = client->GetReqMethod().at(i + 1);
     }
     cgi_argv[1] = new char[1];
     cgi_argv[1][0] = '\0';
@@ -139,15 +137,15 @@ void MethodProcessor::MethodGETCgi(struct Data *client) {
 
     int waitloc;
     if (wait(&waitloc) == -1) {
-      MakeErrorStatus(*client, 500);
+      MakeErrorStatus(client, 500);
     } else {
       if (WIFEXITED(waitloc)) {
         char *buf;
-        size_t len = 0;
+        ssize_t len = 0;
 
         buf = new char[BUFFER_MAX + 1];
         if (!buf) {
-          MakeErrorStatus(*client, 500);
+          MakeErrorStatus(client, 500);
           return;
         }
         std::string temp_data;
@@ -155,7 +153,7 @@ void MethodProcessor::MethodGETCgi(struct Data *client) {
           len = read(cgi_stream[0], buf, BUFFER_MAX);
           if (len == -1) {
             delete[] buf;
-            MakeErrorStatus(*client, 500);
+            MakeErrorStatus(client, 500);
             close(cgi_stream[0]);
             return;
           }
@@ -167,11 +165,10 @@ void MethodProcessor::MethodGETCgi(struct Data *client) {
           }
         }
         size_t temp_length = temp_data.size();
-        client->entity_->entity_length_ = temp_length;
-        client->entity_->entity_data_ =
-            CopyCstr(temp_data.c_str(), temp_length);
+        client->SetResEntityLength(temp_length);
+        client->SetResEntityData(CopyCstr(temp_data.c_str(), temp_length));
       } else if (WIFSIGNALED(waitloc)) {
-        MakeErrorStatus(*client, 500);
+        MakeErrorStatus(client, 500);
       }
       close(cgi_stream[0]);
       return;
@@ -179,7 +176,7 @@ void MethodProcessor::MethodGETCgi(struct Data *client) {
   }
 }
 
-void MethodProcessor::MethodGETFile(struct Data *client) {
+void MethodProcessor::MethodGETFile(Data *client) {
   t_entity *ret;
   ret = new t_entity();
   if (ret == NULL) {
@@ -187,90 +184,90 @@ void MethodProcessor::MethodGETFile(struct Data *client) {
   }
   std::ifstream entityFile;
 
-  entityFile.open(client->req_message_->req_uri_, std::ifstream::in);
+  entityFile.open(client->GetReqURL(), std::ifstream::in);
   entityFile.seekg(0, entityFile.end);
-  ret->entity_length_ = entityFile.tellg();
+  ret->length_ = entityFile.tellg();
   entityFile.seekg(0, entityFile.beg);
 
-  ret->entity_data_ = new char[ret->entity_length_ + 1];
-  ret->entity_data_[ret->entity_length_] = '\0';
+  ret->data_ = new char[ret->length_ + 1];
+  ret->data_[ret->length_] = '\0';
 
-  entityFile.read(ret->entity_data_, ret->entity_length_);
+  entityFile.read(ret->data_, ret->length_);
 
-  client->entity_->entity_data_ = ret->entity_data_;
+  client->SetResEntityData(ret->data_);
   return;
 }
-void MethodProcessor::MethodGET(struct Data *client) {
-  if (!IsFetched(client->req_message_->req_uri_))
-    FetchOiginalPath(client->req_message_->req_uri_);
-  if (!IsExistFile(client->req_message_->req_uri_)) {
-    MakeErrorStatus(*client, 404);
+void MethodProcessor::MethodGET(Data *client) {
+  if (!IsFetched(client->GetReqURL()))
+    FetchOiginalPath(client->GetReqURL());
+  if (!IsExistFile(client->GetReqURL())) {
+    MakeErrorStatus(client, 404);
     return;
   }
-  if (IsCgi(client->req_message_->req_uri_)) {
+  if (IsCgi(client->GetReqURL())) {
     MethodGETCgi(client);
     return;
   }
-  if (IsFile(client->req_message_->req_uri_, PNG) ||
-      IsFile(client->req_message_->req_uri_, JPG) ||
-      IsFile(client->req_message_->req_uri_, ICO)) {
+  if (IsFile(client->GetReqURL(), PNG) ||
+      IsFile(client->GetReqURL(), JPG) ||
+      IsFile(client->GetReqURL(), ICO)) {
     MethodGETFile(client);
-    if (IsFile(client->req_message_->req_uri_, PNG))
-      client->entity_->entity_type_ = TYPE_PNG;
-    else if (IsFile(client->req_message_->req_uri_, JPG))
-      client->entity_->entity_type_ = TYPE_JPEG;
-    else if (IsFile(client->req_message_->req_uri_, ICO))
-      client->entity_->entity_type_ = TYPE_ICON;
+    if (IsFile(client->GetReqURL(), PNG))
+      client->SetResEntityType(strdup("image/png"));
+    else if (IsFile(client->GetReqURL(), JPG))
+      client->SetResEntityType(strdup("image/jpge"));
+    else if (IsFile(client->GetReqURL(), ICO))
+      client->SetResEntityType(strdup(TYPE_ICON));
     else
-      client->entity_->entity_type_ = TYPE_DEFAULT;
+      client->SetResEntityType(strdup(TYPE_DEFAULT));
     return;
   }
   std::map<int, t_entity *>::iterator check_cache =
       cache_entity_.find(client->port_);
   if (check_cache != cache_entity_.end()) {
-    client->entity_->entity_length_ = check_cache->second->entity_length_;
-    client->entity_->entity_data_ = CopyCstr(check_cache->second->entity_data_,
-                                             client->entity_->entity_length_);
-    client->entity_->entity_type_ = check_cache->second->entity_type_;
+    client->SetResEntityLength(check_cache->second->length_);
+    client->SetResEntityData(CopyCstr(check_cache->second->data_, client->GetResEntityLength()));
+    client->SetResEntityType(check_cache->second->type_);
     return;
   }
 
   t_entity *ret;
   ret = new t_entity();
   if (ret == NULL) {
-    MakeErrorStatus(*client, 500);
+    MakeErrorStatus(client, 500);
     return;
   }
   std::ifstream entityFile;
 
-  entityFile.open(client->req_message_->req_uri_, std::ifstream::in);
+  entityFile.open(client->GetReqURL(), std::ifstream::in);
   entityFile.seekg(0, entityFile.end);
-  ret->entity_length_ = entityFile.tellg();
+  ret->length_ = entityFile.tellg();
   entityFile.seekg(0, entityFile.beg);
 
-  ret->entity_data_ = new char[ret->entity_length_];
-  if (!ret->entity_data_) {
-    MakeErrorStatus(*client, 500);
+  ret->data_ = new char[ret->length_];
+  if (!ret->data_) {
+    MakeErrorStatus(client, 500);
     return;
   }
 
-  entityFile.read(ret->entity_data_, ret->entity_length_);
+  entityFile.read(ret->data_, ret->length_);
 
-  client->entity_->entity_data_ = ret->entity_data_;
-  client->entity_->entity_type_ = TYPE_HTML;
-  cache_entity_.emplace(client->port_, ret);
+  client->SetResEntityData(ret->data_);
+  client->SetResEntityType(strdup(TYPE_HTML));
+  cache_entity_.insert(std::pair<const int, t_entity *>(client->port_, ret));
   return;
 }
 
-void MethodProcessor::MethodHEAD(struct Data *client) {
+void MethodProcessor::MethodHEAD(Data *client) {
   MethodGET(client);
-  delete[] client->entity_->entity_data_;
-  client->entity_->entity_data_ = NULL;
+  delete[] client->GetResEntitData();
+  client->SetResEntityData(NULL);
+  // TODO : type 넣어줘야함
   return;
 }
 
-void MethodProcessor::MethodPOST(struct Data *client) {}
+void MethodProcessor::MethodPOST(Data *client) { static_cast<void>(client); }
 
-void MethodProcessor::MethodPUT(struct Data *client) {}
+void MethodProcessor::MethodPUT(Data *client) { static_cast<void>(client); }
 
-void MethodProcessor::MethodDELETE(struct Data *client) {}
+void MethodProcessor::MethodDELETE(Data *client) { static_cast<void>(client); }

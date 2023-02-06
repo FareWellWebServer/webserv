@@ -1,8 +1,11 @@
-#ifndef ReqHandler_HPP
-#define ReqHandler_HPP
+#ifndef REQ_HANDLER_HPP
+#define REQ_HANDLER_HPP
 
-#include "WebServ.hpp"
+#include <sys/socket.h>
+#include <unistd.h>
+#include <sstream>
 
+<<<<<<< HEAD
 // // 테스트 끝나면 지우기
 
 // typedef struct entity {
@@ -41,3 +44,35 @@
 // void Print_Map(std::map<std::string, std::string>& map);
 
 #endif
+=======
+#include "Color.hpp"
+#include "Data.hpp"
+#include "HTTPMessage.hpp"
+
+class ReqHandler {
+ public:
+  ReqHandler(void);
+  ~ReqHandler(void); // buf 확인하고 해제
+  void SetClient(Data* client);
+  void SetReadLen(int64_t kevent_data);
+  void RecvFromSocket();
+  void ParseRecv(int fd);
+  t_req_msg* PopReqMassage(); // 동적할당해서 나가고, 받은 쪽에서 delete 처리해주기
+  void Clear();
+  t_req_msg* req_msg_;
+
+ private:
+  char* buf_; // 동적할당 / 해제
+  int64_t read_len_;
+  Data* client_;
+  int64_t ParseFirstLine();
+  int64_t ParseHeaders(int start_idx);
+  void ParseHeadersSetKeyValue(char *line);
+  void ParseEntity(int start_idx);
+};
+
+void Print_Map(std::map<std::string, std::string>& map);
+void Remove_Tab_Space(std::string& str);
+std::vector<std::string> split(const std::string& s, char delimiter, int cnt);
+#endif
+>>>>>>> develop

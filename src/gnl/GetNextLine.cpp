@@ -1,4 +1,4 @@
-#include "../../include/WebServ.hpp"
+#include "../../include/GetNextLine.hpp"
 
 char *get_next_line(int fd) {
   static char *str;

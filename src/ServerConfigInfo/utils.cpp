@@ -1,4 +1,4 @@
-#include "../../include/Config/Config.hpp"
+#include "../../include/Config.hpp"
 
 /* =========================== Utils Error =========================== */
 void Config::ExitConfigParseError(std::string msg) const {
