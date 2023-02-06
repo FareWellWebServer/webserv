@@ -10,6 +10,20 @@
 #define READ 0
 #define WRITE 1
 
+enum stage {
+  READY,
+  REQ_READY,
+  REQ_FINISHED,
+  GET_READY,
+  GET_FILE,
+  GET_CGI,
+  GET_FINISHED,
+  POST_READY,
+  POST_PROCESSING,
+  POST_CHECKED,
+  DELETE,
+  RESPONSE
+};
 
 class ReqHandler;
 class ResHandler;
@@ -87,7 +101,7 @@ class Data {
     // TODO: MSGComposer에서 res_message 를 동적할당 해서 보내줄지 확인
     t_res_msg* res_message_; // ResHandler 에게 보내줄 내용 정리
     t_entity* res_entity_; // method가 넣어주는 곳
-    // stage e_stage;
+    stage e_stage;
 };
 
 #endif
