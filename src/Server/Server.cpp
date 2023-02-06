@@ -20,7 +20,7 @@ void Server::Run(void) {
 
 void Server::Init(const std::vector<ServerConfigInfo>& server_infos) {
   for (size_t i = 0; i < server_infos.size(); ++i) {
-    SetHostPortAvaiable(server_infos[i].host, server_infos[i].port);
+    SetHostPortAvaiable(server_infos[i].host_, server_infos[i].port_);
   }
 }
 
