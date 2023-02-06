@@ -13,15 +13,15 @@ MethodProcessor::MethodProcessor(
       /*error handling*/
     }
     ret->type_ = strdup(TYPE_HTML);
-    ret->length_ = FileSize(server_list.at(i).file_path.c_str());
+    ret->length_ = FileSize(server_list.at(i).file_path_.c_str());
     ret->data_ = new char[ret->length_];
     if (ret->data_ == NULL) {
       /*error handling*/
     }
-    index.open(server_list.at(i).file_path, std::ifstream::in);
+    index.open(server_list.at(i).file_path_, std::ifstream::in);
     index.read(ret->data_, ret->length_);
     cache_entity_.insert(
-        std::pair<const int, t_entity*>(server_list.at(i).port, ret));
+        std::pair<const int, t_entity*>(server_list.at(i).port_, ret));
     index.close();
   }
 }
@@ -34,6 +34,14 @@ MethodProcessor::~MethodProcessor(void) {
     delete cache_entity_.at(i);
   }
   cache_entity_.clear();
+}
+
+void MethodProcessor::ChangeEvents(unsigned long ident, short filter,
+                                   short flags, unsigned int fflags, long data,
+                                   void* udata) {
+  struct kevent temp_event;
+
+  EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
 }
 
 void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
@@ -50,8 +58,8 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
       GETSecondCgi(curfd, clients, cur_event);
       break;
     case REQ_FINISHED:
-      FetchOiginalPath(client->req_message_->req_msg_.req_url_, *client);
-      if (IsCgi(client->req_message_->req_msg_.req_url_)) {
+      FetchOiginalPath(client->req_message_->req_url_, *client);
+      if (IsCgi(client->req_message_->req_url_)) {
         /*handling cgi*/
         client->e_stage = GET_CGI;
         int cgi_stream[2];
@@ -65,7 +73,7 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
         {
           int flags = fcntl(cgi_stream[0], F_GETFL, 0);
           fcntl(cgi_stream[0], F_SETFL, flags | O_NONBLOCK);
-          int flags = fcntl(cgi_stream[1], F_GETFL, 0);
+          flags = fcntl(cgi_stream[1], F_GETFL, 0);
           fcntl(cgi_stream[1], F_SETFL, flags | O_NONBLOCK);
         }
 
@@ -79,16 +87,15 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
           dup2(cgi_stream[1], 1);
 
           char** cgi_argv;
-          size_t cgi_length = client->req_message_->req_msg_.req_url_.size();
+          size_t cgi_length = client->GetReqURL().size();
 
           cgi_argv = new char*[2];
           cgi_argv[0] = new char[cgi_length + 1];
           cgi_argv[0][cgi_length] = '\0';
           for (size_t i = 0; i < cgi_length; i += 2) {
-            cgi_argv[0][i] = client->req_message_->req_msg_.req_url_.at(i);
+            cgi_argv[0][i] = client->GetReqURL().at(i);
             if (i + 1 < cgi_length)
-              cgi_argv[0][i + 1] =
-                  client->req_message_->req_msg_.req_url_.at(i + 1);
+              cgi_argv[0][i + 1] = client->GetReqURL().at(i + 1);
           }
           cgi_argv[1] = new char[1];
           cgi_argv[1][0] = '\0';
@@ -101,21 +108,20 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
           wait3(&loc, WNOHANG, NULL);
           return;
         }
-      } else if (IsFile(client->req_message_->req_msg_.req_url_, PNG) ||
-                 IsFile(client->req_message_->req_msg_.req_url_, JPG) ||
-                 IsFile(client->req_message_->req_msg_.req_url_, ICO)) {
+      } else if (IsFile(client->req_message_->req_url_, PNG) ||
+                 IsFile(client->req_message_->req_url_, JPG) ||
+                 IsFile(client->req_message_->req_url_, ICO)) {
         /* handling File */
         client->e_stage = GET_FILE;
-        if (IsFile(client->req_message_->req_msg_.req_url_, PNG))
-          client->entity_->type_ = strdup(TYPE_PNG);
-        else if (IsFile(client->req_message_->req_msg_.req_url_, JPG))
-          client->entity_->type_ = strdup(TYPE_JPEG);
-        else if (IsFile(client->req_message_->req_msg_.req_url_, ICO))
-          client->entity_->type_ = strdup(TYPE_ICON);
+        if (IsFile(client->req_message_->req_url_, PNG))
+          client->res_entity_->type_ = strdup(TYPE_PNG);
+        else if (IsFile(client->req_message_->req_url_, JPG))
+          client->res_entity_->type_ = strdup(TYPE_JPEG);
+        else if (IsFile(client->req_message_->req_url_, ICO))
+          client->res_entity_->type_ = strdup(TYPE_ICON);
         else
-          client->entity_->type_ = strdup(TYPE_DEFAULT);
-        int data_fd =
-            open(client->req_message_->req_msg_.req_url_.c_str(), O_RDONLY);
+          client->res_entity_->type_ = strdup(TYPE_DEFAULT);
+        int data_fd = open(client->req_message_->req_url_.c_str(), O_RDONLY);
         int flags = fcntl(data_fd, F_GETFL, 0);
         fcntl(data_fd, F_SETFL, flags | O_NONBLOCK);
         ChangeEvents(data_fd, EVFILT_READ, EV_ADD, 0, 0, client);
@@ -125,10 +131,10 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
         client->e_stage = GET_HTML;
         /* cache data index.html */
         if (cache_entity_.find(client->port_) != cache_entity_.end()) {
-          client->entity_->type_ = strdup(TYPE_HTML);
-          client->entity_->data_ = strdup(
+          client->res_entity_->type_ = strdup(TYPE_HTML);
+          client->res_entity_->data_ = strdup(
               cache_entity_.find(client->port_).operator*().second->data_);
-          client->entity_->length_ =
+          client->res_entity_->length_ =
               cache_entity_.find(client->port_).operator*().second->length_;
           client->e_stage = GET_FINISHED;
 
@@ -137,9 +143,8 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
           // TODO : kevent 들고 와야 함
           return;
         } else /* GET another html */ {
-          client->entity_->type_ = strdup(TYPE_HTML);
-          int data_fd =
-              open(client->req_message_->req_msg_.req_url_.c_str(), O_RDONLY);
+          client->res_entity_->type_ = strdup(TYPE_HTML);
+          int data_fd = open(client->GetReqURL().c_str(), O_RDONLY);
           int flags = fcntl(data_fd, F_GETFL, 0);
           fcntl(data_fd, F_SETFL, flags | O_NONBLOCK);
           ChangeEvents(data_fd, EVFILT_READ, EV_ADD, 0, 0, client);
@@ -156,41 +161,46 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
 void MethodProcessor::POSTFirst(int curfd, ClientMetaData* clients,
                                 struct kevent& cur_event) {
   // TODO : POST 분기 구현
+  (void)curfd;
+  (void)clients;
+  (void)cur_event;
 }
 
 void MethodProcessor::DELETE(int curfd, ClientMetaData* clients,
                              struct kevent& cur_event) {
   // TODO : DELETE 구현~
+  (void)curfd;
+  (void)clients;
+  (void)cur_event;
 }
 
 // Private
 
-void MethodProcessor::MakeErrorStatus(struct Data& client, int code) {
+void MethodProcessor::MakeErrorStatus(Data& client, int code) {
   client.status_code_ = code;
-  if (client.entity_->data_) {
-    delete[] client.entity_->data_;
+  if (client.res_entity_->data_) {
+    delete[] client.res_entity_->data_;
   }
-  client.entity_->data_ = NULL;
-  if (client.entity_->type_) {
-    delete[] client.entity_->type_;
+  client.res_entity_->data_ = NULL;
+  if (client.res_entity_->type_) {
+    delete[] client.res_entity_->type_;
   }
-  client.entity_->type_ = NULL;
-  client.entity_->length_ = 0;
-  delete client.entity_;
+  client.res_entity_->type_ = NULL;
+  client.res_entity_->length_ = 0;
+  delete client.res_entity_;
 }
 
-void MethodProcessor::FetchOiginalPath(std::string& uri, struct Data& client) {
-
+void MethodProcessor::FetchOiginalPath(std::string& uri, Data& client) {
   uri.erase(0);
-  uri.insert(0, client.config_->file_path);
+  uri.insert(0, client.config_->file_path_);
   return;
 }
 
-bool MethodProcessor::IsFetched(std::string& uri, struct Data& client) {
+bool MethodProcessor::IsFetched(std::string& uri, Data& client) {
   size_t i = 0;
 
-  while (client.config_->file_path[i]) {
-    if (client.config_->file_path[i] == uri[i]) {
+  while (client.config_->file_path_[i]) {
+    if (client.config_->file_path_[i] == uri[i]) {
       i++;
     } else {
       return (false);
@@ -198,7 +208,6 @@ bool MethodProcessor::IsFetched(std::string& uri, struct Data& client) {
   }
   return (true);
 }
-
 
 bool MethodProcessor::IsExistFile(std::string& uri) {
   const char* temp = uri.c_str();
@@ -210,9 +219,7 @@ bool MethodProcessor::IsExistFile(std::string& uri) {
   return (true);
 }
 
-
 bool MethodProcessor::IsCgi(std::string& uri) {
-
   std::string::reverse_iterator it = uri.rbegin();
   if (it[0] == CGI[2]) {
     if (it[1] == CGI[1]) {
@@ -224,17 +231,17 @@ bool MethodProcessor::IsCgi(std::string& uri) {
   return (false);
 }
 
-
 bool MethodProcessor::IsFile(std::string& uri, const char* identifier) {
-  const char* temp = uri.c_str();
-
-  int ret = access(temp, F_OK);
-  delete[] temp;
-
-  if (ret != 0) return (false);
-  return (true);
+  std::string::reverse_iterator it = uri.rbegin();
+  if (it[0] == identifier[2]) {
+    if (it[1] == identifier[1]) {
+      if (it[2] == identifier[0]) {
+        return (true);
+      }
+    }
+  }
+  return (false);
 }
-
 
 char* MethodProcessor::CopyCstr(const char* cstr, size_t length) {
   char* ret = new char[length + 1];
@@ -250,19 +257,17 @@ char* MethodProcessor::CopyCstr(const char* cstr, size_t length) {
   return ret;
 }
 
-
 void MethodProcessor::GETSecondCgi(int curfd, ClientMetaData* clients,
                                    struct kevent& cur_event) {
   // TODO : CGI 읽기 구현
   Data* client = &clients->GetData();
   client->e_stage = GET_FINISHED;
-  client->entity_->length_ = cur_event.data;
-  client->entity_->data_ = new char[client->entity_->length_];
-  if (client->entity_->data_ == NULL) {
+  client->res_entity_->length_ = cur_event.data;
+  client->res_entity_->data_ = new char[client->res_entity_->length_];
+  if (client->res_entity_->data_ == NULL) {
     // TODO : error handling;
-
   }
-  int ret = read(curfd, client->entity_->data_, client->entity_->length_);
+  read(curfd, client->res_entity_->data_, client->res_entity_->length_);
   ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
   return;
 }
@@ -271,15 +276,15 @@ void MethodProcessor::GETSecondFile(int curfd, ClientMetaData* clients,
                                     struct kevent& cur_event) {
   Data* client = &clients->GetData();
   client->e_stage = GET_FINISHED;
-  client->entity_->length_ =
-      FileSize(client->req_message_->req_msg_.req_url_.c_str());
+  client->res_entity_->length_ = FileSize(client->GetReqURL().c_str());
 
-  client->entity_->data_ = new char[client->entity_->length_];
-  if (client->entity_->data_ == NULL) {
+  client->res_entity_->data_ = new char[client->res_entity_->length_];
+  if (client->res_entity_->data_ == NULL) {
     // TODO : error handling;
   }
-  int ret = read(curfd, client->entity_->data_, client->entity_->length_);
+  read(curfd, client->res_entity_->data_, client->res_entity_->length_);
   ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+  (void)cur_event;
   return;
 }
 
@@ -287,26 +292,32 @@ void MethodProcessor::GETSecond(int curfd, ClientMetaData* clients,
                                 struct kevent& cur_event) {
   Data* client = &clients->GetData();
   client->e_stage = GET_FINISHED;
-  client->entity_->length_ =
-      FileSize(client->req_message_->req_msg_.req_url_.c_str());
+  client->res_entity_->length_ = FileSize(client->GetReqURL().c_str());
 
-  client->entity_->data_ = new char[client->entity_->length_];
-  if (client->entity_->data_ == NULL) {
+  client->res_entity_->data_ = new char[client->res_entity_->length_];
+  if (client->res_entity_->data_ == NULL) {
     // TODO : error handling;
   }
-  int ret = read(curfd, client->entity_->data_, client->entity_->length_);
+  read(curfd, client->res_entity_->data_, client->res_entity_->length_);
   ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+  (void)cur_event;
   return;
 }
 
 void MethodProcessor::POSTSecond(int curfd, ClientMetaData* clients,
                                  struct kevent& cur_event) {
   // TODO : 쓰기구현
+  (void)curfd;
+  (void)clients;
+  (void)cur_event;
 }
 
 void MethodProcessor::POSTThird(int curfd, ClientMetaData* clients,
                                 struct kevent& cur_event) {
   // TODO : POST 파일 무결성 검사 구현
+  (void)curfd;
+  (void)clients;
+  (void)cur_event;
 }
 
 int MethodProcessor::FileSize(const char* filepath) {
@@ -318,11 +329,4 @@ int MethodProcessor::FileSize(const char* filepath) {
     return (-1);
   }
   return (file_info.st_size);
-}
-
-void ChangeEvents(uintptr_t ident, int16_t filter, uint16_t flags,
-                  uint32_t fflags, intptr_t data, void* udata) {
-  struct kevent temp_event;
-
-  EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
 }
