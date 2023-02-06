@@ -11,7 +11,7 @@ class ReqHandler {
   ~ReqHandler(void);  // buf 확인하고 해제
   void SetClient(Data* client);
   void SetReadLen(int64_t kevent_data);
-  void RecvFromSocket();
+  void RecvFromSocket(void);
   void ParseRecv();
   void ParseRecv(int fd);
   // void SetReadLen(int64_t len);
