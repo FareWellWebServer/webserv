@@ -12,7 +12,7 @@ class ReqHandler {
   void SetClient(Data* client);
   void SetReadLen(int64_t kevent_data);
   void RecvFromSocket(void);
-  void ParseRecv();
+  void ParseRecv(void);
   void ParseRecv(int fd);
   // void SetReadLen(int64_t len);
   void SetBuf(int fd);
