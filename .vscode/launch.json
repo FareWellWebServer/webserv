@@ -8,9 +8,8 @@
 			"type": "lldb",
 			"request": "launch",
 			"name": "Debug",
-			"program": "${workspaceFolder}/testcode/haryu/testdebug",
-			"args": ["31231212", "3213123", "312321"],
-			"cwd": "${workspaceFolder}", 
+			"program": "${workspaceFolder}/Req_handle",
+			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "make debug output",
 		}
 	]

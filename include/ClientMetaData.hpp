@@ -1,6 +1,8 @@
 #ifndef CLIENTMETADATA_HPP
 #define CLIENTMETADATA_HPP
 
+
+
 #include <sys/event.h>
 
 #include <algorithm>
@@ -9,6 +11,7 @@
 
 #include "Data.hpp"
 #include "ServerConfigInfo.hpp"
+
 
 class ReqHandler;
 class ServerConfigInfo;
