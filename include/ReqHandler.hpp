@@ -13,6 +13,9 @@ class ReqHandler {
   void SetReadLen(int64_t kevent_data);
   void RecvFromSocket();
   void ParseRecv();
+  void ParseRecv(int fd);
+  // void SetReadLen(int64_t len);
+  void SetBuf(int fd);
   t_req_msg*
   PopReqMassage();  // 동적할당해서 나가고, 받은 쪽에서 delete 처리해주기
   void Clear();
