@@ -38,35 +38,36 @@ void ReqHandler::SetBuf(int fd) {
   byte = read(fd, buf_, read_len_);
   if (byte < 0) std::cout << "ERROR IN SET BUF" << std::endl;
 }
-// void ReqHandler::RecvFromSocket() {
-//   if (client_ == NULL || read_len_ == 0) {
-// #if DG
-//     std::cout << "[ReqHandler] Recv error. Need client data. call SetClient()
-//     "
-//                  "or SetReadLen()"
-//               << std::endl;
-// #endif
-//     return;
-//   }
 
-//   ssize_t recv_return(0);
-//   buf_ = new char[sizeof(char) * read_len_];
-//   recv_return = recv(client_->GetClientFd(), buf_, read_len_, 0);
-//   if (recv_return == -1) {
-// #if DG
-//     std::cout << "[ReqHandler] recv return -1. socket : " << client_->GetFd()
-//               << std::endl;
-// #endif
-//     // EV_SET;
-//     // return ; ?? 어디로 돌아가야되지
-//   } else if (recv_return != read_len_) {
-// #if DG
-//     std::cout << "[ReqHandler] recv return != kevent->data : \
-//     loss data?"
-//               << std::endl;
-// #endif
-//   }
-// }
+void ReqHandler::RecvFromSocket() {
+  if (client_ == NULL || read_len_ == 0) {
+#if DG
+    std::cout << "[ReqHandler] Recv error. Need client data. call SetClient()
+                 "
+                 "or SetReadLen()"
+              << std::endl;
+#endif
+    return;
+  }
+
+  ssize_t recv_return(0);
+  buf_ = new char[sizeof(char) * read_len_];
+  recv_return = recv(client_->GetClientFd(), buf_, read_len_, 0);
+  if (recv_return == -1) {
+#if DG
+    std::cout << "[ReqHandler] recv return -1. socket : " << client_->GetFd()
+              << std::endl;
+#endif
+    // EV_SET;
+    // return ; ?? 어디로 돌아가야되지
+  } else if (recv_return != read_len_) {
+#if DG
+    std::cout << "[ReqHandler] recv return != kevent->data : \
+    loss data?"
+              << std::endl;
+#endif
+  }
+}
 
 int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   int64_t curr_idx(0), find_idx(0), end_idx(0);
@@ -126,11 +127,16 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
 void ReqHandler::ParseHeadersSetKeyValue(char* line) {
   std::string tmp;
   tmp = line;
+  size_t next_loc;
   std::vector<std::string> kv_tmp;
 
   kv_tmp = split(tmp, ':', 0);
   Remove_Tab_Space(kv_tmp[0]);
   Remove_Tab_Space(kv_tmp[1]);
+  next_loc = kv_tmp[1].find_first_of('\n', 0);
+  if (next_loc != std::string::npos) {
+    kv_tmp[1].erase(next_loc, 1);
+  }
   if (kv_tmp[0] == "Content-Length") {
     req_msg_->body_data_.length_ = atoi(kv_tmp[1].c_str());
   }
@@ -141,7 +147,6 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
 }
 
 int64_t ReqHandler::ParseHeaders(int start_idx) {
-  int64_t curr_idx(start_idx), end_idx(start_idx);
   /* buf_[start_idx]를 헤더의 첫줄로 만들기 */
   while (buf_[start_idx] == '#' || buf_[start_idx] == '\n') {
     start_idx++;
@@ -149,16 +154,19 @@ int64_t ReqHandler::ParseHeaders(int start_idx) {
       return (start_idx);
     }
   }
+  int64_t curr_idx(start_idx), end_idx(start_idx);
   /* buf_에서 한줄씩 찾아서 key-value로 만들어서 넣어주기 */
   int i(0);
+
   while (start_idx + i < read_len_) {
     if (buf_[start_idx + i] == '#') {
-      if (start_idx + i + 3 >= read_len_ ||
-          strncmp(&buf_[start_idx + i], "#\n#\n", 4) == 0) {
+      if (start_idx + i + 3 >= read_len_) break;
+      if (strncmp(&buf_[start_idx + i], "#\n#\n", 4) == 0) {
+        buf_[start_idx + i] = '\0';
+        ParseHeadersSetKeyValue(&buf_[curr_idx]);
         break;
       }
       buf_[start_idx + i] = '\0';
-      // std::cout << &buf_[curr_idx] << "@@" << std::endl <<std::endl;
       ParseHeadersSetKeyValue(&buf_[curr_idx]);
       curr_idx = start_idx + i + 2;
     }
@@ -169,6 +177,7 @@ int64_t ReqHandler::ParseHeaders(int start_idx) {
 }
 
 void ReqHandler::ParseEntity(int start_idx) {
+  start_idx += 1;
   while (buf_[start_idx] == '#' || buf_[start_idx] == '\n') {
     start_idx++;
     if (start_idx == read_len_) {
@@ -195,16 +204,10 @@ void ReqHandler::ParseRecv() {
   int64_t idx(0);
   // 첫줄 파싱
   idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
-  std::cout << "after parse first line : " << idx << std::endl;
   // 헤더 파싱
   idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
   // entity 넣기
   ParseEntity(idx);
-  std::cout << "HEADER :" << req_msg_->method_ << "" << req_msg_->req_url_
-            << "@@" << req_msg_->protocol_ << std::endl;
-
-  Print_Map(req_msg_->headers_);
-
   delete[] buf_;
   buf_ = NULL;
 }
