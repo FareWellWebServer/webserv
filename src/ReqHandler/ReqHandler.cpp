@@ -1,6 +1,6 @@
 #include "../../include/WebServ.hpp"
 
-ReqHandler::ReqHandler(void) : buf_(0), read_len_(0), client_(0), req_msg_(0) {}
+ReqHandler::ReqHandler(void) : req_msg_(0), buf_(0), read_len_(0), client_(0) {}
 
 ReqHandler::~ReqHandler(void) { Clear(); }
 
@@ -118,7 +118,7 @@ int64_t ReqHandler::ParseHeaders(int start_idx) {
               0) {  // buf_[start_idx + i + 2] == '\r'
         break;
       }
-      buf_[start_idx + i] == '\0';
+      buf_[start_idx + i] = '\0';
       ParseHeadersSetKeyValue(&buf_[curr_idx]);
       curr_idx = start_idx + i;
     }
@@ -143,7 +143,8 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   char* tmp = new char[end_idx];
   find_idx = strcspn(buf_, " ");
   if (find_idx >= end_idx) {
-    EV_SET(kq, EVFILT_WRITE);
+    // TODO : EV_SET 이 수정되어야할듯.. 인자가 부족한거같은..?
+    // EV_SET(kq, EVFILT_WRITE);
     client_->SetStatusCode(400);  // bad request
     return (read_len_);
   }
