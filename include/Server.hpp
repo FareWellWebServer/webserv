@@ -25,6 +25,18 @@
 #define DISABLE 0
 #define ENABLE 1
 
+#define LISTEN_FD 255
+#define CLIENT_FD 256
+#define FILE_FD 257
+#define PIPE_FD 258
+
+
+typedef struct s_fd_info {
+	int which_fd;
+	Data *parent;
+} t_fd_info;
+
+
 typedef struct s_litening {
   std::string host;
   int port;
