@@ -23,13 +23,9 @@
 #include "MethodProcessor.hpp"
 #include "MsgComposer.hpp"
 #include "ReqHandler.hpp"
-<<<<<<< HEAD
-#include "ReqHandler_d.hpp"
-=======
 #include "Server.hpp"
 #include "ServerConfigInfo.hpp"
 #include "Stage.hpp"
->>>>>>> develop
 #include "WebServException.hpp"
 
 #endif
