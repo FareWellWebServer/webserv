@@ -80,7 +80,7 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   find_idx = 0;
 
   /* 첫 단어 Method 쪼개기 */
-  char* tmp = new char[end_idx];
+  char* tmp = new char[end_idx + 1];
   find_idx = strcspn(buf_, " ");
   if (find_idx >= end_idx) {
     // TODO : EV_SET 이 수정되어야할듯.. 인자가
@@ -94,6 +94,7 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   req_msg_->method_ = tmp;
   curr_idx = find_idx;
 
+  std::cout << "method : " << req_msg_->method_ << std::endl;
   /* 두번 째 URL 쪼개기 */
   find_idx = strcspn(&buf_[curr_idx + 1], " ");
   if (find_idx >= end_idx) {
@@ -105,6 +106,7 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   /* 올바른 URL 인지 확인 필요 */
   req_msg_->req_url_ = tmp;
   curr_idx = find_idx;
+  std::cout << "URL : " << req_msg_->req_url_ << std::endl;
 
   /* 버전확인 406 Not Acceptable */
   find_idx = strcspn(&buf_[curr_idx + 1], "#");
@@ -114,11 +116,13 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   }
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
-  if (strncmp(tmp, "HTTP/1.1", 8) != 0) {
+  req_msg_->protocol_ = tmp;
+  std::cout << "PROTOCAL : " << req_msg_->protocol_ << std::endl;
+
+  if (strncmp(tmp, "HTTP/1.1", 8) == 0) {
     // client_->SetStatusCode(400);  // bad request
     return (read_len_);
   }
-
   delete[] tmp;
   return (end_idx);
 }
@@ -201,6 +205,8 @@ void ReqHandler::ParseRecv() {
   idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
   // entity 넣기
   ParseEntity(idx);
+  Print_Map(req_msg_->headers_);
+
   delete[] buf_;
   buf_ = NULL;
 }

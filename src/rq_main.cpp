@@ -14,12 +14,11 @@ int main() {
   }
   ReqHandler req;
 
-  req.SetReadLen(500);
+  req.SetReadLen(405);
   req.SetBuf(fd);
 
   req.ParseRecv();
   // std::cout << "Entity :"<<req.req_msg_->body_data_.entity_ << std::endl;
-  Print_Map(req.req_msg_->headers_);
   for (size_t i = 0; i < req.req_msg_->body_data_.length_; ++i) {
     printf("%c", req.req_msg_->body_data_.data_[i]);
   }

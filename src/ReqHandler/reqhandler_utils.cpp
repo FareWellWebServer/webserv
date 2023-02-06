@@ -39,3 +39,12 @@ std::vector<std::string> split(const std::string& s, char delimiter, int cnt) {
   }
   return tokens;
 }
+
+void Print_Map(std::map<std::string, std::string>& map) {
+  std::cout << RED << "[[PRINT MAP]]" << RESET << std::endl;
+  for (std::map<std::string, std::string>::iterator it = map.begin();
+       it != map.end(); ++it) {
+    std::cout << "key : " << it->first << " || value : " << it->second
+              << std::endl;
+  }
+}
