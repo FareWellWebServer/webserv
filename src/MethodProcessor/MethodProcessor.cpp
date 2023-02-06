@@ -37,17 +37,17 @@ MethodProcessor::~MethodProcessor(void) {
 }
 
 void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
-                               std::vector<struct kevent>& change_list) {
+                               struct kevent& cur_event) {
   Data* client = &clients->GetData();
   switch (client->e_stage) {
     case GET_HTML:
-      GETSecond(client);
+      GETSecond(curfd, clients, cur_event);
       break;
     case GET_FILE:
-      GETSecondFile(client);
+      GETSecondFile(curfd, clients, cur_event);
       break;
     case GET_CGI:
-      GETSecondCgi(client);
+      GETSecondCgi(curfd, clients, cur_event);
       break;
     case REQ_FINISHED:
       FetchOiginalPath(client->req_message_->req_msg_.req_url_, *client);
@@ -96,8 +96,7 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
         } else {
           /* Parent handling*/
           close(cgi_stream[1]);
-          ChangeEvents(change_list, cgi_stream[0], EVFILT_READ, EV_ADD, 0, 0,
-                       clients);
+          ChangeEvents(cgi_stream[0], EVFILT_READ, EV_ADD, 0, 0, clients);
           int loc = 0;
           wait3(&loc, WNOHANG, NULL);
           return;
@@ -119,7 +118,7 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
             open(client->req_message_->req_msg_.req_url_.c_str(), O_RDONLY);
         int flags = fcntl(data_fd, F_GETFL, 0);
         fcntl(data_fd, F_SETFL, flags | O_NONBLOCK);
-        ChangeEvents(change_list, data_fd, EVFILT_READ, EV_ADD, 0, 0, clients);
+        ChangeEvents(data_fd, EVFILT_READ, EV_ADD, 0, 0, client);
         return;
       } else {
         /*handling index.html*/
@@ -133,8 +132,8 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
               cache_entity_.find(client->port_).operator*().second->length_;
           client->e_stage = GET_FINISHED;
 
-          ChangeEvents(change_list, client->event_->ident, EVFILT_WRITE,
-                       EV_ENABLE, 0, 0, NULL);
+          ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0,
+                       NULL);
           // TODO : kevent 들고 와야 함
           return;
         } else /* GET another html */ {
@@ -143,8 +142,7 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
               open(client->req_message_->req_msg_.req_url_.c_str(), O_RDONLY);
           int flags = fcntl(data_fd, F_GETFL, 0);
           fcntl(data_fd, F_SETFL, flags | O_NONBLOCK);
-          ChangeEvents(change_list, data_fd, EVFILT_READ, EV_ADD, 0, 0,
-                       clients);
+          ChangeEvents(data_fd, EVFILT_READ, EV_ADD, 0, 0, client);
           return;
         }
       }
@@ -155,11 +153,13 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
   }
 }
 
-void MethodProcessor::POSTFirst(int curfd, ClientMetaData* clients) {
+void MethodProcessor::POSTFirst(int curfd, ClientMetaData* clients,
+                                struct kevent& cur_event) {
   // TODO : POST 분기 구현
 }
 
-void MethodProcessor::DELETE(int curfd, ClientMetaData* clients) {
+void MethodProcessor::DELETE(int curfd, ClientMetaData* clients,
+                             struct kevent& cur_event) {
   // TODO : DELETE 구현~
 }
 
@@ -244,21 +244,22 @@ char* MethodProcessor::CopyCstr(const char* cstr, size_t length) {
 }
 
 void MethodProcessor::GETSecondCgi(int curfd, ClientMetaData* clients,
-                                   struct kevent* cur_event) {
+                                   struct kevent& cur_event) {
   // TODO : CGI 읽기 구현
   Data* client = &clients->GetData();
   client->e_stage = GET_FINISHED;
-  client->entity_->length_ = cur_event->data;
+  client->entity_->length_ = cur_event.data;
   client->entity_->data_ = new char[client->entity_->length_];
   if (client->entity_->data_ == NULL) {
     // TODO : error handling;
   }
   int ret = read(curfd, client->entity_->data_, client->entity_->length_);
+  ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
   return;
 }
 
-void MethodProcessor::GETSecondFile(int curfd, ClientMetaData* clients) {
-  // TODO : FILE 읽기 구현
+void MethodProcessor::GETSecondFile(int curfd, ClientMetaData* clients,
+                                    struct kevent& cur_event) {
   Data* client = &clients->GetData();
   client->e_stage = GET_FINISHED;
   client->entity_->length_ =
@@ -269,11 +270,12 @@ void MethodProcessor::GETSecondFile(int curfd, ClientMetaData* clients) {
     // TODO : error handling;
   }
   int ret = read(curfd, client->entity_->data_, client->entity_->length_);
+  ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
   return;
 }
 
-void MethodProcessor::GETSecond(int curfd, ClientMetaData* clients) {
-  // TODO : HTML 문서 읽기 구현
+void MethodProcessor::GETSecond(int curfd, ClientMetaData* clients,
+                                struct kevent& cur_event) {
   Data* client = &clients->GetData();
   client->e_stage = GET_FINISHED;
   client->entity_->length_ =
@@ -284,14 +286,17 @@ void MethodProcessor::GETSecond(int curfd, ClientMetaData* clients) {
     // TODO : error handling;
   }
   int ret = read(curfd, client->entity_->data_, client->entity_->length_);
+  ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
   return;
 }
 
-void MethodProcessor::POSTSecond(int curfd, ClientMetaData* clients) {
+void MethodProcessor::POSTSecond(int curfd, ClientMetaData* clients,
+                                 struct kevent& cur_event) {
   // TODO : 쓰기구현
 }
 
-void MethodProcessor::POSTThird(int curfd, ClientMetaData* clients) {
+void MethodProcessor::POSTThird(int curfd, ClientMetaData* clients,
+                                struct kevent& cur_event) {
   // TODO : POST 파일 무결성 검사 구현
 }
 
@@ -306,11 +311,9 @@ int MethodProcessor::FileSize(const char* filepath) {
   return (file_info.st_size);
 }
 
-void ChangeEvents(std::vector<struct kevent> change_list, uintptr_t ident,
-                  int16_t filter, uint16_t flags, uint32_t fflags,
-                  intptr_t data, void* udata) {
+void ChangeEvents(uintptr_t ident, int16_t filter, uint16_t flags,
+                  uint32_t fflags, intptr_t data, void* udata) {
   struct kevent temp_event;
 
   EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
-  change_list.push_back(temp_event);
 }

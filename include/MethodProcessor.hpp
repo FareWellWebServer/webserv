@@ -43,15 +43,15 @@ class MethodProcessor {
   bool IsFile(std::string& uri, const char* identifier);
   char* CopyCstr(const char* cstr, size_t length);
   void GETSecondCgi(int curfd, ClientMetaData* clients,
-                    struct kevent* cur_event);
-  void GETSecondFile(int curfd, ClientMetaData* clients);
-  void GETSecond(int curfd, ClientMetaData* clients);
-  void POSTSecond(int curfd, ClientMetaData* clients);
-  void POSTThird(int curfd, ClientMetaData* clients);
+                    struct kevent& cur_event);
+  void GETSecondFile(int curfd, ClientMetaData* clients,
+                     struct kevent& cur_event);
+  void GETSecond(int curfd, ClientMetaData* clients, struct kevent& cur_event);
+  void POSTSecond(int curfd, ClientMetaData* clients, struct kevent& cur_event);
+  void POSTThird(int curfd, ClientMetaData* clients, struct kevent& cur_event);
   int FileSize(const char* filepath);
-  void ChangeEvents(std::vector<struct kevent> change_list, uintptr_t ident,
-                    int16_t filter, uint16_t flags, uint32_t fflags,
-                    intptr_t data, void* udata);
+  void ChangeEvents(uintptr_t ident, int16_t filter, uint16_t flags,
+                    uint32_t fflags, intptr_t data, void* udata);
 
  public:
   /**
@@ -69,15 +69,14 @@ class MethodProcessor {
    * @param clients
    * @param change_list
    */
-  void GETFirst(int curfd, ClientMetaData* clients,
-                std::vector<struct kevent>& change_list);
+  void GETFirst(int curfd, ClientMetaData* clients, struct kevent& cur_event);
 
   /**
    * @brief
    * @param curfd
    * @param clients
    */
-  void POSTFirst(int curfd, ClientMetaData* clients);
+  void POSTFirst(int curfd, ClientMetaData* clients, struct kevent& cur_event);
 
   /**
    * @brief
@@ -85,7 +84,7 @@ class MethodProcessor {
    * @param curfd
    * @param clients
    */
-  void DELETE(int curfd, ClientMetaData* clients);
+  void DELETE(int curfd, ClientMetaData* clients, struct kevent& cur_event);
 };
 
 #endif
