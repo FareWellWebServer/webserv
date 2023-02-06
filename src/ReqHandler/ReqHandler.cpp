@@ -148,7 +148,7 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
 
 int64_t ReqHandler::ParseHeaders(int start_idx) {
   /* buf_[start_idx]를 헤더의 첫줄로 만들기 */
-  while (buf_[start_idx] == '#' || buf_[start_idx] == '\n') {
+  while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
     start_idx++;
     if (start_idx == read_len_) {
       return (start_idx);
@@ -159,9 +159,9 @@ int64_t ReqHandler::ParseHeaders(int start_idx) {
   int i(0);
 
   while (start_idx + i < read_len_) {
-    if (buf_[start_idx + i] == '#') {
+    if (buf_[start_idx + i] == '\r') {
       if (start_idx + i + 3 >= read_len_) break;
-      if (strncmp(&buf_[start_idx + i], "#\n#\n", 4) == 0) {
+      if (strncmp(&buf_[start_idx + i], "\r\n\r\n", 4) == 0) {
         buf_[start_idx + i] = '\0';
         ParseHeadersSetKeyValue(&buf_[curr_idx]);
         break;
@@ -178,7 +178,7 @@ int64_t ReqHandler::ParseHeaders(int start_idx) {
 
 void ReqHandler::ParseEntity(int start_idx) {
   start_idx += 1;
-  while (buf_[start_idx] == '#' || buf_[start_idx] == '\n') {
+  while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
     start_idx++;
     if (start_idx == read_len_) {
 #if DG
