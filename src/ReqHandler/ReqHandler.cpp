@@ -34,7 +34,7 @@ t_req_msg* ReqHandler::PopReqMassage() {
 
 void ReqHandler::SetBuf(int fd) {
   int byte = 0;
-  buf_ = new char[read_len_];
+  buf_ = new char[read_len_ * sizeof(char)];
   byte = read(fd, buf_, read_len_);
   if (byte < 0) std::cout << "ERROR IN SET BUF" << std::endl;
 }
@@ -80,50 +80,46 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   find_idx = 0;
 
   /* 첫 단어 Method 쪼개기 */
-  char* tmp = new char[end_idx + 1];
   find_idx = strcspn(buf_, " ");
+  char* tmp = new char[end_idx + 1];
   if (find_idx >= end_idx) {
-    // TODO : EV_SET 이 수정되어야할듯.. 인자가
-    // EV_SET(kq, EVFILT_WRITE);
-    // client_->SetStatusCode(400);  // bad request
+    // client_->SetStatusCode(400); // bad request
     return (read_len_);
   }
   strncpy(tmp, buf_, find_idx);
   tmp[find_idx] = '\0';
   /* 메소드 유효성 확인 필요 */
-  req_msg_->method_ = tmp;
-  curr_idx = find_idx;
-
-  std::cout << "method : " << req_msg_->method_ << std::endl;
+  req_msg_->method_.append(tmp);
+  curr_idx += find_idx;
   /* 두번 째 URL 쪼개기 */
   find_idx = strcspn(&buf_[curr_idx + 1], " ");
   if (find_idx >= end_idx) {
-    // client_->SetStatusCode(400);  // bad request
+    // client_->SetStatusCode(400); // bad request
     return (read_len_);
   }
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
   /* 올바른 URL 인지 확인 필요 */
   req_msg_->req_url_ = tmp;
-  curr_idx = find_idx;
-  std::cout << "URL : " << req_msg_->req_url_ << std::endl;
+  curr_idx += find_idx;
 
   /* 버전확인 406 Not Acceptable */
   find_idx = strcspn(&buf_[curr_idx + 1], "#");
   if (find_idx >= end_idx) {
-    // client_->SetStatusCode(400);  // bad request
+    // client_->SetStatusCode(400); // bad request
     return (read_len_);
   }
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
-  req_msg_->protocol_ = tmp;
-  std::cout << "PROTOCAL : " << req_msg_->protocol_ << std::endl;
 
   if (strncmp(tmp, "HTTP/1.1", 8) == 0) {
-    // client_->SetStatusCode(400);  // bad request
+    // client_->SetStatusCode(400); // bad request
     return (read_len_);
   }
+  req_msg_->protocol_ = tmp;
+
   delete[] tmp;
+  Remove_Tab_Space(req_msg_->protocol_);
   return (end_idx);
 }
 
@@ -153,19 +149,18 @@ int64_t ReqHandler::ParseHeaders(int start_idx) {
       return (start_idx);
     }
   }
-
   /* buf_에서 한줄씩 찾아서 key-value로 만들어서 넣어주기 */
   int i(0);
   while (start_idx + i < read_len_) {
     if (buf_[start_idx + i] == '#') {
-      if (start_idx + i + 3 < read_len_ ||
-          strncmp(&buf_[start_idx + i], "#\n#\n", 4) ==
-              0) {  // buf_[start_idx + i + 2] == '#'
+      if (start_idx + i + 3 >= read_len_ ||
+          strncmp(&buf_[start_idx + i], "#\n#\n", 4) == 0) {
         break;
       }
       buf_[start_idx + i] = '\0';
+      // std::cout << &buf_[curr_idx] << "@@" << std::endl <<std::endl;
       ParseHeadersSetKeyValue(&buf_[curr_idx]);
-      curr_idx = start_idx + i;
+      curr_idx = start_idx + i + 2;
     }
     i++;
   }
@@ -183,9 +178,8 @@ void ReqHandler::ParseEntity(int start_idx) {
       return;
     }
   }
-  req_msg_->body_data_.length_ = read_len_ - start_idx;
-  char* entity = new char[req_msg_->body_data_.length_];
-  strncpy(entity, &buf_[start_idx], req_msg_->body_data_.length_);
+  char* entity = new char[req_msg_->body_data_.length_ + 1];
+  memcpy(entity, &buf_[start_idx], req_msg_->body_data_.length_);
   req_msg_->body_data_.data_ = entity;
 }
 
@@ -201,10 +195,14 @@ void ReqHandler::ParseRecv() {
   int64_t idx(0);
   // 첫줄 파싱
   idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
+  std::cout << "after parse first line : " << idx << std::endl;
   // 헤더 파싱
   idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
   // entity 넣기
   ParseEntity(idx);
+  std::cout << "HEADER :" << req_msg_->method_ << "" << req_msg_->req_url_
+            << "@@" << req_msg_->protocol_ << std::endl;
+
   Print_Map(req_msg_->headers_);
 
   delete[] buf_;
