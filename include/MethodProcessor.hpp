@@ -42,22 +42,49 @@ class MethodProcessor {
   bool IsCgi(std::string& uri);
   bool IsFile(std::string& uri, const char* identifier);
   char* CopyCstr(const char* cstr, size_t length);
-  void GETSecondCgi(struct Data* client);
-  void GETSecondFile(struct Data* client);
-  void GETSecond(struct Data* client);
-  void POSTSecond(struct Data* client);
-  void POSTThird(struct Data* client);
+  void GETSecondCgi(int curfd, ClientMetaData* clients,
+                    struct kevent* cur_event);
+  void GETSecondFile(int curfd, ClientMetaData* clients);
+  void GETSecond(int curfd, ClientMetaData* clients);
+  void POSTSecond(int curfd, ClientMetaData* clients);
+  void POSTThird(int curfd, ClientMetaData* clients);
   int FileSize(const char* filepath);
   void ChangeEvents(std::vector<struct kevent> change_list, uintptr_t ident,
                     int16_t filter, uint16_t flags, uint32_t fflags,
                     intptr_t data, void* udata);
 
  public:
+  /**
+   * @brief Construct a new Method Processor:: Method Processor object
+   *
+   * @param server_list 해당 config 를 활용해서, 등록된 설정 전체를 순회하며
+   * default index.html 문서를 읽습니다. index.html 문서는 read 작업을 거치지
+   * 않습니다.
+   */
   MethodProcessor(const std::vector<ServerConfigInfo>& server_list);
   ~MethodProcessor(void);
+  /**
+   * @brief
+   * @param curfd
+   * @param clients
+   * @param change_list
+   */
   void GETFirst(int curfd, ClientMetaData* clients,
                 std::vector<struct kevent>& change_list);
+
+  /**
+   * @brief
+   * @param curfd
+   * @param clients
+   */
   void POSTFirst(int curfd, ClientMetaData* clients);
+
+  /**
+   * @brief
+
+   * @param curfd
+   * @param clients
+   */
   void DELETE(int curfd, ClientMetaData* clients);
 };
 
