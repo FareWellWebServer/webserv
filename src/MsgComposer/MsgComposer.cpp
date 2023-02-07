@@ -1,6 +1,6 @@
 #include "../../include/MsgComposer.hpp"
 
-MsgComposer::MsgComposer(Data* client) : client_(client) {
+MsgComposer::MsgComposer() : client_(NULL) {
   Clear();
   status_infos_.insert(std::make_pair(100, "Continue"));
   status_infos_.insert(std::make_pair(101, "Switching Protocols"));
@@ -44,6 +44,50 @@ MsgComposer::MsgComposer(Data* client) : client_(client) {
   status_infos_.insert(std::make_pair(505, "HTTP Version Not Supported"));
 }
 
+// MsgComposer::MsgComposer(Data* client) : client_(client) {
+//   Clear();
+//   status_infos_.insert(std::make_pair(100, "Continue"));
+//   status_infos_.insert(std::make_pair(101, "Switching Protocols"));
+//   status_infos_.insert(std::make_pair(200, "OK"));
+//   status_infos_.insert(std::make_pair(201, "Created"));
+//   status_infos_.insert(std::make_pair(202, "Accepted"));
+//   status_infos_.insert(std::make_pair(203, "Non-Authoritative Information"));
+//   status_infos_.insert(std::make_pair(204, "No Content"));
+//   status_infos_.insert(std::make_pair(205, "Content"));
+//   status_infos_.insert(std::make_pair(206, "Partial Content"));
+//   status_infos_.insert(std::make_pair(300, "Multiple Choices"));
+//   status_infos_.insert(std::make_pair(301, "Moved Permanently"));
+//   status_infos_.insert(std::make_pair(302, "Found"));
+//   status_infos_.insert(std::make_pair(303, "See Other"));
+//   status_infos_.insert(std::make_pair(304, "Not Modified"));
+//   status_infos_.insert(std::make_pair(305, "Use Proxy"));
+//   status_infos_.insert(std::make_pair(307, "Temporary Redirect"));
+//   status_infos_.insert(std::make_pair(400, "Bad Request"));
+//   status_infos_.insert(std::make_pair(401, "Unauthorized"));
+//   status_infos_.insert(std::make_pair(402, "Payment Required"));
+//   status_infos_.insert(std::make_pair(403, "Payment Required"));
+//   status_infos_.insert(std::make_pair(404, "Not Found"));
+//   status_infos_.insert(std::make_pair(405, "Method Not Allowed"));
+//   status_infos_.insert(std::make_pair(406, "Not Acceptable"));
+//   status_infos_.insert(std::make_pair(407, "Proxy Authentication Required"));
+//   status_infos_.insert(std::make_pair(408, "Request Timeout"));
+//   status_infos_.insert(std::make_pair(409, "Conflict"));
+//   status_infos_.insert(std::make_pair(410, "Gone"));
+//   status_infos_.insert(std::make_pair(411, "Length Required"));
+//   status_infos_.insert(std::make_pair(412, "Precondition Failed"));
+//   status_infos_.insert(std::make_pair(413, "Request Entity Too Large"));
+//   status_infos_.insert(std::make_pair(414, "Request-URI Too Long"));
+//   status_infos_.insert(std::make_pair(415, "Unsupported Media Type"));
+//   status_infos_.insert(std::make_pair(416, "Requested Range Not Satisfiable"));
+//   status_infos_.insert(std::make_pair(417, "Expectation Failed"));
+//   status_infos_.insert(std::make_pair(500, "Internal Server Error"));
+//   status_infos_.insert(std::make_pair(501, "Not Implemented"));
+//   status_infos_.insert(std::make_pair(502, "Bad Gateway"));
+//   status_infos_.insert(std::make_pair(503, "Service Unavailable"));
+//   status_infos_.insert(std::make_pair(504, "Gateway Timeout"));
+//   status_infos_.insert(std::make_pair(505, "HTTP Version Not Supported"));
+// }
+
 MsgComposer::~MsgComposer(void) {}
 
 void MsgComposer::SetStatusText(void) {
@@ -53,6 +97,10 @@ void MsgComposer::SetStatusText(void) {
   } else {
     res_msg_.status_text_ = "Unknown Status Code Error";
   }
+}
+
+void MsgComposer::SetData(Data* client) {
+  client_ = client;
 }
 
 void MsgComposer::SetHeaders(void) {

@@ -6,7 +6,7 @@
  */
 Data::Data()
     : litsen_fd_(-1),
-      port_(-1),
+      host_port_(-1),
       client_fd_(-1),
       timeout_(false),
       event_(NULL),
@@ -34,13 +34,14 @@ void Data::Clear() {
   }
   if (res_message_) cgi = false;
   file_fd_ = -1;
+  log_file_fd_ = -1;
   pipe_[READ] = -1;
   pipe_[WRITE] = -1;
 }
 
 int Data::GetListenFd() const { return litsen_fd_; }
 
-int Data::GetListenPort() const { return port_; }
+int Data::GetListenPort() const { return host_port_; }
 
 int Data::GetClientFd() const { return client_fd_; }
 
@@ -51,6 +52,8 @@ void Data::SetStatusCode(int status_code) { status_code_ = status_code; }
 bool Data::IsTimeout() const { return timeout_; }
 
 int Data::GetFileFd() const { return file_fd_; }
+
+int Data::GetLogFileFd() const {return log_file_fd_; }
 
 int Data::GetPipeWrite() const { return pipe_[WRITE]; }
 

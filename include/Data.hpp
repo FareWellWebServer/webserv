@@ -34,6 +34,7 @@ class Data {
   void SetStatusCode(int status_code);
   bool IsTimeout() const;
   int GetFileFd() const;
+  int GetLogFileFd() const;
   int GetPipeWrite() const;
   int GetPipeRead() const;
 
@@ -71,13 +72,16 @@ class Data {
 
  public:
   int litsen_fd_;  // 어느 listen fd에 연결됐는지
-  int port_;  // listen fd에 bind 되어있는 port 번호. config볼 때 필요
+  int host_port_;  // listen fd에 bind 되어있는 port 번호. config볼 때 필요
   int client_fd_;
-  // TODO: client ip, port, request time도 저장해주면 좋을듯(로그 남기기 위해서)
+  std::string host;
+  char* client_name_;
+  char* client_port_;
   int status_code_;  // 상태코드 enum 정의 필요
   bool timeout_;
   bool cgi;
   int file_fd_;
+  int log_file_fd_;
   int pipe_[2];
   struct kevent* event_;  // fd(ident), flag들
   const ServerConfigInfo* config_;

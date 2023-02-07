@@ -9,8 +9,9 @@
 
 class ResHandler {
  public:
-  ResHandler(const char* response, std::size_t response_length);
+  ResHandler(void);
   ~ResHandler(void);
+  void SetResponse(const char* response, std::size_t response_length);
   void SendToClient(int client_fd);
 
  private:

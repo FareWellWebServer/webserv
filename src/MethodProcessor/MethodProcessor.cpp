@@ -130,12 +130,12 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
         /*handling index.html*/
         client->e_stage = GET_HTML;
         /* cache data index.html */
-        if (cache_entity_.find(client->port_) != cache_entity_.end()) {
+        if (cache_entity_.find(client->host_port_) != cache_entity_.end()) {
           client->res_entity_->type_ = strdup(TYPE_HTML);
           client->res_entity_->data_ = strdup(
-              cache_entity_.find(client->port_).operator*().second->data_);
+              cache_entity_.find(client->host_port_).operator*().second->data_);
           client->res_entity_->length_ =
-              cache_entity_.find(client->port_).operator*().second->length_;
+              cache_entity_.find(client->host_port_).operator*().second->length_;
           client->e_stage = GET_FINISHED;
 
           ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0,
