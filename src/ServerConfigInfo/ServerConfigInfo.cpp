@@ -13,6 +13,7 @@ bool ServerConfigInfo::CheckHostPortMatching(const std::string& host,
 t_location* ServerConfigInfo::GetCurrentLocation(
     const std::string& req_uri) const {
   if (locations_.empty()) return NULL;
+  std::cout << "req_uri: " << req_uri << std::endl;
 
   std::map<std::string, t_location>::const_iterator it = locations_.begin();
   for (; it != locations_.end(); ++it) {

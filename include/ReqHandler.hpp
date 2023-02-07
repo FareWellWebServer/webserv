@@ -20,6 +20,7 @@ class ReqHandler {
   PopReqMassage();  // 동적할당해서 나가고, 받은 쪽에서 delete 처리해주기
   void Clear();
   t_req_msg* req_msg_;
+  int entity_flag;
 
  private:
   char* buf_;  // 동적할당 / 해제
@@ -29,9 +30,10 @@ class ReqHandler {
   int64_t ParseHeaders(int start_idx);
   void ParseHeadersSetKeyValue(char* line);
   void ParseEntity(int start_idx);
+  void ValidateReq(void);
 };
 
-void CheckValidUri(std::string& tmp);
+void ReduceSlash(std::string& tmp);
 void PrintMap(std::map<std::string, std::string>& map);
 void RemoveTabSpace(std::string& str);
 std::vector<std::string> split(const std::string& s, char delimiter, int cnt);

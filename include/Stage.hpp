@@ -3,7 +3,8 @@
 
 enum stage {
   READY,
-  REQ_READY,
+  REQ_PROCESSING,
+  REQ_ERROR,
   REQ_FINISHED,
   GET_READY,
   GET_HTML,
