@@ -247,10 +247,17 @@ void ReqHandler::ValidateReq(void) {
     modi_url.clear();
     result.clear();
   } else {
+    client_->e_stage = REQ_ERROR;
     modi_url.clear();
     return;
     // TODO : 에러처리
   }
+  // 실제 유효한 경로인지 확인 필요.
+  struct stat sb;
+  if (stat(("." + req_msg_->req_url_).c_str(), &sb) != 0) {
+    client_->e_stage = REQ_ERROR;
+  }
+  return;
 }
 
 void ReqHandler::ParseRecv() {
