@@ -75,6 +75,7 @@ void Server::Act(void) {
         #if SERVER
           std::cout << "[Server] Client READ fd : " << client->GetClientFd() << std::endl;
         #endif
+				ActCoreLogic(idx);
       }
       /* 내부에서 읽으려고 Open()한 File에 대한 이벤트 */
       else if (event_fd == client->GetFileFd()) {
@@ -162,31 +163,25 @@ void Server::AcceptNewClient(int idx) {
   }
 }
 
-// void Server::ActCoreLogic(int idx) {
-//   ReqHandler rq;
-// 	rq.SetClient(&clients_.GetDataByFd(events_[idx].ident));
-// 	rq.SetReadLen(events_[idx].data);
-// 	rq.RecvFromSocket();
-// 	rq.ParseRecv();
+void Server::ActCoreLogic(int idx) {
+	req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
+	req_handler_->SetReadLen(events_[idx].data);
+	req_handler_->RecvFromSocket();
+	req_handler_->ParseRecv();
 
-// 	clients_.SetReqMessageByFd(rq.req_msg_, events_[idx].ident);
-// 	std::cout << rq.req_msg_->method_ << " " << rq.req_msg_->req_url_ << "\n";
-// 	std::map<std::string, std::string>::iterator it = rq.req_msg_->headers_.begin();
-// 	for(; it != rq.req_msg_->headers_.end(); ++it) {
-// 		std::cout << it->first << ": " << it->second << "\n";
-// 	}
+	clients_->SetReqMessageByFd(req_handler_->req_msg_, events_[idx].ident);
+	std::cout << req_handler_->req_msg_->method_ << " " << req_handler_->req_msg_->req_url_ << "\n";
+	std::map<std::string, std::string>::iterator it = req_handler_->req_msg_->headers_.begin();
+	for(; it != req_handler_->req_msg_->headers_.end(); ++it) {
+		std::cout << it->first << ": " << it->second << "\n";
+	}
 
-	// clients_.GetDataByFd(events_[idx].ident).e_stage = GET_HTML;
-	// mp_.GETFirst(events_[idx].ident, &clients_, events_[idx]);
-	// mp.GET(events_[idx].ident, clients_.GetDataByFd(events_[idx].ident), events_[idx], clients_.GetReqMsgByFd(events_[idx].ident));
-
-
-	
+	req_handler_->Clear();
+  DisConnect(events_[idx].ident);
 
   // TODO: call ReqHandler and run other process
   // TODO: call ResHandler and send data to client
-//   DisConnect(events_[idx].ident);
-// }
+}
 
 /* Init에 포함시켰음 */
 // void Server::SetHostPortAvaiable(const std::string& host, const int& port) {

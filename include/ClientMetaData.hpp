@@ -65,10 +65,10 @@ class ClientMetaData {
     Data* GetDataByFd(int fd);
 
     // core에서 요청 헤더 데이터 필요할 때
-    struct HTTPMessage* GetReqHeader();
+    // struct HTTPMessage* GetReqHeader();
 		t_req_msg* GetReqMsgByFd(int fd);
     // core에서 응답 헤더 데이터 필요할 때
-    struct HTTPMessage* GetResHeader();
+    // struct HTTPMessage* GetResHeader();
 
     // core에서 헤더 데이터 필요할 때
     ServerConfigInfo* GetConfig();
