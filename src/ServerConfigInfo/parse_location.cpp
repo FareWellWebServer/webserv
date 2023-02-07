@@ -93,7 +93,7 @@ void Config::ParseLocationRoot(t_location& l,
 
   std::string root_path = vec[0];
   struct stat sb;
-  if (stat(root_path.c_str(), &sb) == 0)
+  if (stat(("." + root_path).c_str(), &sb) == 0)
     l.root_path_ = vec[0];
   else
     ExitConfigParseError();

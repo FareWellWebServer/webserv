@@ -256,7 +256,9 @@ void ReqHandler::ValidateReq(void) {
   struct stat sb;
   if (stat(("." + req_msg_->req_url_).c_str(), &sb) != 0) {
     client_->e_stage = REQ_ERROR;
-  }
+    std::cout << "no valid path : " << req_msg_->req_url_ << std::endl;
+  } else
+    std::cout << "valid path : " << req_msg_->req_url_ << std::endl;
   return;
 }
 
