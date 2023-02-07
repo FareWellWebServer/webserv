@@ -14,6 +14,12 @@ void ClientMetaData::ValidCheckToAccessData() {
   }
 }
 
+void ClientMetaData::ValidCheckToAccessDataByFd(int fd) {
+  if (datas_.find(fd) == datas_.end()) {
+    throw WrongFd();
+  }
+}
+
 void ClientMetaData::InitializeData(Data* data) {
   data->litsen_fd_ = -1;
   data->port_ = -1;
@@ -45,6 +51,10 @@ void ClientMetaData::SetEvent(struct kevent* event) {
   datas_[current_fd_].event_ = event;
 }
 
+void ClientMetaData::SetEventByFd(struct kevent* event, int fd) {
+  datas_[fd].event_ = event;
+}
+
 void ClientMetaData::SetConfig() {
   ValidCheckToAccessData();
   if (datas_[current_fd_].event_ == NULL)
@@ -66,7 +76,7 @@ void ClientMetaData::SetPipeFd(int pipe[2]) {
 
 
 void ClientMetaData::DeleteByFd(const int& client_fd) {
-  ValidCheckToAccessData();
+  ValidCheckToAccessDataByFd(client_fd);
   datas_[client_fd].Clear();
   datas_.erase(client_fd);
 }
@@ -75,6 +85,12 @@ void ClientMetaData::SetReqMessage(t_req_msg* req_message)
 {
   ValidCheckToAccessData();
   datas_[current_fd_].req_message_ = req_message;
+}
+
+void ClientMetaData::SetReqMessageByFd(t_req_msg* req_message, int fd)
+{
+  ValidCheckToAccessDataByFd(fd);
+  datas_[fd].req_message_ = req_message;
 }
 
 void ClientMetaData::SetResEntity(t_entity* res_enetity)
@@ -86,6 +102,17 @@ void ClientMetaData::SetResEntity(t_entity* res_enetity)
 Data& ClientMetaData::GetData() {
   ValidCheckToAccessData();
   return datas_[current_fd_];
+}
+
+Data& ClientMetaData::GetDataByFd(int fd) {
+	ValidCheckToAccessDataByFd(fd);
+	return datas_[fd];
+}
+
+t_req_msg* ClientMetaData::GetReqMsgByFd(int fd)
+{
+	ValidCheckToAccessDataByFd(fd);
+	return datas_[fd].req_message_;
 }
 
 // struct HTTPMessage* ClientMetaData::GetReqHeader() {
@@ -141,3 +168,5 @@ int ClientMetaData::GetStatusCode() {
 //   ValidCheckToAccessData();
 //   return datas_[current_fd_].req_message_.getURL();
 // }
+
+

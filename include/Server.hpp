@@ -1,6 +1,12 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "MethodProcessor.hpp"
+#include "ServerConfigInfo.hpp"
+#include "ClientMetaData.hpp"
+#include "ReqHandler.hpp"
+// #include "WebServ.hpp"
+
 #include <arpa/inet.h> /* htons, htonl, ntohs, ntohl */
 #include <fcntl.h>     /* fcntl */
 #include <netdb.h>     /* getprotobyname */
@@ -15,8 +21,8 @@
 #include <cstring> /* memset, strerror */
 #include <iostream>
 #include <set>
+#include <vector>
 
-#include "ClientMetaData.hpp"
 
 #define MAXLINE 1000000
 #define MAXBUF 1000000
@@ -43,13 +49,24 @@ typedef struct s_litening {
   int fd;
 } t_listening;
 
+class MethodProcessor;
+
 class Server {
  public:
-  Server(void);
+  // Server(void);
+  Server(std::vector<ServerConfigInfo>);
   ~Server(void);
 
   void Run(void);
-  void Init(const std::vector<ServerConfigInfo>& server_infos);
+  // void Init(const std::vector<ServerConfigInfo>& server_infos);
+  void Init(void);
+
+
+	// 임의로 public에 나둠 나중에 setter구현해야함
+	// server_info를 Method_Processor 호출할 때, 필요하기 때문에
+	// Class 내부에 저장함.
+	std::vector<ServerConfigInfo> server_infos_;
+	MethodProcessor mp_;
 
  private:
   int kq_;
