@@ -18,16 +18,16 @@ int main(int ac, char** av) {
     // error handler
     ErrorHandler error_handler(custom_error);
   } catch (const std::exception& error) {
-    // 미쳐 처리하지 못한 에러 잡기
+    // 미처 처리하지 못한 에러 잡기
     std::cerr << RED << error.what() << std::endl;
   };
 }
 
 void main_process(int ac, char** av) {
-  const std::vector<ServerConfigInfo> server_infos = config_process(ac, av);
-  Server server;
+  Server server(config_process(ac, av));
 
-  server.Init(server_infos);
+  // server.Init(server_infos);
+  server.Init();
   server.Run();
 }
 

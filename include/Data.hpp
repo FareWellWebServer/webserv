@@ -1,26 +1,25 @@
 #ifndef DATA_HPP
 #define DATA_HPP
 
+#include <string>
+
 #include "HTTPMessage.hpp"
 #include "ServerConfigInfo.hpp"
 #include "Stage.hpp"
 
-#include <string>
-
 #define READ 0
 #define WRITE 1
-
 
 class ReqHandler;
 class ResHandler;
 
-/* 포인터로 갖고있는 녀석들의 메모리 관리는 어디서 해줄지? 
+/* 포인터로 갖고있는 녀석들의 메모리 관리는 어디서 해줄지?
   객체 자신에서 안해주는거는 Data 에서 해주기
 */
 
 /**
  * @brief Data 에서는 Get만 가능. Set은 Handler에서
- * 
+ *
  */
 class Data {
   public:
@@ -28,7 +27,7 @@ class Data {
     ~Data();
     void Init();
     void Clear();
-    /* 멤버변수 Getter() .ccp:54 ~ 102*/
+    /* 멤버변수 Getter() .ccp:72 ~ 108*/
     int GetListenFd() const;
     int GetListenPort() const;
     int GetClientFd() const;
@@ -38,10 +37,11 @@ class Data {
     bool IsTimeout() const;
     bool IsCGI() const;
     int GetFileFd() const;
+    int GetLogFileFd() const;
     int GetPipeWrite() const;
     int GetPipeRead() const;
 
-    /* 멤버변수 Setter() .cpp: 106 ~ 148 */
+    /* 멤버변수 Setter() .cpp: 110 ~ 154 */
     void SetListenFd(int listen_fd);
     void SetListenPort(int listen_port);
     void SetClientFd(int client_fd);
@@ -51,23 +51,25 @@ class Data {
     void SetTimeout(bool is_timeout);
     void SetCGi(bool is_CGI);
     void SetFileFd(int file_fd);
+    void SetLogFileFd(int log_file_fd);
     void SetPipeWrite(int pipe_write_fd);
     void SetPipeRead(int pipe_read_fd);
 
     /* Get Config */
     // int GetConfig() const; // Config에서 어떤 정보를 뭘 보고 반환해줘야하는지?
 
-    /* Request Message Getter() .cpp:150 ~ 188 */
-    t_req_msg* GetReqMessage() const;
-    std::string GetReqMethod() const;
-    std::string GetReqURL() const;
-    std::string GetReqProtocol() const;
+    /* Request Message Getter() .cpp:156 ~ 182 */
+    t_req_msg* GetReqMessage(void) const;
+    std::string GetReqMethod(void) const;
+    std::string GetReqURL(void) const;
+    std::string GetReqProtocol(void) const;
     std::string GetReqHeaderByKey(std::string &key) const;
-    char* GetReqBodyData() const;
-    char* GetReqBodyType() const;
-    size_t GetReqBodyLength() const;
+    t_entity GetReqBody(void) const;
+    char* GetReqBodyData(void) const;
+    char* GetReqBodyType(void) const;
+    size_t GetReqBodyLength(void) const;
 
-    /* Request Message Setter()  .cpp:190 ~ 237 */
+    /* Request Message Setter()  .cpp:184 ~ 233 */
     void SetReqMessage(t_req_msg* req_message);
     void SetReqMethod(std::string req_message_method);
     void SetReqURL(std::string req_message_URL);
@@ -78,17 +80,18 @@ class Data {
     void SetReqBodyType(char* req_body_type);
     void SetReqBodyLength(size_t req_body_length);
 
-    /* Response Message Getter() .cpp:239 ~ 279 */
-    t_res_msg* GetResMessage() const;
-    std::string GetResVersion() const;
-    int GetResStatusCode() const;
-    std::string GetResStatusText() const;
+    /* Response Message Getter() .cpp:233 ~ 267 */
+    t_res_msg* GetResMessage(void) const;
+    std::string GetResVersion(void) const;
+    int GetResStatusCode(void) const;
+    std::string GetResStatusText(void) const;
     std::string GetResHeaderByKey(std::string &key) const;
-    char* GetResBodyData() const;
-    char* GetResBodyType() const;
-    size_t GetResBodyLength() const;
+    t_entity GetResBody(void) const;
+    char* GetResBodyData(void) const;
+    char* GetResBodyType(void) const;
+    size_t GetResBodyLength(void) const;
 
-    /* Response Message Setter() .cpp:281 ~ 319 */
+    /* Response Message Setter() .cpp:269 ~ 309 */
     void SetResMessage(t_res_msg* res_msg);
     void SetResVersion(std::string version);
     void SetResStatusCode(int status_code);
@@ -99,13 +102,13 @@ class Data {
     void SetResBodyType(char* res_body_type);
     void SetResBodyLength(size_t res_body_length);
     
-    /* Method Entity Getter() .cpp:321 ~ 337 */
-    t_entity* GetMethodEntity() const;
-    char* GetMethodEntityData() const;
-    size_t GetMethodEntityLength() const;
-    char* GetMethodEntityType() const;
+    /* Method Entity Getter() .cpp:311 ~ 327 */
+    t_entity* GetMethodEntity(void) const;
+    char* GetMethodEntityData(void) const;
+    size_t GetMethodEntityLength(void) const;
+    char* GetMethodEntityType(void) const;
 
-    /* Method Entity Setter() .cpp:339 ~ */
+    /* Method Entity Setter() .cpp:329 ~ 347 */
     void SetMethodEntity(t_entity* entity);
     void SetMethodEntityData(char *data);
     void SetMethodEntityLength(size_t length);
@@ -123,6 +126,7 @@ class Data {
     bool timeout_;
     bool cgi_;
     int file_fd_;
+    int log_file_fd_;
     int pipe_[2];
     struct kevent* event_;  // fd(ident), flag들
     const ServerConfigInfo* config_;
@@ -130,9 +134,9 @@ class Data {
     t_res_msg* res_message_; // ResHandler 에게 보내줄 내용 정리
     t_entity* method_entity_; // method가 넣어주는 곳
     // message 구조체들은 요청 들어왔을 때 동적할당해주고, 응답할 때 프리해주면 될듯
-    // stage e_stage;
+    stage e_stage;
 };
 
 #endif
 
-//TODO: timeout setting 어떻게? SetTimeOut(bool)
+// TODO: timeout setting 어떻게? SetTimeOut(bool)

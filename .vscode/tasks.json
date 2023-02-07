@@ -3,7 +3,7 @@
         {
             "type": "shell",
             "label": "make debug output",
-            "command": "make debug",
+            "command": "make fclean; make rp",
         }
     ],
     "version": "2.0.0"
