@@ -12,7 +12,7 @@ MethodProcessor::MethodProcessor(
     if (ret == NULL) {
       /*error handling*/
     }
-    ret->type_ = strdup(TYPE_HTML);
+L);
     ret->length_ = FileSize(server_list.at(i).file_path_.c_str());
     ret->data_ = new char[ret->length_];
     if (ret->data_ == NULL) {

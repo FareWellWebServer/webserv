@@ -106,7 +106,7 @@ void MsgComposer::SetData(Data* client) {
 void MsgComposer::SetHeaders(void) {
   // content-length
   std::stringstream ss;
-  ss << res_msg_.body_data_->length_;
+  ss << client_->GetResBodyLength();
   res_msg_.headers_["Content-length"] = ss.str();
   // content-type
   // .headers_["Content-type"] = .body_data_->type;
@@ -120,7 +120,7 @@ void MsgComposer::InitResMsg() {
   res_msg_.http_version_ = "HTTP/1.1";
   res_msg_.status_code_ = client_->status_code_;
   SetStatusText();
-  res_msg_.body_data_ = client_->GetResEntity();
+  res_msg_.body_data_ = client_->GetResBody();
   SetHeaders();
 }
 
@@ -148,8 +148,8 @@ const char* MsgComposer::GetResponse(void) {
   std::cout << "headers len: " << headers_len << std::endl;
 
   // response 생성
-  std::cout << "entity len: " << res_msg_.body_data_->length_ << std::endl;
-  response_length_ = str.length() + res_msg_.body_data_->length_;
+  std::cout << "entity len: " << res_msg_.body_data_.length_ << std::endl;
+  response_length_ = str.length() + res_msg_.body_data_.length_;
   std::cout << "response len: " << response_length_ << std::endl << std::endl;
 
   // response에 붙여넣기
@@ -158,8 +158,8 @@ const char* MsgComposer::GetResponse(void) {
   for (std::size_t i = 0; i < str_len; ++i) {
     res[i] = str[i];
   }
-  for (std::size_t i = 0; i < res_msg_.body_data_->length_; ++i) {
-    res[str_len + i] = res_msg_.body_data_->data_[i];
+  for (std::size_t i = 0; i < res_msg_.body_data_.length_; ++i) {
+    res[str_len + i] = res_msg_.body_data_.data_[i];
   }
   return res;
 }
@@ -171,5 +171,5 @@ void MsgComposer::Clear() {
   res_msg_.status_code_ = 200;
   res_msg_.status_text_.clear();
   res_msg_.headers_.clear();
-  res_msg_.body_data_ = NULL;
+  // res_msg_.body_data_ // leak 날 수 있음
 }

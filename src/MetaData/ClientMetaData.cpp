@@ -22,12 +22,9 @@ void ClientMetaData::ValidCheckToAccessDataByFd(int fd) {
 
 void ClientMetaData::InitializeData(Data* data) {
   data->litsen_fd_ = -1;
-  data->host_port_ = -1;
-  // data->client_fd_ = -1;
+  data->listen_port_ = -1;
+  data->client_fd_ = -1;
   data->event_ = NULL;
-  // data->config_ = NULL;
-  // data->req_message_ = NULL;
-  // data->res_message_ = NULL;
   data->status_code_ = 200;
 }
 
@@ -36,13 +33,13 @@ void ClientMetaData::SetCurrentFd(const fd& client_fd) {
 }
 
 void ClientMetaData::AddData(const int& listen_fd, const int& client_fd,
-                             const int& host_port, char* client_name, char* client_port) {
+                            const int& host_port, char* client_name, char* client_port) {
   Data* new_data = new Data;
 
   InitializeData(new_data);
   new_data->litsen_fd_ = listen_fd;
   new_data->client_fd_ = client_fd;
-  new_data->host_port_ = host_port;
+  new_data->listen_port_ = host_port;
   new_data->client_name_ = strdup(client_name);
   new_data->client_port_ = strdup(client_port);
   datas_.insert(std::pair<int, Data*>(client_fd, new_data));
@@ -97,11 +94,11 @@ void ClientMetaData::SetReqMessageByFd(t_req_msg* req_message, int fd)
   datas_[fd]->req_message_ = req_message;
 }
 
-void ClientMetaData::SetResEntity(t_entity* res_enetity)
-{
-  ValidCheckToAccessData();
-  datas_[current_fd_]->res_entity_ = res_enetity;
-}
+// void ClientMetaData::SetResEntity(t_entity* res_enetity)
+// {
+//   ValidCheckToAccessData();
+//   datas_[current_fd_]->res_message_ = res_enetity;
+// }
 
 Data* ClientMetaData::GetData() {
   ValidCheckToAccessData();
@@ -136,7 +133,7 @@ ServerConfigInfo* ClientMetaData::GetConfig() {
 
 int ClientMetaData::GetPort() {
   ValidCheckToAccessData();
-  return datas_[current_fd_]->host_port_;
+  return datas_[current_fd_]->listen_port_;
 }
 
 int ClientMetaData::GetDataCount(void) {
