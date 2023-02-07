@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-
-import cgi
+import sys
 
 def caesar(s):
     s = list(s)
@@ -12,7 +10,6 @@ def caesar(s):
  
     return "".join(s)
 
-form = cgi.FieldStorage()
-plain_text = form.getvalue("origin")
+plain_text = sys.argv[1]
 
 print(caesar(plain_text))
