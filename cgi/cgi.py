@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
-from flask import Flask, render_template
+import cgi
 
-app = Flask(__name__)
+def caesar(s):
+    s = list(s)
+    for i in range(len(s)):
+        if s[i].isupper():
+            s[i]=chr((ord(s[i]) - ord('A')+ 42) % 26 + ord('A'))
+        elif s[i].islower():
+            s[i]=chr((ord(s[i]) - ord('a')+ 42) % 26 + ord('a'))
+ 
+    return "".join(s)
 
-@app.route('/')
-def hello():
-    return "Hello Webserv"
+form = cgi.FieldStorage()
+plain_text = form.getvalue(origin)
 
-@app.route("/index", methods=['GET'])
-def index():
-    return render_templete("index.html")
-
-if __name__ == '__main__':
-    app.run(debug=True)
+print(caesar(plain_text))
