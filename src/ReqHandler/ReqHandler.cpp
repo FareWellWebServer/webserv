@@ -90,7 +90,17 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   strncpy(tmp, buf_, find_idx);
   tmp[find_idx] = '\0';
   /* 메소드 유효성 확인 필요 */
-  req_msg_->method_.append(tmp);
+  req_msg_->method_ = tmp;
+  // 체크할 때 -1을 반환하는 형식으로 변경해도 될듯
+  if (req_msg_->method_ != "GET" || req_msg_->method_ != "POST" ||
+      req_msg_->method_ != "HEAD" || req_msg_->method_ != "DELETE") {
+#if REQ_HANDLER
+    std::cout << "[ReqHandler] Invalid method input ! : \
+    loss data?"
+              << std::endl;
+#endif
+  }
+
   curr_idx += find_idx;
   /* 두번 째 URL 쪼개기 */
   find_idx = strcspn(&buf_[curr_idx + 1], " ");
@@ -102,6 +112,8 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   tmp[find_idx] = '\0';
   /* 올바른 URL 인지 확인 필요 */
   req_msg_->req_url_ = tmp;
+  CheckValidUri(req_msg_->req_url_);
+
   curr_idx += find_idx;
 
   /* 버전확인 406 Not Acceptable */
@@ -113,8 +125,9 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
 
-  if (strncmp(tmp, "HTTP/1.1", 8) == 0) {
+  if (strncmp(tmp, "HTTP/1.1", 8) != 0) {
     // client_->SetStatusCode(400); // bad request
+    // TODO : ERROR처리 필요
     return (read_len_);
   }
   req_msg_->protocol_ = tmp;
@@ -210,4 +223,15 @@ void ReqHandler::ParseRecv() {
   ParseEntity(idx);
   delete[] buf_;
   buf_ = NULL;
+}
+
+void CheckValidUri(std::string& tmp) {
+  int i = 0;
+  int cnt = 0;
+
+  while (tmp[i]) {
+    if (tmp[i] == '/') ++cnt;
+    i++;
+  }
+  if (cnt == i) tmp = '/';
 }

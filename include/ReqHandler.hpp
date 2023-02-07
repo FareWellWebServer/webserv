@@ -31,6 +31,7 @@ class ReqHandler {
   void ParseEntity(int start_idx);
 };
 
+void CheckValidUri(std::string& tmp);
 void PrintMap(std::map<std::string, std::string>& map);
 void RemoveTabSpace(std::string& str);
 std::vector<std::string> split(const std::string& s, char delimiter, int cnt);
