@@ -18,12 +18,13 @@ void Server::Run(void) {
   }
 }
 
-void Server::Init(const std::vector<ServerConfigInfo>& server_infos) {
-  for (size_t i = 0; i < server_infos.size(); ++i) {
-    SetHostPortAvaiable(server_infos[i].host_, server_infos[i].port_);
+// void Server::Init(const std::vector<ServerConfigInfo>& server_infos) {
+void Server::Init(void) {
+  for (size_t i = 0; i < server_infos_.size(); ++i) {
+    SetHostPortAvaiable(server_infos_[i].host_, server_infos_[i].port_);
   }
 }
-
+ // 임의로 public에 나둠 나중에 setter구현해야함
 // private
 
 void Server::Act(void) {
@@ -38,7 +39,7 @@ void Server::Act(void) {
     if (which_fd == LISTEN_FD) {
       AcceptNewClient(idx);
     } else if (which_fd == CLIENT_FD && filter == EVFILT_READ) { 
-			DisConnect(events_[idx].ident);
+			ActCoreLogic(idx);
     } else if (which_fd == CLIENT_FD && filter == EVFILT_WRITE) {
 			DisConnect(events_[idx].ident);
 		} else if (which_fd == CLIENT_FD && events_[idx].flags == EV_EOF) {
@@ -82,12 +83,19 @@ void Server::AcceptNewClient(int idx) {
 }
 
 void Server::ActCoreLogic(int idx) {
-  struct kevent event;
+  ReqHandler rq;
+	rq.SetClient(&clients_.GetDataByFd(events_[idx].ident));
+	rq.SetReadLen(events_[idx].data);
+	rq.RecvFromSocket();
+	rq.ParseRecv();
+	
+	std::cout << rq.req_msg_->method_ << " " << rq.req_msg_->req_url_ << "\n";
+	std::map<std::string, std::string>::iterator it = rq.req_msg_->headers_.begin();
+	for(; it != rq.req_msg_->headers_.end(); ++it) {
+		std::cout << it->first << ": " << it->second << "\n";
+	}
+	
 
-  EV_SET(&event, events_[idx].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-  if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
-    std::cerr << "Error: kevent()\n";
-  }
   // TODO: call ReqHandler and run other process
   // TODO: call ResHandler and send data to client
   DisConnect(events_[idx].ident);

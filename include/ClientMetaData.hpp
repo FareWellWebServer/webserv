@@ -24,6 +24,7 @@ class ClientMetaData {
   std::map<fd, Data> datas_;
     int current_fd_;
     void ValidCheckToAccessData();
+    void ValidCheckToAccessDataByFd(int fd);
     class WrongFd : public std::exception {
     public:
       const char* what() const throw();
@@ -40,6 +41,7 @@ class ClientMetaData {
     // 저장
     void AddData(const fd& listen_fd, const fd& client_fd, const fd& port);
     void SetEvent(struct kevent* event);
+    void SetEventByFd(struct kevent* event, int fd);
     void SetConfig();
     void SetFileFd(int file_fd);
     void SetPipeFd(int pipe[2]);
@@ -58,6 +60,7 @@ class ClientMetaData {
 
     // data 통채로 원할 때
     Data& GetData();
+    Data& GetDataByFd(int fd);
 
     // core에서 요청 헤더 데이터 필요할 때
     struct HTTPMessage* GetReqHeader();

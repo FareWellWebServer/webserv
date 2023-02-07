@@ -1,6 +1,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "WebServ.hpp"
+
 #include <arpa/inet.h> /* htons, htonl, ntohs, ntohl */
 #include <fcntl.h>     /* fcntl */
 #include <netdb.h>     /* getprotobyname */
@@ -16,7 +18,6 @@
 #include <iostream>
 #include <set>
 
-#include "ClientMetaData.hpp"
 
 #define MAXLINE 1000000
 #define MAXBUF 1000000
@@ -49,7 +50,14 @@ class Server {
   ~Server(void);
 
   void Run(void);
-  void Init(const std::vector<ServerConfigInfo>& server_infos);
+  // void Init(const std::vector<ServerConfigInfo>& server_infos);
+  void Init(void);
+
+
+	// 임의로 public에 나둠 나중에 setter구현해야함
+	// server_info를 Method_Processor 호출할 때, 필요하기 때문에
+	// Class 내부에 저장함.
+	std::vector<ServerConfigInfo> server_infos_;
 
  private:
   int kq_;

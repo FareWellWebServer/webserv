@@ -14,6 +14,12 @@ void ClientMetaData::ValidCheckToAccessData() {
   }
 }
 
+void ClientMetaData::ValidCheckToAccessDataByFd(int fd) {
+  if (datas_.find(fd) == datas_.end()) {
+    throw WrongFd();
+  }
+}
+
 void ClientMetaData::InitializeData(Data* data) {
   data->litsen_fd_ = -1;
   data->port_ = -1;
@@ -43,6 +49,10 @@ void ClientMetaData::AddData(const int& listen_fd, const int& client_fd,
 
 void ClientMetaData::SetEvent(struct kevent* event) {
   datas_[current_fd_].event_ = event;
+}
+
+void ClientMetaData::SetEventByFd(struct kevent* event, int fd) {
+  datas_[fd].event_ = event;
 }
 
 void ClientMetaData::SetConfig() {
@@ -86,6 +96,11 @@ void ClientMetaData::SetResEntity(t_entity* res_enetity)
 Data& ClientMetaData::GetData() {
   ValidCheckToAccessData();
   return datas_[current_fd_];
+}
+
+Data& ClientMetaData::GetDataByFd(int fd) {
+	ValidCheckToAccessDataByFd(fd);
+	return datas_[fd];
 }
 
 // struct HTTPMessage* ClientMetaData::GetReqHeader() {

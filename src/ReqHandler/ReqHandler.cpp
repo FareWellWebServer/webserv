@@ -1,6 +1,6 @@
 #include "../../include/ReqHandler.hpp"
 
-ReqHandler::ReqHandler(void) : req_msg_(0), buf_(0), read_len_(0), client_(0) {}
+ReqHandler::ReqHandler(void) : req_msg_(NULL), buf_(NULL), read_len_(0), client_(0) {}
 
 ReqHandler::~ReqHandler(void) { Clear(); }
 
@@ -73,7 +73,7 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   int64_t curr_idx(0), find_idx(0), end_idx(0);
   /* 첫 줄 찾기 */
   find_idx = strcspn(buf_, "\n");  // buf 에서 "\n"의 인덱스 찾는 함수
-  while (find_idx != read_len_ && buf_[find_idx - 1] != '#')
+  while (find_idx != read_len_ && buf_[find_idx - 1] != '\r')
     find_idx += strcspn(&buf_[find_idx + 1], "\n");
   end_idx = find_idx;
 
@@ -105,7 +105,7 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   curr_idx += find_idx;
 
   /* 버전확인 406 Not Acceptable */
-  find_idx = strcspn(&buf_[curr_idx + 1], "#");
+  find_idx = strcspn(&buf_[curr_idx + 1], "\r");
   if (find_idx >= end_idx) {
     // client_->SetStatusCode(400); // bad request
     return (read_len_);
