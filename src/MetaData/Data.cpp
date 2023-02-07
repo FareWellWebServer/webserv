@@ -4,48 +4,84 @@
  * @brief 세팅 후 연결 해제까지 바뀌지 않아야하는 값은 생성자에서 초기화
  * 
  */
-Data::Data() : \
-litsen_fd_(-1), port_(-1), client_fd_(-1), timeout_(false), event_(NULL), config_(NULL) {
-  req_message_ = NULL;
-  res_entity_ = NULL;
-  Clear();
+Data::Data() : 
+litsen_fd_(-1),
+listen_port_(-1),
+client_fd_(-1),
+client_name_(NULL),
+timeout_(false),
+cgi_(false),
+file_fd_(-1),
+event_(NULL),
+config_(NULL),
+req_message_(NULL),
+method_entity_(NULL),
+client_port_(NULL)
+{
+  pipe_[0] = (-1);
+  pipe_[1] = (-1);
 }
 
 Data::~Data() {
   Clear();
+  
 }
 
 /**
- * @brief 새로운 요청 들어올때마다 초기화할 값
- * delete : ReqMessage, res_entity_
+ * @brief HTTP 요청 시작할 때 동적할당 해주기. 이후에 외부 객체들이 이 자리에 값만 넣어주기
+ * 
+ */
+void Data::Init() {
+  Clear();
+  req_message_ = new t_req_msg;
+  res_message_ = new t_res_msg;
+  method_entity_ = new t_entity;
+}
+
+/**
+ * @brief HTTP 요청 시작 or HTTP 응답 직후 남은 정보 지워주기
+ * 
  */
 void Data::Clear() {
   status_code_ = 200;
+  cgi_ = false;
+  file_fd_ = -1;
+  pipe_[READ] = -1;
+  pipe_[WRITE] = -1;
   if (req_message_ != NULL) {
     delete req_message_;
     req_message_ = NULL;
   }
-  if (res_entity_ != NULL) {
-    delete res_entity_;
-    res_entity_ = NULL;
+  if (res_message_ != NULL) {
+    delete res_message_;
+    res_message_ = NULL;
   }
-  if (res_message_)
-  cgi = false;
-  file_fd_ = -1;
-  pipe_[READ] = -1;
-  pipe_[WRITE] = -1;
+  if (method_entity_ != NULL) {
+    delete method_entity_;
+    method_entity_ = NULL;
+  }
 }
+
+///////////  * 멤버변수 Getter() *  ///////////
 
 int Data::GetListenFd() const {
   return litsen_fd_;
 }
 
 int Data::GetListenPort() const {
-  return port_;
+  return listen_port_;
 }
 
 int Data::GetClientFd() const {
   return client_fd_;
+}
+
+char* Data::GetClientName() const {
+  return client_name_;
+}
+
+char* Data::GetClientPort() const {
+  return client_port_;
 }
 
 int Data::GetStatusCode() const {
@@ -61,6 +97,10 @@ bool Data::IsTimeout() const {
   return timeout_;
 }
 
+bool Data::IsCGI() const {
+  return cgi_;
+}
+
 int Data::GetFileFd() const {
   return file_fd_;
 }
@@ -72,6 +112,54 @@ int Data::GetPipeWrite() const {
 int Data::GetPipeRead() const {
 return pipe_[READ];
 }
+
+///////////  * 멤버변수 Setter() *  ///////////
+
+void Data::SetListenFd(int listen_fd) {
+  litsen_fd_ = listen_fd;
+}
+
+void Data::SetListenPort(int listen_port) {
+  listen_port_ = listen_port;
+}
+
+void Data::SetClientFd(int client_fd) {
+  client_fd_ = client_fd;
+}
+
+void Data::SetClientName(char* client_name) {
+  client_name_ = client_name;
+}
+
+void Data::SetClientPort(char* client_port) {
+  client_port_ = client_port;
+}
+
+void Data::SetStatusCode(int status_code) {
+  status_code_ = status_code;
+}
+
+void Data::SetTimeout(bool is_timeout) {
+  timeout_ = is_timeout;
+}
+
+void Data::SetCGi(bool is_CGI) {
+  cgi_ = is_CGI;
+}
+
+void Data::SetFileFd(int file_fd) {
+  file_fd_ = file_fd;
+}
+
+void Data::SetPipeWrite(int pipe_write_fd) {
+  pipe_[WRITE] = pipe_write_fd;
+}
+
+void Data::SetPipeRead(int pipe_read_fd) {
+  pipe_[READ] = pipe_read_fd;
+}
+
+//////////* Request Message Getter() *//////////
 
 t_req_msg* Data::GetReqMessage() const {
   return req_message_;
@@ -111,8 +199,57 @@ size_t Data::GetReqBodyLength() const {
   return req_message_->body_data_.length_;
 }
 
+//////////* Request Message Setter() *//////////
 
-/* Get about Response Message */
+void Data::SetReqMessage(t_req_msg* req_message) {
+  SetReqMethod(req_message->method_);
+  SetReqURL(req_message->req_url_);
+  SetReqProtocol(req_message->protocol_);
+  SetReqHeaders(req_message->headers_);
+  SetReqBody(&req_message->body_data_);
+}
+
+void Data::SetReqMethod(std::string req_message_method) {
+  if (req_message_ != NULL)
+    req_message_->method_ = req_message_method;
+}
+
+void Data::SetReqURL(std::string req_message_URL) {
+  if (req_message_ != NULL)
+    req_message_->req_url_ = req_message_URL;
+}
+
+void Data::SetReqProtocol(std::string req_message_protocol) {
+  if (req_message_ != NULL)
+    req_message_->protocol_ = req_message_protocol;
+}
+
+void Data::SetReqHeaders(std::map<std::string, std::string> &headers) {
+  if (req_message_ != NULL)
+    req_message_->headers_ = headers;
+}
+
+void Data::SetReqBody(t_entity* body_entity) {
+  req_message_->body_data_ = *body_entity;
+}
+
+void Data::SetReqBodyData(char* req_body_data) {
+  if (req_message_ != NULL)
+    req_message_->body_data_.data_ = req_body_data;
+}
+
+void Data::SetReqBodyType(char* req_body_type) {
+  if (req_message_ != NULL)
+    req_message_->body_data_.type_ = req_body_type;
+}
+
+void Data::SetReqBodyLength(size_t req_body_length) {
+  if (req_message_ != NULL)
+    req_message_->body_data_.length_ = req_body_length;
+}
+
+//////////* Response Message Getter() *//////////
+
 t_res_msg* Data::GetResMessage() const {
   return res_message_;
 }
@@ -140,50 +277,93 @@ std::string Data::GetResHeaderByKey(std::string &key) const {
 }
 
 char* Data::GetResBodyData() const {
-  return res_message_->body_data_->data_;
+  return res_message_->body_data_.data_;
 }
 
 char* Data::GetResBodyType() const {
-  return res_message_->body_data_->type_;
+  return res_message_->body_data_.type_;
 }
 
 size_t Data::GetResBodyLength() const {
-  return res_message_->body_data_->length_;
+  return res_message_->body_data_.length_;
 }
+
+//////////* Response Message Setter() *//////////
 
 void Data::SetResMessage(t_res_msg* res_msg) {
-  res_message_ = res_msg;
+  SetResVersion(res_msg->http_version_);
+  SetResStatusCode(res_msg->status_code_);
+  SetResStatusText(res_msg->status_text_);
+  SetResHeaders(res_msg->headers_);
+  SetResBody(&res_msg->body_data_);
 }
 
-void Data::SetResEntity(t_entity* entity) {
-  res_entity_ = entity;
+void Data::SetResVersion(std::string version) {
+  res_message_->http_version_ = version;
 }
 
-t_entity* Data::GetResEntity() const {
-  return res_entity_;
+void Data::SetResStatusCode(int status_code) {
+  res_message_->status_code_ = status_code;
 }
 
-char* Data::GetResEntitData() const {
-  return res_entity_->data_;
+void Data::SetResStatusText(std::string status_text) {
+  res_message_->status_text_ = status_text;
 }
 
-size_t Data::GetResEntityLength() const {
-  return res_entity_->length_;
+void Data::SetResHeaders(std::map<std::string, std::string> &headers) {
+  res_message_->headers_ = headers;
 }
 
-char* Data::GetResEntityType() const {
-  return res_entity_->type_;
+void Data::SetResBody(t_entity* entity) {
+  res_message_->body_data_ = *entity;
 }
 
-
-void Data::SetResEntityData(char* data) {
-  res_entity_->data_ = data;
+void Data::SetResBodyData(char* res_body_data) {
+  res_message_->body_data_.data_ = res_body_data;
 }
 
-void Data::SetResEntityLength(size_t length) {
-  res_entity_->length_ = length;
+void Data::SetResBodyType(char* res_body_type) {
+  res_message_->body_data_.type_ = res_body_type;
 }
 
-void Data::SetResEntityType(char *type) {
-  res_entity_->type_ = type;
+void Data::SetResBodyLength(size_t res_body_length) {
+  res_message_->body_data_.length_ = res_body_length;
+}
+
+//////////* Method Entity Getter() *//////////
+
+t_entity* Data::GetMethodEntity() const {
+  return method_entity_;
+}
+
+char* Data::GetMethodEntityData() const {
+  return method_entity_->data_;
+}
+
+size_t Data::GetMethodEntityLength() const {
+  return method_entity_->length_;
+}
+
+char* Data::GetMethodEntityType() const {
+  return method_entity_->type_;
+}
+
+//////////* Method Entity Setter() *//////////
+
+void Data::SetMethodEntity(t_entity* entity) {
+  SetMethodEntityData(entity->data_);
+  SetMethodEntityLength(entity->length_);
+  SetMethodEntityType(entity->type_);
+}
+
+void Data::SetMethodEntityData(char *data) {
+  method_entity_->data_ = data;
+}
+
+void Data::SetMethodEntityLength(size_t length) {
+  method_entity_->length_ = length;
+}
+
+void Data::SetMethodEntityType(char *type) {
+  method_entity_->type_ = type;
 }
