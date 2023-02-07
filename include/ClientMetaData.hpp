@@ -51,6 +51,7 @@ class ClientMetaData {
 
     // reqHandler에서 요청헤더 파싱 후
     void SetReqMessage(t_req_msg* header);
+    void SetReqMessageByFd(t_req_msg* header, int fd);
 
     // MsgComposer에서
     void SetResEntity(t_entity* res_enetity);
@@ -64,7 +65,7 @@ class ClientMetaData {
 
     // core에서 요청 헤더 데이터 필요할 때
     struct HTTPMessage* GetReqHeader();
-
+		t_req_msg* GetReqMsgByFd(int fd);
     // core에서 응답 헤더 데이터 필요할 때
     struct HTTPMessage* GetResHeader();
 

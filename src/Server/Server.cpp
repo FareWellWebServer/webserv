@@ -1,9 +1,10 @@
 #include "../../include/Server.hpp"
 
+
 #include <netdb.h>
 
-Server::Server() : kq_(kqueue()) {}
-
+// Server::Server() : kq_(kqueue()) {}
+Server::Server(std::vector<ServerConfigInfo> server_info) : server_infos_(server_info), mp_(server_info), kq_(kqueue()) {}
 Server::~Server(void) {
   close(kq_);
   servers_.clear();
@@ -88,12 +89,19 @@ void Server::ActCoreLogic(int idx) {
 	rq.SetReadLen(events_[idx].data);
 	rq.RecvFromSocket();
 	rq.ParseRecv();
-	
+
+	clients_.SetReqMessageByFd(rq.req_msg_, events_[idx].ident);
 	std::cout << rq.req_msg_->method_ << " " << rq.req_msg_->req_url_ << "\n";
 	std::map<std::string, std::string>::iterator it = rq.req_msg_->headers_.begin();
 	for(; it != rq.req_msg_->headers_.end(); ++it) {
 		std::cout << it->first << ": " << it->second << "\n";
 	}
+
+	// clients_.GetDataByFd(events_[idx].ident).e_stage = GET_HTML;
+	// mp_.GETFirst(events_[idx].ident, &clients_, events_[idx]);
+	// mp.GET(events_[idx].ident, clients_.GetDataByFd(events_[idx].ident), events_[idx], clients_.GetReqMsgByFd(events_[idx].ident));
+
+
 	
 
   // TODO: call ReqHandler and run other process
@@ -190,6 +198,6 @@ bool Server::IsListenFd(const int& fd) {
 }
 
 void Server::DisConnect(const int& fd) {
-  close(fd);
   clients_.DeleteByFd(fd);
+  close(fd);
 }

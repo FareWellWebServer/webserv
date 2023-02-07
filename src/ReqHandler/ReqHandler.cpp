@@ -14,11 +14,14 @@ void ReqHandler::Clear() {
     buf_ = NULL;
   }
   read_len_ = 0;
+
   client_ = NULL;
-  if (req_msg_ != NULL) {
-    delete req_msg_;
-    req_msg_ = NULL;
-  }
+	// req_msg_는 ClientMetaData가 가지고 있어야하니 여기서 할당해제하면 안될 듯.
+
+  // if (req_msg_ != NULL) {
+  //   delete req_msg_;
+  //   req_msg_ = NULL;
+  // }
 }
 
 t_req_msg* ReqHandler::PopReqMassage() {

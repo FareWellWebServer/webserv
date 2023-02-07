@@ -1,9 +1,14 @@
-#ifndef METHOD_PROCESSOR_HPP
-#define METHOD_PROCESSOR_HPP
+#ifndef METHODPROCESSOR_HPP
+#define METHODPROCESSOR_HPP
+// #include "Server.hpp"
+// #include "WebServ.hpp"
+
+#include "ServerConfigInfo.hpp"
+#include "ClientMetaData.hpp"
 
 #include <sys/event.h>
 #include <sys/stat.h>
-
+#include <fcntl.h>
 #include <algorithm>
 #include <ctime>
 #include <exception>
@@ -15,7 +20,6 @@
 #include <sstream>
 #include <vector>
 
-#include "WebServ.hpp"
 
 #define CGI ".py"
 #define INDEX "index.html"
@@ -33,6 +37,7 @@
 #include <unistd.h>
 extern char** environ;
 
+class Server;
 class MethodProcessor {
  public:
   /**
@@ -69,7 +74,7 @@ class MethodProcessor {
    * @param clients
    */
   void DELETE(int curfd, ClientMetaData* clients, struct kevent& cur_event);
-
+	void GET(int client_fd, Data& data, struct kevent& event, t_req_msg* req_msg);
  private:
   std::map<int, t_entity*> cache_entity_;
   void MakeErrorStatus(Data& client, int code);
@@ -89,6 +94,8 @@ class MethodProcessor {
   int FileSize(const char* filepath);
   void ChangeEvents(unsigned long ident, short filter, short flags,
                     unsigned int fflags, long data, void* udata);
+
+	
 };
 
 #endif

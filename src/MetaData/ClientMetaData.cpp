@@ -76,7 +76,7 @@ void ClientMetaData::SetPipeFd(int pipe[2]) {
 
 
 void ClientMetaData::DeleteByFd(const int& client_fd) {
-  ValidCheckToAccessData();
+  ValidCheckToAccessDataByFd(client_fd);
   datas_[client_fd].Clear();
   datas_.erase(client_fd);
 }
@@ -85,6 +85,12 @@ void ClientMetaData::SetReqMessage(t_req_msg* req_message)
 {
   ValidCheckToAccessData();
   datas_[current_fd_].req_message_ = req_message;
+}
+
+void ClientMetaData::SetReqMessageByFd(t_req_msg* req_message, int fd)
+{
+  ValidCheckToAccessDataByFd(fd);
+  datas_[fd].req_message_ = req_message;
 }
 
 void ClientMetaData::SetResEntity(t_entity* res_enetity)
@@ -101,6 +107,12 @@ Data& ClientMetaData::GetData() {
 Data& ClientMetaData::GetDataByFd(int fd) {
 	ValidCheckToAccessDataByFd(fd);
 	return datas_[fd];
+}
+
+t_req_msg* ClientMetaData::GetReqMsgByFd(int fd)
+{
+	ValidCheckToAccessDataByFd(fd);
+	return datas_[fd].req_message_;
 }
 
 // struct HTTPMessage* ClientMetaData::GetReqHeader() {
@@ -156,3 +168,5 @@ int ClientMetaData::GetStatusCode() {
 //   ValidCheckToAccessData();
 //   return datas_[current_fd_].req_message_.getURL();
 // }
+
+
