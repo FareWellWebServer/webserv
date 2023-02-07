@@ -21,7 +21,7 @@ class ClientMetaData {
     typedef int fd;
 
   private:
-  std::map<fd, Data> datas_;
+  std::map<fd, Data*> datas_;
     int current_fd_;
     void ValidCheckToAccessData();
     void ValidCheckToAccessDataByFd(int fd);

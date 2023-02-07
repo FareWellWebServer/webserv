@@ -10,13 +10,22 @@ Data::Data()
       client_fd_(-1),
       timeout_(false),
       event_(NULL),
-      config_(NULL) {
-  req_message_ = NULL;
-  res_entity_ = NULL;
-  Clear();
-}
+      config_(NULL),
+			req_message_(NULL),
+			res_message_(NULL),
+			res_entity_(NULL) {}
 
-Data::~Data() { Clear(); }
+Data::~Data() {
+	Clear();
+	if (client_name_ != NULL){
+		delete client_name_;
+		client_name_ = NULL;
+	}
+	if (client_port_ != NULL){
+		delete client_port_;
+		client_port_ = NULL;
+	}
+}
 
 /**
  * @brief 새로운 요청 들어올때마다 초기화할 값
@@ -32,6 +41,11 @@ void Data::Clear() {
     delete res_entity_;
     res_entity_ = NULL;
   }
+	if (res_message_ != NULL) {
+		delete res_message_;
+		res_message_ = NULL;
+	}
+
   if (res_message_) cgi = false;
   file_fd_ = -1;
   log_file_fd_ = -1;
@@ -112,9 +126,17 @@ size_t Data::GetResBodyLength() const {
   return res_message_->body_data_->length_;
 }
 
-void Data::SetResMessage(t_res_msg* res_msg) { res_message_ = res_msg; }
+void Data::SetResMessage(t_res_msg* res_msg) { 
+	if (res_message_ != NULL)
+		delete res_message_;
+	res_message_ = res_msg;
+}
 
-void Data::SetResEntity(t_entity* entity) { res_entity_ = entity; }
+void Data::SetResEntity(t_entity* entity) {
+	if (res_entity_ != NULL)
+		delete res_entity_;
+	res_entity_ = entity; 
+}
 
 t_entity* Data::GetResEntity() const { return res_entity_; }
 

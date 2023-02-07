@@ -44,10 +44,13 @@ void Server::Init(void) {
 
       BindListen(server_infos_[i].host_, server_infos_[i].port_, listenfd);
       EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, (void *)&server_infos_[i]);
+      // EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
       if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
         throw std::runtime_error("Error: kevent()");
       }
-      servers_.insert(CreateListening(server_infos_[i].host_, server_infos_[i].port_, listenfd));
+			t_listening* tmp = CreateListening(server_infos_[i].host_, server_infos_[i].port_, listenfd);
+      servers_.insert(tmp);
+			// delete tmp;
     #if SERVER
       std::cout << server_infos_[i].host_ << " is listening port on " << server_infos_[i].port_ << "\n";
     #endif
@@ -67,7 +70,7 @@ void Server::Act(void) {
       AcceptNewClient(idx);
       continue;
     }
-    Data* client = reinterpret_cast<Data *>(events_[idx].udata);
+		Data* client = reinterpret_cast<Data *>(events_[idx].udata);
     int event_fd = events_[idx].ident;
     if (events_[idx].filter == EVFILT_READ) {
       /* accept 된 port로 request 요청메세지 들어옴 */
@@ -121,10 +124,10 @@ void Server::Act(void) {
 
       }
     }
-    /* timeout 발생시 */
+    // /* timeout 발생시 */
     else if (events_[idx].filter == EVFILT_TIMER) {
-
     }
+		client = NULL;
 	}
 }
 
@@ -164,6 +167,7 @@ void Server::AcceptNewClient(int idx) {
 }
 
 void Server::ActCoreLogic(int idx) {
+	(void) idx;
 	req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
 	req_handler_->SetReadLen(events_[idx].data);
 	req_handler_->RecvFromSocket();
@@ -176,8 +180,12 @@ void Server::ActCoreLogic(int idx) {
 		std::cout << it->first << ": " << it->second << "\n";
 	}
 
+	for(size_t i = 0; i < req_handler_->req_msg_->body_data_.length_; ++i)
+		std::cout << req_handler_->req_msg_->body_data_.data_[i];
+	std::cout << "\n";
 	req_handler_->Clear();
-  DisConnect(events_[idx].ident);
+	DisConnect(events_[idx].ident);
+	// system("leaks $PPID");
 
   // TODO: call ReqHandler and run other process
   // TODO: call ResHandler and send data to client
@@ -255,7 +263,6 @@ void Server::BindListen(const std::string& host, const int& port, int& listenfd)
 
 t_listening* Server::CreateListening(const std::string& host, const int& port, const int& fd) {
   t_listening* new_listening = new t_listening;
-
   new_listening->host = host;
   new_listening->port = port;
   new_listening->fd = fd;
@@ -273,5 +280,9 @@ bool Server::IsListenFd(const int& fd) {
 }
 
 void Server::DisConnect(const int& fd) {
+	// struct kevent event;
+	// EV_SET(&event, fd, EVFILT_READ, EV_DELETE, 0, 0, clients_->GetDataByFd(fd));
+	// kevent(kq_, &event, 1, NULL, 0, NULL);
   clients_->DeleteByFd(fd);
+	close(fd);
 }

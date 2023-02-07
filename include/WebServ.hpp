@@ -18,7 +18,7 @@
 #include "Data.hpp"
 #include "ErrorHandler.hpp"
 #include "GetNextLine.hpp"
-// #include "HTTPMessage.hpp"
+#include "HTTPMessage.hpp"
 #include "Logger.hpp"
 #include "Server.hpp"
 #include "MethodProcessor.hpp"
