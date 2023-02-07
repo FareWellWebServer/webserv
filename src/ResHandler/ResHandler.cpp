@@ -1,9 +1,18 @@
 #include "../../include/ResHandler.hpp"
 
-ResHandler::ResHandler(const char* response, std::size_t response_length)
-    : response_(response), response_length_(response_length) {}
+ResHandler::ResHandler()
+    : response_(NULL), response_length_(0) {}
 
-ResHandler::~ResHandler(void) {}
+ResHandler::~ResHandler(void) {
+  if (response_ != NULL) {
+    delete response_;
+  }
+}
+
+void ResHandler::SetResponse(const char* response, std::size_t response_length) {
+  response_ = response;
+  response_length_ = response_length;
+}
 
 void ResHandler::SendToClient(int client_fd) {
   #if RES_HANDLER

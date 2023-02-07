@@ -46,7 +46,7 @@ void MethodProcessor::ChangeEvents(unsigned long ident, short filter,
 
 void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
                                struct kevent& cur_event) {
-  Data* client = &clients->GetDataByFd(curfd);
+  Data* client = clients->GetDataByFd(curfd);
   switch (client->e_stage) {
     case GET_HTML:
       GETSecond(curfd, clients, cur_event);
@@ -130,12 +130,12 @@ void MethodProcessor::GETFirst(int curfd, ClientMetaData* clients,
         /*handling index.html*/
         client->e_stage = GET_HTML;
         /* cache data index.html */
-        if (cache_entity_.find(client->port_) != cache_entity_.end()) {
+        if (cache_entity_.find(client->host_port_) != cache_entity_.end()) {
           client->res_entity_->type_ = strdup(TYPE_HTML);
           client->res_entity_->data_ = strdup(
-              cache_entity_.find(client->port_).operator*().second->data_);
+              cache_entity_.find(client->host_port_).operator*().second->data_);
           client->res_entity_->length_ =
-              cache_entity_.find(client->port_).operator*().second->length_;
+              cache_entity_.find(client->host_port_).operator*().second->length_;
           client->e_stage = GET_FINISHED;
 
           ChangeEvents(client->event_->ident, EVFILT_WRITE, EV_ENABLE, 0, 0,
@@ -260,7 +260,7 @@ char* MethodProcessor::CopyCstr(const char* cstr, size_t length) {
 void MethodProcessor::GETSecondCgi(int curfd, ClientMetaData* clients,
                                    struct kevent& cur_event) {
   // TODO : CGI 읽기 구현
-  Data* client = &clients->GetData();
+  Data* client = clients->GetData();
   client->e_stage = GET_FINISHED;
   client->res_entity_->length_ = cur_event.data;
   client->res_entity_->data_ = new char[client->res_entity_->length_];
@@ -274,7 +274,7 @@ void MethodProcessor::GETSecondCgi(int curfd, ClientMetaData* clients,
 
 void MethodProcessor::GETSecondFile(int curfd, ClientMetaData* clients,
                                     struct kevent& cur_event) {
-  Data* client = &clients->GetData();
+  Data* client = clients->GetData();
   client->e_stage = GET_FINISHED;
   client->res_entity_->length_ = FileSize(client->GetReqURL().c_str());
 
@@ -290,7 +290,7 @@ void MethodProcessor::GETSecondFile(int curfd, ClientMetaData* clients,
 
 void MethodProcessor::GETSecond(int curfd, ClientMetaData* clients,
                                 struct kevent& cur_event) {
-  Data* client = &clients->GetDataByFd(curfd);
+  Data* client = clients->GetDataByFd(curfd);
   client->e_stage = GET_FINISHED;
   client->res_entity_->length_ = FileSize(client->GetReqURL().c_str());
 

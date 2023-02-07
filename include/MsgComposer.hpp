@@ -7,8 +7,10 @@
 
 class MsgComposer {
  public:
-  MsgComposer(Data* client);
+  MsgComposer();
+  // MsgComposer(Data* client);
   ~MsgComposer(void);
+  void SetData(Data* client);
   void InitResMsg(void);
   const char* GetResponse(void);
   std::size_t getLength(void) const;
