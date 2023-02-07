@@ -13,6 +13,6 @@ def caesar(s):
     return "".join(s)
 
 form = cgi.FieldStorage()
-plain_text = form.getvalue(origin)
+plain_text = form.getvalue("origin")
 
 print(caesar(plain_text))
