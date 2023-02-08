@@ -6,7 +6,7 @@
 // Server::Server() : kq_(kqueue()) {}
 Server::Server(std::vector<ServerConfigInfo> server_info) 
 : server_infos_(server_info), kq_(kqueue()) {
-  mp_ = new MethodProcessor(server_info);
+  // mp_ = new MethodProcessor(server_info);
   clients_ = new ClientMetaData;
   req_handler_ = new ReqHandler;
   res_handler_ = new ResHandler;
