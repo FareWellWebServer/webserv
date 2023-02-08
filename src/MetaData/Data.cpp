@@ -41,7 +41,7 @@ Data::~Data(void) {
  * 
  */
 void Data::Init(void) {
-  Clear();
+  // Clear();
   req_message_ = new t_req_msg;
   res_message_ = new t_res_msg;
   method_entity_ = new t_entity;

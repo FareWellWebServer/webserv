@@ -76,6 +76,7 @@ void Server::Act(void) {
         #if SERVER
           std::cout << "[Server] Client READ fd : " << client->GetClientFd() << std::endl;
         #endif
+				client->Init();
 				ActCoreLogic(idx);
       }
       /* 내부에서 읽으려고 Open()한 File에 대한 이벤트 */
@@ -101,6 +102,7 @@ void Server::Act(void) {
           std::cout << "[Server] Client Write :" << client->GetClientFd() << std::endl;
         #endif
 				Send(idx);
+				// client->Clear();
       }
       /* POST, PUT file에 대한 write 발생시 */
       else if (event_fd == client->GetFileFd()) {
@@ -138,7 +140,11 @@ void Server::ActCoreLogic(int idx) {
 	req_handler_->RecvFromSocket();
 	req_handler_->ParseRecv();
 
-	clients_->SetReqMessageByFd(req_handler_->req_msg_, events_[idx].ident);
+	// clients_->SetReqMessageByFd(req_handler_->req_msg_, events_[idx].ident);
+	// Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+
+	// client->SetReqMessage(req_handler_->req_msg_);
+
 	// std::cout << req_handler_->req_msg_->method_ << " " << req_handler_->req_msg_->req_url_ << "\n";
 	// std::map<std::string, std::string>::iterator it = req_handler_->req_msg_->headers_.begin();
 	// for(; it != req_handler_->req_msg_->headers_.end(); ++it) {
@@ -148,7 +154,7 @@ void Server::ActCoreLogic(int idx) {
 	// for(size_t i = 0; i < req_handler_->req_msg_->body_data_.length_; ++i)
 	// 	std::cout << req_handler_->req_msg_->body_data_.data_[i];
 	// std::cout << "\n";
-	req_handler_->Clear();
+	// req_handler_->Clear();
 
 
 	Data* client = clients_->GetDataByFd(events_[idx].ident);
