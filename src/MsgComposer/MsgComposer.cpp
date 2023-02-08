@@ -106,7 +106,7 @@ void MsgComposer::SetData(Data* client) {
 void MsgComposer::SetHeaders(void) {
   // content-length
   std::stringstream ss;
-  ss << client_->GetReqBodyLength();
+  ss << client_->GetMethodEntityLength();
   res_msg_.headers_["Content-length"] = ss.str();
   // content-type
   // .headers_["Content-type"] = .body_data_->type;
@@ -117,9 +117,9 @@ void MsgComposer::SetHeaders(void) {
 
 
 	std::cout << res_msg_.headers_.size() << "__________\n";
-	std::map<std::string, std::string>::iterator it = res_msg_.headers_.begin();
-	for(; it != res_msg_.headers_.end(); ++it)
-		std::cout << it->first << ": " << it->second << "\n";
+	// std::map<std::string, std::string>::iterator it = res_msg_.headers_.begin();
+	// for(; it != res_msg_.headers_.end(); ++it)
+	// 	std::cout << it->first << ": " << it->second << "\n";
   // 헤더 필요하면 여기서 더 추가하기(set-cookie or ...)
 }
 
@@ -127,7 +127,7 @@ void MsgComposer::InitResMsg() {
   res_msg_.http_version_ = "HTTP/1.1";
   res_msg_.status_code_ = client_->status_code_;
   SetStatusText();
-  res_msg_.body_data_ = client_->GetReqBody();
+  res_msg_.body_data_ = *(client_->GetMethodEntity());
   SetHeaders();
 }
 
@@ -149,8 +149,8 @@ const char* MsgComposer::GetResponse(void) {
       res_msg_.headers_.begin();
   for (; it != res_msg_.headers_.end(); ++it)
 	{
-    // str.append(it->first + ": " + it->second + "\r\n");
-		std::cout << it->first << ": " << it->second << "\n";
+    str.append(it->first + ": " + it->second + "\r\n");
+		// std::cout << it->first << ": " << it->second << "\n";
 	}
   str.append("\r\n");
 
