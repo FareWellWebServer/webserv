@@ -66,6 +66,14 @@ class Server {
 	// Class 내부에 저장함.
 	std::vector<ServerConfigInfo> server_infos_;
 
+
+	/* ----- seojin -----*/
+
+	void Get(int idx);
+	void Read_file(int idx);
+	void Send(int idx);
+
+	/* ------------------*/
  private:
   int kq_;
   struct kevent events_[MAXLISTEN + BACKLOG];

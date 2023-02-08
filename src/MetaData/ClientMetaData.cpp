@@ -37,6 +37,7 @@ void ClientMetaData::AddData(const int& listen_fd, const int& client_fd,
   Data* new_data = new Data;
 
   InitializeData(new_data);
+	new_data->Init();
   new_data->litsen_fd_ = listen_fd;
   new_data->client_fd_ = client_fd;
   new_data->listen_port_ = host_port;

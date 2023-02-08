@@ -74,7 +74,8 @@ class MethodProcessor {
    * @param clients
    */
   void DELETE(int curfd, ClientMetaData* clients, struct kevent& cur_event);
-	void GET(int client_fd, Data& data, struct kevent& event, t_req_msg* req_msg);
+
+
  private:
   std::map<int, t_entity*> cache_entity_;
   void MakeErrorStatus(Data& client, int code);
