@@ -24,10 +24,10 @@ int main(int ac, char** av) {
 }
 
 void main_process(int ac, char** av) {
-  const std::vector<ServerConfigInfo> server_infos = config_process(ac, av);
-  Server server;
+  Server server(config_process(ac, av));
 
-  server.Init(server_infos);
+  // server.Init(server_infos);
+  server.Init();
   server.Run();
 }
 

@@ -16,8 +16,7 @@ class ReqHandler {
   void ParseRecv(int fd);
   // void SetReadLen(int64_t len);
   void SetBuf(int fd);
-  t_req_msg*
-  PopReqMassage();  // 동적할당해서 나가고, 받은 쪽에서 delete 처리해주기
+  t_req_msg* PopReqMassage();  // 동적할당해서 나가고, 받은 쪽에서 delete 처리해주기
   void Clear();
   t_req_msg* req_msg_;
   int entity_flag;
