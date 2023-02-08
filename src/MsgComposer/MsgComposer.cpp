@@ -106,11 +106,11 @@ void MsgComposer::SetData(Data* client) {
 void MsgComposer::SetHeaders(void) {
   // content-length
   std::stringstream ss;
-  ss << client_->GetResBodyLength();
+  ss << client_->GetReqBodyLength();
   res_msg_.headers_["Content-length"] = ss.str();
   // content-type
   // .headers_["Content-type"] = .body_data_->type;
-  res_msg_.headers_["Content-type"] = "text/plain";
+  res_msg_.headers_["Content-type"] = "text/html";
   // Connection -> keep-alive
   res_msg_.headers_["Connection"] = "keep-alive";
   // 헤더 필요하면 여기서 더 추가하기(set-cookie or ...)
@@ -120,7 +120,7 @@ void MsgComposer::InitResMsg() {
   res_msg_.http_version_ = "HTTP/1.1";
   res_msg_.status_code_ = client_->status_code_;
   SetStatusText();
-  res_msg_.body_data_ = client_->GetResBody();
+  res_msg_.body_data_ = client_->GetReqBody();
   SetHeaders();
 }
 

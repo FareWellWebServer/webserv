@@ -331,17 +331,3 @@ int MethodProcessor::FileSize(const char* filepath) {
 }
 
 
-
-
-// seojin
-
-void MethodProcessor::GET(int client_fd, Data& data, struct kevent& event, t_req_msg* 
-req_msg) {
-	(void) client_fd;
-	(void) data;
-	(void) event;
-	(void) req_msg;
-
-
-	std::cout << "hello\n";
-}
