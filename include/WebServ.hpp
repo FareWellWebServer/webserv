@@ -1,18 +1,31 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-#define RED "\033[31m"
-#define GREEN "\033[32m"
-#define YELLOW "\033[33m"
-#define BLUE "\033[34m"
-#define WHITE "\033[37m"
+#define BUFFER_SIZE 1024
 
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <fstream>
 #include <iostream>
+#include <map>
+#include <string>
 
-#include "Config/Config.hpp"
-#include "Config/ServerConfigInfo.hpp"
+#include "ClientMetaData.hpp"
+#include "Color.hpp"
+#include "Config.hpp"
+#include "Data.hpp"
 #include "ErrorHandler.hpp"
+#include "GetNextLine.hpp"
+#include "HTTPMessage.hpp"
 #include "Logger.hpp"
+#include "Server.hpp"
+#include "MethodProcessor.hpp"
+#include "MsgComposer.hpp"
+#include "ReqHandler.hpp"
+#include "ServerConfigInfo.hpp"
+#include "Stage.hpp"
 #include "WebServException.hpp"
 
 #endif

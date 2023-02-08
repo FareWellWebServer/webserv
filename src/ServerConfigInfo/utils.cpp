@@ -1,4 +1,4 @@
-#include "../../include/Config/Config.hpp"
+#include "../../include/Config.hpp"
 
 /* =========================== Utils Error =========================== */
 void Config::ExitConfigParseError(std::string msg) const {
@@ -52,10 +52,12 @@ std::vector<std::string> Config::Split(const std::string& str,
   size_t start = str.find_first_not_of(charset);
   size_t end = str.find_first_of(charset, start);
 
-  if (end == std::string::npos) res.push_back(str.substr(start, str.size()));
-
+  if (end == std::string::npos) {
+    res.push_back(str.substr(start, str.size()));
+    return res;
+  }
+  res.push_back(str.substr(start, end - start));
   while (end != std::string::npos) {
-    res.push_back(str.substr(start, end - start));
     start = str.find_first_not_of(charset, end);
     end = str.find(charset, start);
     if (start == std::string::npos) break;
@@ -85,54 +87,55 @@ void Config::PrintKeyVal(const std::string& key, const std::string& val) const {
             << "| val: " << val.c_str() << std::endl;
 }
 
-void Config::PrintLocation(const location& l) const {
-  if (l.is_cgi) {
-    std::cout << "uri: " << l.uri << std::endl;
-    std::cout << "cgi_pass: " << l.cgi_pass << std::endl;
+void Config::PrintLocation(const t_location& l) const {
+  if (l.is_cgi_) {
+    std::cout << "cgi_pass: " << l.cgi_pass_ << std::endl;
   } else {
-    std::cout << "uri: " << l.uri << std::endl;
-    std::cout << "status_code: " << l.status_code << std::endl;
-    std::cout << "file_path: " << l.file_path << std::endl;
-    std::cout << "redir status : " << l.redir_status << std::endl;
-    std::cout << "redirection_path: " << l.redir_path << std::endl;
-    std::cout << "methods:";
-    for (size_t i = 0; i < l.methods.size(); ++i)
-      std::cout << " " << l.methods[i];
-    std::cout << std::endl;
+    std::cout << "file_path: " << l.file_path_ << std::endl;
+    if (!l.redir_path_.empty())
+      std::cout << "redirection_path: " << l.redir_path_ << std::endl;
   }
+  std::cout << "methods:";
+  for (size_t i = 0; i < l.methods_.size(); ++i)
+    std::cout << " " << l.methods_[i];
+  std::cout << std::endl;
 }
 
-void Config::PrintLocations(const std::vector<location>& locations) const {
-  for (size_t i = 0; i < locations.size(); ++i) {
+void Config::PrintLocations(
+    const std::map<std::string, t_location>& locations) const {
+  std::map<std::string, t_location>::const_iterator it = locations.begin();
+  int i = 0;
+  for (; it != locations.end(); ++it) {
     std::cout << std::endl;
-    std::cout << "------ [locations " << i << " -> cgi ";
-    (locations[i].is_cgi) ? std::cout << "O" : std::cout << "X";
+    std::cout << "------ [locations " << i++ << " -> cgi ";
+    (it->second.is_cgi_) ? std::cout << "O" : std::cout << "X";
     std::cout << "] ------" << std::endl;
-    PrintLocation(locations[i]);
+    std::cout << "uri: " << it->first << std::endl;
+    PrintLocation(it->second);
   }
 }
 
 void Config::PrintConfigInfo(const ServerConfigInfo& info) const {
   std::cout << "------ [server info] ------" << std::endl;
-  std::cout << "host: " << info.host << std::endl;
-  std::cout << "port: " << info.port << std::endl;
-  std::cout << "body_size: " << info.body_size << std::endl;
-  std::cout << "root_path: " << info.root_path << std::endl;
-  std::cout << "file_path: " << info.file_path << std::endl;
-  std::cout << "upload_path: " << info.upload_path << std::endl;
+  std::cout << "host: " << info.host_ << std::endl;
+  std::cout << "port: " << info.port_ << std::endl;
+  std::cout << "body_size: " << info.body_size_ << std::endl;
+  std::cout << "root_path: " << info.root_path_ << std::endl;
+  std::cout << "file_path: " << info.file_path_ << std::endl;
+  std::cout << "upload_path: " << info.upload_path_ << std::endl;
 
-  std::cout << "server_name: " << info.server_name << std::endl;
-  std::cout << "directory_list: " << info.directory_list << std::endl;
-  std::cout << "timeout: " << info.timeout << std::endl;
+  std::cout << "server_name: " << info.server_name_ << std::endl;
+  std::cout << "directory_list: " << info.directory_list_ << std::endl;
+  std::cout << "timeout: " << info.timeout_ << std::endl;
 
   std::cout << "methods:";
-  PrintVector(info.methods);
+  PrintVector(info.methods_);
   std::cout << "error_pages:";
   std::map<int, std::string>::const_iterator it;
-  for (it = info.error_pages.begin(); it != info.error_pages.end(); ++it)
+  for (it = info.error_pages_.begin(); it != info.error_pages_.end(); ++it)
     std::cout << " [" << it->first << " -> " << it->second << "]";
   std::cout << std::endl;
-  PrintLocations(info.locations);
+  PrintLocations(info.locations_);
 }
 
 void Config::PrintConfigInfos(void) const {
