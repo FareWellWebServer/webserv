@@ -5,6 +5,7 @@ void Config::InitLocation(t_location& l, const std::string& uri) {
   l.is_cgi_ = (uri == ".py") ? true : false;
   l.cgi_pass_ = "";
 
+  l.root_path_ = server_config_info_.root_path_;
   l.file_path_.clear();
 
   l.methods_ = server_config_info_.methods_;
@@ -47,6 +48,8 @@ void Config::SetLocation(t_location& l, const std::string& key,
     ParseLocationRedirection(l, vec);
   } else if (key == "method") {
     ParseLocationMethods(l, vec);
+  } else if (key == "root") {
+    ParseLocationRoot(l, vec);
   } else if (key == "file_path") {
     ParseLocationFilePath(l, vec);
   } else if (key == "cgi_pass") {
@@ -60,10 +63,11 @@ void Config::ParseLocationRedirection(t_location& l,
   if (vec.size() != 1) ExitConfigParseError();
 
   std::string redir_path = vec[0];
+
   struct stat sb;
-  if (stat(redir_path.c_str(), &sb) == 0)
+  if (stat(("." + redir_path).c_str(), &sb) == 0) {
     l.redir_path_ = redir_path;
-  else
+  } else
     ExitConfigParseError();
 }
 
@@ -81,6 +85,18 @@ void Config::ParseLocationMethods(t_location& l,
     }
     l.methods_.push_back(method);
   }
+}
+
+void Config::ParseLocationRoot(t_location& l,
+                               const std::vector<std::string>& vec) {
+  if (vec.size() != 1) ExitConfigParseError();
+
+  std::string root_path = vec[0];
+  struct stat sb;
+  if (stat(("." + root_path).c_str(), &sb) == 0)
+    l.root_path_ = vec[0];
+  else
+    ExitConfigParseError();
 }
 
 void Config::ParseLocationFilePath(t_location& l,

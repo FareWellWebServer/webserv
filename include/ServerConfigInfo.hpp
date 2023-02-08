@@ -6,6 +6,7 @@
 #include <vector>
 
 typedef struct s_location {
+  std::string root_path_;             // 필수 입력 O
   std::string file_path_;             // 필수 입력 O
   std::vector<std::string> methods_;  // 필수 입력 X
   std::string redir_path_;            // 필수 입력 X

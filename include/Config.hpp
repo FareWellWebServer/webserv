@@ -51,6 +51,7 @@ class Config {
   void ParseLocationStatusCode(t_location &l, const value &vec);
   void ParseLocationRedirection(t_location &l, const value &vec);
   void ParseLocationMethods(t_location &l, const value &vec);
+  void ParseLocationRoot(t_location &l, const value &vec);
   void ParseLocationFilePath(t_location &l, const value &vec);
   void ParseLocationCgi(t_location &l, const value &vec);
 

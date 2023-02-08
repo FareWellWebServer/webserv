@@ -118,7 +118,7 @@ void Config::CheckValidation(void) {
 
     std::string file_path = info.root_path_ + info.file_path_;
     struct stat sb;
-    if (stat(file_path.c_str(), &sb) == 0) {
+    if (stat(("." + file_path).c_str(), &sb) == 0) {
       info.file_path_ = file_path;
     } else {
       ExitConfigValidateError("Wrong File Path\n-> " + info.root_path_ +
@@ -143,7 +143,7 @@ void Config::CheckLocation(t_location& loc, const ServerConfigInfo& info) {
     }
     std::string file_path = info.root_path_ + loc.file_path_;
     struct stat sb;
-    if (stat(file_path.c_str(), &sb) == 0) {
+    if (stat(("." + file_path).c_str(), &sb) == 0) {
       loc.file_path_ = file_path;
     } else {
       ExitConfigValidateError("Wrong Location File Path\n-> " +
