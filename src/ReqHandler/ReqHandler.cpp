@@ -2,7 +2,7 @@
 
 
 ReqHandler::ReqHandler(void)
-    : req_msg_(0), entity_flag(0), buf_(0), read_len_(0), client_(0) {}
+    : req_msg_(0), entity_flag(0), buf_(0), client_(0), read_len_(0) {}
 
 ReqHandler::~ReqHandler(void) { Clear(); }
 
@@ -16,24 +16,14 @@ void ReqHandler::Clear() {
     buf_ = NULL;
   }
   read_len_ = 0;
-
   client_ = NULL;
 	req_msg_ = NULL;
-	// req_msg_는 ClientMetaData가 가지고 있어야하니 여기서 할당해제하면 안될 듯.
 
+	// req_msg_는 ClientMetaData가 가지고 있어야하니 여기서 할당해제하면 안될 듯.
   // if (req_msg_ != NULL) {
   //   delete req_msg_;
   //   req_msg_ = NULL;
   // }
-}
-
-t_req_msg* ReqHandler::PopReqMassage() {
-  t_req_msg* req(req_msg_);
-#if REQ_HANDLER
-  if (req_msg_ == NULL) std::cout << "ReqHanlder is empty" << std::endl;
-#endif
-  req_msg_ = NULL;
-  return (req);
 }
 
 // void ReqHandler::SetReadLen(int64_t len) { read_len_ = len; }
@@ -51,7 +41,7 @@ void ReqHandler::RecvFromSocket() {
   if (client_ == NULL || read_len_ == 0) {
 #if REQ_HANDLER
     std::cout << " [ReqHandler] Recv error. Need client data. call SetClient() "
-              << "or SetReadLen() " << std::endl;
+              << "or SetReadLen() " << &client_ << read_len_ << std::endl;
 #endif
     return;
   }

@@ -70,7 +70,7 @@ class Server {
 	/* ----- seojin -----*/
 
 	void Get(int idx);
-	void Read_file(int idx);
+	void ReadFile(int idx);
 	void Send(int idx);
 
 	/* ------------------*/

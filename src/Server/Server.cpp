@@ -53,7 +53,7 @@ void Server::Init(void) {
     #endif
   }
 }
- // 임의로 public에 나둠 나중에 setter구현해야함
+	// 임의로 public에 나둠 나중에 setter구현해야함
 
 
 // private
@@ -77,7 +77,10 @@ void Server::Act(void) {
           std::cout << "[Server] Client READ fd : " << client->GetClientFd() << std::endl;
         #endif
 				client->Init();
-				ActCoreLogic(idx);
+				if (events_[idx].flags == EV_EOF)
+					std::cout << RED << "FUCK\n" << RESET;
+				else
+					ActCoreLogic(idx);
       }
       /* 내부에서 읽으려고 Open()한 File에 대한 이벤트 */
       else if (event_fd == client->GetFileFd()) {
@@ -85,7 +88,7 @@ void Server::Act(void) {
           std::cout << "[Server] File READ fd : " << event_fd << " == " << client->GetFileFd() << std::endl;
         #endif
         // 
-				Read_file(idx);
+				ReadFile(idx);
       }
       /* CGI에게 반환받는 pipe[READ]에 대한 이벤트 */
       else if (event_fd == client->GetPipeRead()) {
@@ -99,7 +102,7 @@ void Server::Act(void) {
       /* response 보낼 때에 대한 이벤트 */
       if (event_fd == client->GetClientFd()) {
         #if SERVER
-          std::cout << "[Server] Client Write :" << client->GetClientFd() << std::endl;
+          std::cout << "[Server] Client Write : " << client->GetClientFd() << std::endl;
         #endif
 				Send(idx);
 				client->Clear();
@@ -142,6 +145,8 @@ void Server::ActCoreLogic(int idx) {
 
 	// clients_->SetReqMessageByFd(req_handler_->req_msg_, events_[idx].ident);
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+
+
 	client->SetReqMessage(req_handler_->req_msg_);
 
 	// client->SetReqMessage(req_handler_->req_msg_);
@@ -298,17 +303,19 @@ void Server::Get(int idx) {
 
 
 
-void Server::Read_file(int idx) {
+void Server::ReadFile(int idx) {
 	int file_fd = events_[idx].ident;
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 	// t_req_msg* req_msg = client->GetReqMessage();
 
 	int size = client->event_[idx].data;
-	char* buf = new char(size);
+	char* buf = new char[size];
 	read(file_fd, buf, size);
+
 
 	client->SetMethodEntityData(buf);
 	client->SetMethodEntityLength(size);
+	client->SetMethodEntityType(strdup("text/html"));
 
 
 	struct kevent event;
@@ -323,14 +330,19 @@ void Server::Send(int idx) {
 	msg_composer_->InitResMsg();
 	int client_fd = client->GetClientFd();
 	int file_fd = client->GetFileFd();
-	send(client_fd, msg_composer_->GetResponse(), msg_composer_->getLength(), 0);
+	const char* response = msg_composer_->GetResponse();
+	send(client_fd, response, msg_composer_->getLength(), 0);
+	delete[] response;
+	response = NULL;
 
-	// write(1, msg_composer_->GetResponse(), msg_composer_->getLength());
 	struct kevent event;
 	EV_SET(&event, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, client);
 	kevent(kq_, &event, 1, NULL, 0, NULL);
 
-	close(file_fd);
 	EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	kevent(kq_, &event, 1, NULL, 0, NULL);
+
+
+	close(file_fd);
+	// DisConnect(client_fd);
 }
