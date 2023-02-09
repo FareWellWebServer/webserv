@@ -90,7 +90,7 @@ void CGIManager::SendToCGI(Data* client, int kq)
         dup2(p[0], 0);
         extern char** environ;
         // extern char** __argv;
-        if (execve("../cgi/cgi.py", NULL, environ) < 0) {
+        if (execve(client_->GetReqURL().c_str(), NULL, environ) < 0) {
             #if CGI
                 std::cout << "[CGI] execve 에러" << std::endl;
             #endif
@@ -118,6 +118,7 @@ void CGIManager::GetFromCGI(Data* client, size_t len, int kq)
     struct kevent event;
     EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
     kevent(kq, &event, 1, NULL, 0, NULL);
+    close(client_->GetPipeRead());
     client_->SetMethodEntityLength(len);
     client_->SetMethodEntityData(buf);
     char* type = ParseCGIType(buf);
