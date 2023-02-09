@@ -296,14 +296,16 @@ void Server::Get(int idx) {
   if (req_url == "/") {
     file_path += "index.html";
   } else {
+    file_path.pop_back();
     file_path += req_url;
   }
 
 	int file_fd = open(file_path.c_str(), O_RDONLY);
   if (file_fd == -1) { // 존재하지 않는 파일.
     file_path.clear();
-    file_path = config->error_pages_.find(404)->second;
+    file_path = "./" + config->error_pages_.find(404)->second;
     file_fd = open(file_path.c_str(), O_RDONLY);
+    client->SetStatusCode(404);
   }
 	client->SetFileFd(file_fd);
 
