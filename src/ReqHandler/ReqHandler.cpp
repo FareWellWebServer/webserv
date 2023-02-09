@@ -302,14 +302,16 @@ void ReqHandler::ValidateReq(void) {
     return;
   }
 
-  // file_path 가 없는 경우 -> / or /test/
+  // file_path가 없는 경우 -> / or /test/
   if (req_file_path.empty()) {
     // directory_list인 경우
     if (loc->directory_list_) {
       client_->SetDirectoryList(true);
       client_->SetStatusCode(200);
       req_msg_->req_url_ = loc->root_path_;
-    } else {
+    }
+    // directory_list가 아닌 경우
+    else {
       client_->SetStatusCode(200);
       req_msg_->req_url_ = loc->file_path_[0];
     }
@@ -322,11 +324,14 @@ void ReqHandler::ValidateReq(void) {
                 loc->root_path_ + req_file_path);
   // location 안에 파일이 있는 경우
   if (it != loc->file_path_.end()) {
+    // directory_list인 경우
     if (loc->directory_list_) {
       client_->SetDirectoryList(true);
       client_->SetStatusCode(200);
       req_msg_->req_url_ = loc->root_path_;
-    } else {
+    }
+    // directory_list가 아닌 경우
+    else {
       client_->SetStatusCode(200);
       req_msg_->req_url_ = *it;
     }
