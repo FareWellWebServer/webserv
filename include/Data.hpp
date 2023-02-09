@@ -40,6 +40,7 @@ class Data {
     int GetLogFileFd() const;
     int GetPipeWrite() const;
     int GetPipeRead() const;
+    const ServerConfigInfo* GetConfig() const;
 
     /* 멤버변수 Setter() .cpp: 110 ~ 154 */
     void SetListenFd(int listen_fd);
