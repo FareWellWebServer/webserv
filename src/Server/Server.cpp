@@ -167,9 +167,14 @@ void Server::ActCoreLogic(int idx) {
 
 
 	// Data* client = clients_->GetDataByFd(events_[idx].ident);
-	if (client->GetReqMethod() == "GET")
-  {
+	if (client->GetReqMethod() == "GET") {
 		Get(idx);
+  } else if (client->GetReqMethod() == "POST") {
+
+  } else if (client->GetReqMethod() == "DELETE") {
+
+  } else {
+    
   }
 
 
@@ -280,26 +285,28 @@ void Server::DisConnect(const int& fd) {
 /* ----- seojin ----- */
 
 void Server::Get(int idx) {
-	// int client_fd = events_[idx].ident;
-
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-	// t_req_msg* req_msg = client->GetReqMessage();
-	// (void) req_msg;
-	const ServerConfigInfo* info = client->config_;
-	// std::cout << client->GetListenFd() << "\n";
-	// std::cout << client->GetListenPort() << "\n";
-	// std::cout << req_msg->req_url_ << "\n";
-	// std::cout << info->root_path_ << "\n";
-
-	std::string file_path = info->root_path_ + "index.html";
-	file_path = "./" + file_path;
-	
-	// std::cout << "file_path: " << file_path << "\n";
-	int file_fd = open(file_path.c_str(), O_RDONLY);
+	const ServerConfigInfo* config = client->config_;
+  t_req_msg* req_msg = client->GetReqMessage();
   int client_fd = client->GetClientFd();
-	// std::cout << "file_fd: " << file_fd << "\n";
+
+  std::string req_url = req_msg->req_url_;
+  std::string file_path = "." + config->root_path_;
+
+  if (req_url == "/") {
+    file_path += "index.html";
+  } else {
+    file_path += req_url;
+  }
+
+	int file_fd = open(file_path.c_str(), O_RDONLY);
+  if (file_fd == -1) { // 존재하지 않는 파일.
+    file_path.clear();
+    file_path = config->error_pages_.find(404)->second;
+    file_fd = open(file_path.c_str(), O_RDONLY);
+  }
 	client->SetFileFd(file_fd);
-	
+
 	struct kevent event;
 	EV_SET(&event, file_fd, EVFILT_READ, EV_ADD, 0, 0, client);
 	kevent(kq_, &event, 1, NULL, 0, NULL);
@@ -356,5 +363,5 @@ void Server::Send(int idx) {
 
 
 	close(file_fd);
-	DisConnect(client_fd);
+	// DisConnect(client_fd);
 }
