@@ -6,13 +6,15 @@
 #include <vector>
 
 typedef struct s_location {
-  std::string root_path_;             // 필수 입력 O
-  std::string file_path_;             // 필수 입력 O
+  std::vector<std::string> file_path_;             // 필수 입력 O
+
+  bool directory_list_;               // 필수 입력 X
+  std::string root_path_;             // 필수 입력 X
   std::vector<std::string> methods_;  // 필수 입력 X
   std::string redir_path_;            // 필수 입력 X
 
   bool is_cgi_;
-  std::string cgi_pass_;
+  std::string cgi_path_;
 } t_location;
 
 class ServerConfigInfo {
@@ -40,13 +42,10 @@ class ServerConfigInfo {
   int port_;                 // 필수 입력 O
   int body_size_;            // 필수 입력 O
   std::string root_path_;    // 필수 입력 O
-  std::string file_path_;    // 필수 입력 O
   std::string upload_path_;  // 필수 입력 O
+  int timeout_;              // 필수 입력 O
 
   std::string server_name_;  // 필수 입력 X
-  bool directory_list_;      // 필수 입력 X
-  int timeout_;              // 필수 입력 X
-
   std::vector<std::string> methods_;        // 필수 입력 O
   std::map<int, std::string> error_pages_;  // 필수 입력 O
 

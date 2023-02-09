@@ -67,9 +67,10 @@ class Server {
 	std::vector<ServerConfigInfo> server_infos_;
 
 
-	/* ----- seojin -----*/
+	/* ----- METHOD -----*/
 
 	void Get(int idx);
+  bool IsLocation(std::string& url, ServerConfigInfo& config);
 	void ReadFile(int idx);
 	void Send(int idx);
 

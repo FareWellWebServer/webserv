@@ -282,8 +282,6 @@ void Server::DisConnect(const int& fd) {
 
 
 
-/* ----- seojin ----- */
-
 void Server::Get(int idx) {
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 	const ServerConfigInfo* config = client->config_;
@@ -292,9 +290,13 @@ void Server::Get(int idx) {
 
   std::string req_url = req_msg->req_url_;
   std::string file_path = "." + config->root_path_;
+  std::string location;
 
   if (req_url == "/") {
     file_path += "index.html";
+  // } else if (IsLocation(req_url, config)) {
+
+  // } 
   } else {
     file_path.pop_back();
     file_path += req_url;
@@ -318,6 +320,20 @@ void Server::Get(int idx) {
 
 }
 
+
+bool Server::IsLocation(std::string& url, ServerConfigInfo& config) {
+  // std::string path;
+  // std::string::iterator it = url.begin();
+  // ++it;
+  // for(; it != url.end(); ++it)
+  // {
+  //   path.push_back(*it);
+  //   if (strcmp(path.back(), '/') == 0)
+  // }
+  return true;
+  (void) url;
+  (void) config;
+}
 
 
 

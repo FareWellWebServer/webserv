@@ -277,8 +277,7 @@ void ReqHandler::ParseRecv() {
   if (entity_flag_ == 1) ParseEntity(idx);
 
   ValidateReq();
-  if (entity_flag_ == 1) ParseEntity(idx);
-  ValidateReq();
+
 
   delete[] buf_;
   buf_ = NULL;

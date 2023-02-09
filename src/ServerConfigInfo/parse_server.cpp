@@ -43,7 +43,7 @@ void Config::ParseRoot(const std::vector<std::string> &vec) {
 
   std::string root_path = vec[0];
   struct stat sb;
-  if (stat(("." + root_path).c_str(), &sb) == 0)
+  if (stat(root_path.c_str(), &sb) == 0)
     server_config_info_.root_path_ = root_path;
   else
     ExitConfigParseError();
@@ -60,7 +60,7 @@ void Config::ParseUploadPath(const std::vector<std::string> &vec) {
 
   std::string upload_path = vec[0];
   struct stat sb;
-  if (stat(("." + upload_path).c_str(), &sb) == 0)
+  if (stat(upload_path.c_str(), &sb) == 0)
     server_config_info_.upload_path_ = upload_path;
   else
     ExitConfigParseError();
