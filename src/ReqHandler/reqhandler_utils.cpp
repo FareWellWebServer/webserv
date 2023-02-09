@@ -24,6 +24,23 @@ void RemoveTabSpace(std::string& str) {
   }
 }
 
+void ReduceSlash(std::string& tmp) {
+  size_t pos;
+
+  while ((pos = tmp.find("//")) != std::string::npos) {
+    tmp.replace(pos, 2, "/");
+  }
+}
+
+bool CheckValidPath(const std::string& file_path) {
+  struct stat sb;
+  if (stat(file_path.c_str(), &sb) == 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 std::vector<std::string> split(const std::string& s, char delimiter, int cnt) {
   std::vector<std::string> tokens;
   std::string token;

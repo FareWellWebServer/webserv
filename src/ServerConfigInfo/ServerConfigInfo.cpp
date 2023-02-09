@@ -10,28 +10,15 @@ t_location* ServerConfigInfo::GetCurrentLocation(
 
   std::map<std::string, t_location>::const_iterator it = locations_.begin();
   for (; it != locations_.end(); ++it) {
-    const std::string location_path = it->first;
-    if (IsInLocation(location_path, req_uri)) {
+    std::string location_path = it->first;
+    if (req_uri == "/" && req_uri == location_path) {
+      return const_cast<t_location*>(&it->second);
+    } else if (req_uri != "/" &&
+               req_uri.substr(0, req_uri.size() - 1) == location_path) {
       return const_cast<t_location*>(&it->second);
     }
   }
   return NULL;
-}
-
-bool ServerConfigInfo::IsInLocation(const std::string& location_path,
-                                    const std::string& req_uri) const {
-  if (req_uri.compare(location_path)) {
-    return false;
-  }
-  if (req_uri[location_path.length()]) {
-    if (req_uri[location_path.length()] == '/') {
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    return true;
-  }
 }
 
 bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
@@ -45,18 +32,4 @@ bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
     return true;
   }
   return false;
-}
-
-std::string ServerConfigInfo::GetCurrentDate(void) const {
-  time_t raw_time;
-  struct tm* pm;
-  char format[40];
-
-  time(&raw_time);
-  pm = gmtime(&raw_time);
-  pm->tm_hour += 9;
-  pm->tm_mday += pm->tm_hour / 24;
-  pm->tm_hour %= 24;
-  strftime(format, 29, "%a, %d %b %G %X KST", pm);
-  return std::string(format);
 }

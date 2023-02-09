@@ -29,8 +29,6 @@ class ServerConfigInfo {
   bool CheckAvailableMethod(const std::string& req_uri,
                             const std::string& method) const;
 
-  std::string GetCurrentDate(void) const;
-
  public:
   /* ======================== Variable ======================== */
   std::string host_;                        // default -> 127.0.0.1
@@ -45,10 +43,6 @@ class ServerConfigInfo {
   std::string server_name_;  // 필수 입력 X
 
   std::map<std::string, t_location> locations_;  // 필수 입력 X
-
- private:
-  bool IsInLocation(const std::string& location_path,
-                    const std::string& req_uri) const;
 };
 
 #endif

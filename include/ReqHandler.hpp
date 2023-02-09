@@ -2,6 +2,7 @@
 #define REQHANDLER_HPP
 
 #include <cstring>
+#include <string>
 
 #include "WebServ.hpp"
 
@@ -18,8 +19,6 @@ class ReqHandler {
   void SetBuf(int fd);
   void Clear();
 
-
-
   t_req_msg* req_msg_;
   int entity_flag_;
 
@@ -34,8 +33,9 @@ class ReqHandler {
   void ValidateReq(void);
 };
 
-void ReduceSlash(std::string& tmp);
 void PrintMap(std::map<std::string, std::string>& map);
 void RemoveTabSpace(std::string& str);
+void ReduceSlash(std::string& tmp);
+bool CheckValidPath(const std::string& file_path);
 std::vector<std::string> split(const std::string& s, char delimiter, int cnt);
 #endif

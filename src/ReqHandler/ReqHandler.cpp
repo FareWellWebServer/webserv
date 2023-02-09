@@ -1,6 +1,5 @@
 #include "../../include/ReqHandler.hpp"
 
-
 ReqHandler::ReqHandler(void)
     : req_msg_(NULL), entity_flag_(0), buf_(NULL), client_(0), read_len_(0) {}
 
@@ -17,9 +16,9 @@ void ReqHandler::Clear() {
   }
   read_len_ = 0;
   client_ = NULL;
-	req_msg_ = NULL;
+  req_msg_ = NULL;
 
-	// req_msg_는 ClientMetaData가 가지고 있어야하니 여기서 할당해제하면 안될 듯.
+  // req_msg_는 ClientMetaData가 가지고 있어야하니 여기서 할당해제하면 안될 듯.
   // if (req_msg_ != NULL) {
   //   delete req_msg_;
   //   req_msg_ = NULL;
@@ -163,7 +162,7 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
 int64_t ReqHandler::ParseHeaders(int start_idx) {
   /* buf_[start_idx]를 헤더의 첫줄로 만들기 */
   while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
-    start_idx++;
+    ++start_idx;
     if (start_idx == read_len_) {
       return (start_idx);
     }
@@ -209,54 +208,6 @@ void ReqHandler::ParseEntity(int start_idx) {
   req_msg_->body_data_.data_ = entity;
 }
 
-// /cgi-bin/process.cgi
-void ReqHandler::ValidateReq(void) {
-  if (req_msg_->req_url_ == "/") {
-    client_->e_stage = REQ_FINISHED;
-    return;
-  }
-
-  std::vector<std::string> modi_url = split(req_msg_->req_url_, '/', 0);
-
-  if (!client_->config_->CheckAvailableMethod("/" + modi_url[1],
-                                              req_msg_->method_)) {
-    client_->e_stage = REQ_ERROR;
-    // TODO : 에러처리
-    return;
-  }
-
-  t_location* loc = client_->config_->GetCurrentLocation("/" + modi_url[1]);
-  if (loc != 0) {
-    std::string result;
-    if (loc->redir_path_.empty()) {
-      result = loc->root_path_;
-    } else {
-      result = loc->redir_path_;
-    }
-    for (size_t i = 2; i < modi_url.size(); ++i) {
-      result.append("/" + modi_url[i]);
-    }
-    req_msg_->req_url_ = result;
-    client_->e_stage = REQ_FINISHED;
-    ReduceSlash(req_msg_->req_url_);
-    modi_url.clear();
-    result.clear();
-  } else {
-    client_->e_stage = REQ_ERROR;
-    modi_url.clear();
-    return;
-    // TODO : 에러처리
-  }
-  // 실제 유효한 경로인지 확인 필요.
-  struct stat sb;
-  if (stat(("." + req_msg_->req_url_).c_str(), &sb) != 0) {
-    client_->e_stage = REQ_ERROR;
-    std::cout << "no valid path : " << req_msg_->req_url_ << std::endl;
-  } else
-    std::cout << "valid path : " << req_msg_->req_url_ << std::endl;
-  return;
-}
-
 void ReqHandler::ParseRecv() {
   if (buf_ == NULL) {
 #if DG
@@ -276,40 +227,111 @@ void ReqHandler::ParseRecv() {
   // entity 넣기
   if (entity_flag_ == 1) ParseEntity(idx);
 
+  // request 유효성 검사 -> body_size, method
+  std::cout << BLUE << "original req_url: " << req_msg_->req_url_ << std::endl;
   ValidateReq();
-
+  std::cout << "status code: " << client_->status_code_ << std::endl;
+  std::cout << "served req_url: " << req_msg_->req_url_ << RESET << std::endl;
 
   delete[] buf_;
   buf_ = NULL;
 }
 
-void ReqHandler::ParseRecv(int fd) {
-  read_len_ = 414;
-  buf_ = new char[sizeof(char) * read_len_];
-
-  // 첫줄 파싱 //414
-  read(fd, buf_, read_len_);
-  client_->e_stage = REQ_PROCESSING;
-  if (req_msg_ == NULL) req_msg_ = new t_req_msg;
-  int64_t idx(0);
-  // 첫줄 파싱
-  idx = ParseFirstLine();   // buf[idx] = 첫줄의 \n
-                            // 헤더 파싱
-  idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
-  // PrintMap(req_msg_->headers_);
-  // entity 넣기
-  if (entity_flag_ == 1) ParseEntity(idx);
-
-  ValidateReq();
-
-  delete[] buf_;
-  buf_ = NULL;
-}
-
-void ReduceSlash(std::string& tmp) {
-  size_t pos;
-
-  while ((pos = tmp.find("//")) != std::string::npos) {
-    tmp.replace(pos, 2, "/");
+void ReqHandler::ValidateReq(void) {
+  // body_size가 너무 큰 경우
+  if (client_->config_->body_size_ <
+      static_cast<int>(req_msg_->body_data_.length_)) {
+    client_->SetStatusCode(501);
+    req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
   }
+
+  std::string req_url = req_msg_->req_url_;
+  // 중복 slash 제거 EX) ////// -> /
+  ReduceSlash(req_msg_->req_url_);
+  size_t last_slash_idx = req_url.find_last_of("/");
+  std::string req_location_path = req_url.substr(0, last_slash_idx + 1);
+  std::string req_file_path = req_url.substr(last_slash_idx + 1);
+
+  // location이 없는 경우
+  t_location* loc = client_->config_->GetCurrentLocation(req_location_path);
+  if (!loc) {
+    client_->SetStatusCode(404);
+    req_msg_->req_url_ = client_->config_->error_pages_.find(404)->second;
+    return;
+  }
+
+  // method가 유효하지 않은 경우
+  if (!client_->config_->CheckAvailableMethod(req_location_path,
+                                              req_msg_->method_)) {
+    client_->SetStatusCode(405);
+    req_msg_->req_url_ = client_->config_->error_pages_.find(405)->second;
+    return;
+  }
+
+  // cgi인 경우
+  if (loc->is_cgi_) {
+    client_->SetCGi(true);
+    // cgi인데 file_path가 없는 경우 -> ~:8080/cgi/
+    if (req_file_path.empty()) {
+      client_->SetStatusCode(501);
+      req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
+      return;
+    }
+    std::vector<std::string>::iterator it =
+        std::find(loc->cgi_path_.begin(), loc->cgi_path_.end(),
+                  loc->root_path_ + req_file_path);
+
+    // cgi인데 file_path가 있는 경우
+    if (it != loc->file_path_.end()) {
+      client_->SetStatusCode(200);
+      req_msg_->req_url_ = *it;
+    }
+    // cgi인데 file_path가 없는 경우 -> ~:8080/cgi/not-found.py
+    else {
+      client_->SetStatusCode(501);
+      req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
+    }
+    return;
+  }
+
+  // location에 리다이랙션이 있는 경우
+  if (!loc->redir_path_.empty()) {
+    client_->SetStatusCode(301);
+    req_msg_->req_url_ = loc->redir_path_;
+    return;
+  }
+
+  // location에 directory_list가 있는 경우
+  if (loc->directory_list_) {
+    client_->SetDirectoryList(true);
+    client_->SetStatusCode(200);
+    req_msg_->req_url_ = loc->root_path_;
+    return;
+  }
+
+  // file_path 가 없는 경우 -> / or /test/
+  if (req_file_path.empty()) {
+    client_->SetStatusCode(200);
+    req_msg_->req_url_ = loc->file_path_[0];
+    return;
+  }
+
+  // file_path가 있는 경우 -> /index.html or /test/index.html
+  std::vector<std::string>::iterator it =
+      std::find(loc->file_path_.begin(), loc->file_path_.end(),
+                loc->root_path_ + req_file_path);
+  // location 안에 파일이 있는 경우
+  if (it != loc->file_path_.end()) {
+    client_->SetStatusCode(200);
+    req_msg_->req_url_ = *it;
+    return;
+  }
+  // location 안에 파일이 없는 경우
+  else {
+    client_->SetStatusCode(404);
+    req_msg_->req_url_ = client_->config_->error_pages_.find(404)->second;
+    return;
+  }
+
+  return;
 }
