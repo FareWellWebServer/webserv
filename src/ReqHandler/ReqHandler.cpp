@@ -267,7 +267,7 @@ void ReqHandler::ParseRecv() {
   }
   client_->e_stage = REQ_PROCESSING;
   if (req_msg_ == NULL) req_msg_ = new t_req_msg;
-  memset(req_msg_, 0, sizeof(t_req_msg));
+  memset(&req_msg_->body_data_, 0, sizeof(t_entity));
   int64_t idx(0);
   // 첫줄 파싱
   idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
