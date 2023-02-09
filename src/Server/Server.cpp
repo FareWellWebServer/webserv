@@ -287,54 +287,27 @@ void Server::Get(int idx) {
 	const ServerConfigInfo* config = client->config_;
   t_req_msg* req_msg = client->GetReqMessage();
   int client_fd = client->GetClientFd();
+  struct kevent event;
 
   std::string req_url = req_msg->req_url_;
-  std::string file_path = "." + config->root_path_;
-  std::string location;
+  std::string file_path;
 
-  if (req_url == "/") {
-    file_path += "index.html";
-  // } else if (IsLocation(req_url, config)) {
-
-  // } 
+  if (config->locations_.find(req_url)->second.directory_list_ == true) {
+    //directory list
+  } else if (config->locations_.find(req_url)->second.is_cgi_ == true) {
+    //cgi
   } else {
-    file_path.pop_back();
-    file_path += req_url;
+    int file_fd = open(req_msg->req_url_.c_str(), O_RDONLY);
+    client->SetFileFd(file_fd);
+    EV_SET(&event, file_fd, EVFILT_READ, EV_ADD, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
   }
 
-	int file_fd = open(file_path.c_str(), O_RDONLY);
-  if (file_fd == -1) { // 존재하지 않는 파일.
-    file_path.clear();
-    file_path = "./" + config->error_pages_.find(404)->second;
-    file_fd = open(file_path.c_str(), O_RDONLY);
-    client->SetStatusCode(404);
-  }
-	client->SetFileFd(file_fd);
-
-	struct kevent event;
-	EV_SET(&event, file_fd, EVFILT_READ, EV_ADD, 0, 0, client);
-	kevent(kq_, &event, 1, NULL, 0, NULL);
 
   EV_SET(&event, client_fd, EVFILT_READ, EV_DISABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
 }
-
-
-bool Server::IsLocation(std::string& url, ServerConfigInfo& config) {
-  // std::string path;
-  // std::string::iterator it = url.begin();
-  // ++it;
-  // for(; it != url.end(); ++it)
-  // {
-  //   path.push_back(*it);
-  //   if (strcmp(path.back(), '/') == 0)
-  // }
-  return true;
-  (void) url;
-  (void) config;
-}
-
 
 
 void Server::ReadFile(int idx) {
