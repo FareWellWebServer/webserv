@@ -166,11 +166,13 @@ void Config::CheckLocation(t_location& loc) {
           "Missing Location Elements(status_code or cgi_pass)");
     }
 
-    std::string cgi_path = loc.root_path_ + loc.cgi_path_;
-    if (CheckValidPath(cgi_path)) {
-      loc.cgi_path_ = cgi_path;
-    } else {
-      ExitConfigValidateError("Wrong CGI File Path\n-> " + cgi_path);
+    for (size_t i = 0; i < loc.cgi_path_.size(); ++i) {
+      std::string cgi_path = loc.root_path_ + loc.cgi_path_[i];
+      if (CheckValidPath(cgi_path)) {
+        loc.cgi_path_[i] = cgi_path;
+      } else {
+        ExitConfigValidateError("Wrong CGI File Path\n-> " + cgi_path);
+      }
     }
   }
 }

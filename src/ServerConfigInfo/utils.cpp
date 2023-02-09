@@ -89,7 +89,11 @@ void Config::PrintKeyVal(const std::string& key, const std::string& val) const {
 
 void Config::PrintLocation(const t_location& l) const {
   if (l.is_cgi_) {
-    std::cout << "cgi_pass: " << l.cgi_path_ << std::endl;
+    std::cout << "cgi_pass:";
+    for (size_t i = 0; i < l.cgi_path_.size(); ++i) {
+      std::cout << " " << l.cgi_path_[i];
+    }
+    std::cout << std::endl;
   } else {
     std::cout << "file_path:";
     for (size_t i = 0; i < l.file_path_.size(); ++i) {

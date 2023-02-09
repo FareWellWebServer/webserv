@@ -14,7 +14,7 @@ typedef struct s_location {
   std::string redir_path_;            // 필수 입력 X
 
   bool is_cgi_;
-  std::string cgi_path_;
+  std::vector<std::string> cgi_path_;
 } t_location;
 
 class ServerConfigInfo {

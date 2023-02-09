@@ -10,7 +10,7 @@ void Config::InitLocation(t_location& l) {
   l.redir_path_ = "";
 
   l.is_cgi_ = false;
-  l.cgi_path_ = "";
+  l.cgi_path_.clear();
 }
 
 /* ========================== Parsing Location ========================== */
@@ -133,9 +133,5 @@ void Config::ParseLocationIsCgi(t_location& l,
 
 void Config::ParseLocationCgiPass(t_location& l,
                                   const std::vector<std::string>& vec) {
-  if (vec.size() != 1) {
-    ExitConfigParseError();
-  }
-
-  l.cgi_path_ = vec[0];
+  l.cgi_path_ = vec;
 }
