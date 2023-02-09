@@ -26,5 +26,6 @@
 #include "ServerConfigInfo.hpp"
 #include "Stage.hpp"
 #include "WebServException.hpp"
+#include "CGIManager.hpp"
 
 #endif

@@ -115,7 +115,6 @@ class Data {
     void SetMethodEntityLength(size_t length);
     void SetMethodEntityType(char *type);
 
-
   public:
     int litsen_fd_;  // 어느 listen fd에 연결됐는지
     int listen_port_;  // listen fd에 bind 되어있는 port 번호. config볼 때 필요
@@ -135,6 +134,7 @@ class Data {
     t_res_msg* res_message_; // ResHandler 에게 보내줄 내용 정리
     t_entity* method_entity_; // method가 넣어주는 곳
     // message 구조체들은 요청 들어왔을 때 동적할당해주고, 응답할 때 프리해주면 될듯
+    std::string post_data_;
     stage e_stage;
 };
 
