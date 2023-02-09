@@ -89,8 +89,8 @@ void CGIManager::SendToCGI(Data* client, int kq)
         dup2(p[1], 1);
         dup2(p[0], 0);
         extern char** environ;
-        extern char** __argv;
-        if (execve("../cgi/cgi.py", __argv, environ) < 0) {
+        // extern char** __argv;
+        if (execve("../cgi/cgi.py", NULL, environ) < 0) {
             #if CGI
                 std::cout << "[CGI] execve 에러" << std::endl;
             #endif
