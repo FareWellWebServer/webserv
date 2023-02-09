@@ -11,6 +11,7 @@ Server::Server(std::vector<ServerConfigInfo> server_info)
   req_handler_ = new ReqHandler;
   res_handler_ = new ResHandler;
   msg_composer_ = new MsgComposer;
+  cgi_manager_ = new CGIManager;
 }
 Server::~Server(void) {
   close(kq_);
@@ -109,7 +110,7 @@ void Server::Act(void) {
       }
       /* POST, PUT file에 대한 write 발생시 */
       else if (event_fd == client->GetFileFd()) {
-
+        WriteFile(idx);
       }
       /* CGI에게 보내줄 pipe[WRITE]에 대한 이벤트 */
       else if (event_fd == client->GetPipeRead()) {
@@ -170,7 +171,7 @@ void Server::ActCoreLogic(int idx) {
 	if (client->GetReqMethod() == "GET") {
 		Get(idx);
   } else if (client->GetReqMethod() == "POST") {
-
+    Post(idx);
   } else if (client->GetReqMethod() == "DELETE") {
 
   } else {
@@ -287,59 +288,109 @@ void Server::Get(int idx) {
 	const ServerConfigInfo* config = client->config_;
   t_req_msg* req_msg = client->GetReqMessage();
   int client_fd = client->GetClientFd();
+  struct kevent event;
 
   std::string req_url = req_msg->req_url_;
-  std::string file_path = "." + config->root_path_;
-  std::string location;
+  std::string file_path;
 
-  if (req_url == "/") {
-    file_path += "index.html";
-  // } else if (IsLocation(req_url, config)) {
-
-  // } 
+  if (config->locations_.find(req_url)->second.directory_list_ == true) {
+    //directory list
+  } else if (config->locations_.find(req_url)->second.is_cgi_ == true) {
+    cgi_manager_->SetData(client);
+    cgi_manager_->SendToCGI(client, kq_);
   } else {
-    file_path.pop_back();
-    file_path += req_url;
+    int file_fd = open(req_msg->req_url_.c_str(), O_RDONLY);
+    client->SetFileFd(file_fd);
+    EV_SET(&event, file_fd, EVFILT_READ, EV_ADD, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
   }
-
-	int file_fd = open(file_path.c_str(), O_RDONLY);
-  if (file_fd == -1) { // 존재하지 않는 파일.
-    file_path.clear();
-    file_path = "./" + config->error_pages_.find(404)->second;
-    file_fd = open(file_path.c_str(), O_RDONLY);
-    client->SetStatusCode(404);
-  }
-	client->SetFileFd(file_fd);
-
-	struct kevent event;
-	EV_SET(&event, file_fd, EVFILT_READ, EV_ADD, 0, 0, client);
-	kevent(kq_, &event, 1, NULL, 0, NULL);
 
   EV_SET(&event, client_fd, EVFILT_READ, EV_DISABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
 }
 
+void Server::Post(int idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+	const ServerConfigInfo* config = client->config_;
+  t_req_msg* req_msg = client->GetReqMessage();
+  struct kevent event;
 
-bool Server::IsLocation(std::string& url, ServerConfigInfo& config) {
-  // std::string path;
-  // std::string::iterator it = url.begin();
-  // ++it;
-  // for(; it != url.end(); ++it)
-  // {
-  //   path.push_back(*it);
-  //   if (strcmp(path.back(), '/') == 0)
-  // }
-  return true;
-  (void) url;
-  (void) config;
+  std::string content_type = req_msg->headers_["Content-Type"];
+
+  if (content_type == "application/x-www-form-urlencoded")
+  {
+    std::string encoded_string = req_msg->body_data_.data_;
+    std::string decoded_string = encoded_string;
+  
+    std::replace(decoded_string.begin(), decoded_string.end(), '+', ' ');
+
+    size_t len = decoded_string.length();
+    int buf_len = 0;
+    for(size_t i = 0; i < len; ++i)
+    {
+      if (decoded_string.at(i) == '%') {
+        i += 2;
+      }
+      ++buf_len;
+    }
+    char* buf = new char[buf_len];
+    bzero(buf, buf_len);
+    char c = 0;
+    size_t j = 0;
+    for(size_t i = 0; i < len; ++i, ++j)
+    {
+      if (decoded_string.at(i) == '%') {
+        c = 0;
+        c += decoded_string.at(i + 1) >= 'A' ? 16 * (decoded_string.at(i + 1) - 55) : 16 * (decoded_string.at(i + 1) - 48);
+        c += decoded_string.at(i + 2) >= 'A' ? (decoded_string.at(i + 2) - 55) : (decoded_string.at(i + 2) - 48);
+        i += 2;
+      } else {
+        c = decoded_string.at(i);
+      }
+      buf[j] = c;
+    }
+    // write(1, buf, buf_len);
+
+    decoded_string.clear();
+    for(int i = 0; i < buf_len; ++i) {
+      decoded_string.push_back(buf[i]);
+    }
+    delete[] buf;
+
+    std::string query = decoded_string;
+    int and_pos = query.find('&');
+
+    std::string title = query.substr(0, and_pos);
+    int equal_pos = title.find('=');
+    title = title.substr(equal_pos + 1, and_pos - equal_pos);
+
+
+    std::string content = query.substr(and_pos);
+    equal_pos = content.find('=');
+    content = content.substr(equal_pos + 1);
+
+
+    // std::cout << "title: " << title.c_str() << "\ncontent: " << content.c_str() << "\n";
+    title = config->upload_path_ + title;
+    int file_fd = open(title.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
+    if (file_fd == -1)
+    {
+      std::cout << RED << "OPEN ERROR\n";
+    }
+
+    fchmod(file_fd, S_IRWXU | S_IRWXG | S_IRWXO);
+    client->SetFileFd(file_fd);
+    EV_SET(&event, file_fd, EVFILT_WRITE, EV_ADD, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
+    client->post_data_ = content;
+  }
+
 }
 
-
-
 void Server::ReadFile(int idx) {
-	int file_fd = events_[idx].ident;
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+	int file_fd = client->GetFileFd();
 	// t_req_msg* req_msg = client->GetReqMessage();
 
 	int size = client->event_[idx].data;
@@ -356,6 +407,21 @@ void Server::ReadFile(int idx) {
 	EV_SET(&event, client->GetClientFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
 	kevent(kq_, &event, 1, NULL, 0, NULL);
 }
+void Server::WriteFile(int idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  // int client_fd = client->GetClientFd();
+  int file_fd = client->GetFileFd();
+
+  write(file_fd, client->post_data_.c_str(), client->post_data_.size());
+
+  struct kevent event;
+	// EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+	// kevent(kq_, &event, 1, NULL, 0, NULL);
+
+	EV_SET(&event, file_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+	kevent(kq_, &event, 1, NULL, 0, NULL);
+}
+
 
 void Server::Send(int idx) {
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
@@ -381,5 +447,6 @@ void Server::Send(int idx) {
 
 
 	close(file_fd);
+  std::cout << "HERE\n";
 	// DisConnect(client_fd);
 }

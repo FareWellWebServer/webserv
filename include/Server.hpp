@@ -12,6 +12,8 @@
 #include <sys/types.h>  /* kqueue kevent */
 #include <unistd.h>     /* execve, dup, dup2, pipe */
 
+
+#include <regex>
 #include <cstring> /* memset, strerror */
 #include <iostream>
 #include <set>
@@ -22,6 +24,7 @@
 #include "ReqHandler.hpp"
 #include "ResHandler.hpp"
 #include "ServerConfigInfo.hpp"
+#include "CGIManager.hpp"
 
 #define MAXLINE 1000000
 #define MAXBUF 1000000
@@ -64,8 +67,9 @@ class Server {
   /* ----- METHOD -----*/
 
   void Get(int idx);
-  bool IsLocation(std::string& url, ServerConfigInfo& config);
+  void Post(int idx);
   void ReadFile(int idx);
+  void WriteFile(int idx);
   void Send(int idx);
 
   /* ------------------*/
@@ -77,6 +81,7 @@ class Server {
   ReqHandler* req_handler_;
   ResHandler* res_handler_;
   MsgComposer* msg_composer_;
+  CGIManager* cgi_manager_;
 
   void Act(void);
   void AcceptNewClient(int idx);

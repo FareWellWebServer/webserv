@@ -40,6 +40,7 @@ class Data {
   int GetLogFileFd() const;
   int GetPipeWrite() const;
   int GetPipeRead() const;
+  const ServerConfigInfo* GetConfig() const;
 
   /* 멤버변수 Setter() .cpp: 110 ~ 154 */
   void SetListenFd(int listen_fd);
@@ -136,6 +137,7 @@ class Data {
   t_entity* method_entity_;  // method가 넣어주는 곳
   // message 구조체들은 요청 들어왔을 때 동적할당해주고, 응답할 때 프리해주면
   // 될듯
+  std::string post_data_;
   stage e_stage;
 };
 

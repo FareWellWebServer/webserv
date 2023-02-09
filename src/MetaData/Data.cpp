@@ -125,6 +125,8 @@ int Data::GetPipeWrite(void) const { return pipe_[WRITE]; }
 
 int Data::GetPipeRead(void) const { return pipe_[READ]; }
 
+const ServerConfigInfo* Data::GetConfig() const { return config_; }
+
 ///////////  * 멤버변수 Setter() *  ///////////
 
 void Data::SetListenFd(int listen_fd) { litsen_fd_ = listen_fd; }
