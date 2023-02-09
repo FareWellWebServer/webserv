@@ -130,7 +130,7 @@ void Config::CheckValidation(void) {
         std::cout << error_page_path << std::endl;
         info.error_pages_[error_page_status_code] = error_page_path;
       } else {
-        ExitConfigValidateError("Wrong Error Page Path");
+        ExitConfigValidateError("Wrong error_page path");
       }
     }
 
@@ -146,10 +146,11 @@ void Config::CheckValidation(void) {
 }
 
 void Config::CheckLocation(t_location& loc) {
-  if (!loc.is_cgi_) {  // cgi가 아닌 경우
+  // cgi가 아닌 경우
+  if (!loc.is_cgi_) {
+    // file path가 없는 경우
     if (loc.file_path_.empty()) {
-      ExitConfigValidateError(
-          "Missing Location Elements(status_code or file_path)");
+      ExitConfigValidateError("Location must has file_path");
     }
 
     for (size_t i = 0; i < loc.file_path_.size(); ++i) {
@@ -157,21 +158,33 @@ void Config::CheckLocation(t_location& loc) {
       if (CheckValidPath(file_path)) {
         loc.file_path_[i] = file_path;
       } else {
-        ExitConfigValidateError("Wrong File Path\n-> " + file_path);
+        ExitConfigValidateError("Wrong file path\n-> " + file_path);
       }
     }
   } else {  // cgi인 경우
+    // cgi path가 없는 경우
     if (loc.cgi_path_.empty()) {
-      ExitConfigValidateError(
-          "Missing Location Elements(status_code or cgi_pass)");
+      ExitConfigValidateError("Cgi location must has file_path");
+    }
+
+    // cgi인데 리다이랙션이 있는 경우
+    if (!loc.redir_path_.empty()) {
+      ExitConfigValidateError("Cgi location must not has redirection");
+    }
+
+    // cgi인데 디렉토리 리스트가 있는 경우
+    if (loc.directory_list_) {
+      ExitConfigValidateError("Cgi location must not has directory_list");
     }
 
     for (size_t i = 0; i < loc.cgi_path_.size(); ++i) {
       std::string cgi_path = loc.root_path_ + loc.cgi_path_[i];
       if (CheckValidPath(cgi_path)) {
         loc.cgi_path_[i] = cgi_path;
-      } else {
-        ExitConfigValidateError("Wrong CGI File Path\n-> " + cgi_path);
+      }
+      // cgi path가 잘못된 경우
+      else {
+        ExitConfigValidateError("Wrong cgi file path\n-> " + cgi_path);
       }
     }
   }
