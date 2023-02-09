@@ -296,12 +296,16 @@ void Server::Get(int idx) {
 	
 	// std::cout << "file_path: " << file_path << "\n";
 	int file_fd = open(file_path.c_str(), O_RDONLY);
+  int client_fd = client->GetClientFd();
 	// std::cout << "file_fd: " << file_fd << "\n";
 	client->SetFileFd(file_fd);
 	
 	struct kevent event;
 	EV_SET(&event, file_fd, EVFILT_READ, EV_ADD, 0, 0, client);
 	kevent(kq_, &event, 1, NULL, 0, NULL);
+
+  EV_SET(&event, client_fd, EVFILT_READ, EV_DISABLE, 0, 0, client);
+  kevent(kq_, &event, 1, NULL, 0, NULL);
 
 }
 
@@ -344,10 +348,13 @@ void Server::Send(int idx) {
 	EV_SET(&event, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, client);
 	kevent(kq_, &event, 1, NULL, 0, NULL);
 
+  EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
+  kevent(kq_, &event, 1, NULL, 0, NULL);
+
 	EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	kevent(kq_, &event, 1, NULL, 0, NULL);
 
 
 	close(file_fd);
-	// DisConnect(client_fd);
+	DisConnect(client_fd);
 }
