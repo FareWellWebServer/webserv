@@ -136,10 +136,14 @@ void Server::Act(void) {
 	}
 }
 
-
 void Server::ActCoreLogic(int idx) {
 	req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
 	req_handler_->SetReadLen(events_[idx].data);
+  if (events_[idx].data == 0)
+  {
+    std::cout << RED << "req len is 0\n" << RESET;
+    return;
+  }
 	req_handler_->RecvFromSocket();
 	req_handler_->ParseRecv();
 
@@ -150,7 +154,6 @@ void Server::ActCoreLogic(int idx) {
 	client->SetReqMessage(req_handler_->req_msg_);
 
 	// client->SetReqMessage(req_handler_->req_msg_);
-
 	// std::cout << req_handler_->req_msg_->method_ << " " << req_handler_->req_msg_->req_url_ << "\n";
 	// std::map<std::string, std::string>::iterator it = req_handler_->req_msg_->headers_.begin();
 	// for(; it != req_handler_->req_msg_->headers_.end(); ++it) {
@@ -165,7 +168,9 @@ void Server::ActCoreLogic(int idx) {
 
 	// Data* client = clients_->GetDataByFd(events_[idx].ident);
 	if (client->GetReqMethod() == "GET")
+  {
 		Get(idx);
+  }
 
 
 
@@ -278,8 +283,8 @@ void Server::Get(int idx) {
 	// int client_fd = events_[idx].ident;
 
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-	t_req_msg* req_msg = client->GetReqMessage();
-	(void) req_msg;
+	// t_req_msg* req_msg = client->GetReqMessage();
+	// (void) req_msg;
 	const ServerConfigInfo* info = client->config_;
 	// std::cout << client->GetListenFd() << "\n";
 	// std::cout << client->GetListenPort() << "\n";

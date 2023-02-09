@@ -2,7 +2,7 @@
 
 
 ReqHandler::ReqHandler(void)
-    : req_msg_(0), entity_flag(0), buf_(0), client_(0), read_len_(0) {}
+    : req_msg_(NULL), entity_flag_(0), buf_(NULL), client_(0), read_len_(0) {}
 
 ReqHandler::~ReqHandler(void) { Clear(); }
 
@@ -151,11 +151,11 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
   }
   if (kv_tmp[0] == "Content-Length") {
     req_msg_->body_data_.length_ = atoi(kv_tmp[1].c_str());
-    entity_flag = 1;
+    entity_flag_ = 1;
   }
   if (kv_tmp[0] == "Content-type") {
     req_msg_->body_data_.type_ = strdup(kv_tmp[1].c_str());
-    entity_flag = 1;
+    entity_flag_ = 1;
   }
   req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
 }
@@ -267,16 +267,17 @@ void ReqHandler::ParseRecv() {
   }
   client_->e_stage = REQ_PROCESSING;
   if (req_msg_ == NULL) req_msg_ = new t_req_msg;
+  memset(req_msg_, 0, sizeof(t_req_msg));
   int64_t idx(0);
   // 첫줄 파싱
   idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
   // 헤더 파싱
   idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
   // entity 넣기
-  if (entity_flag == 1) ParseEntity(idx);
+  if (entity_flag_ == 1) ParseEntity(idx);
 
   ValidateReq();
-  if (entity_flag == 1) ParseEntity(idx);
+  if (entity_flag_ == 1) ParseEntity(idx);
   ValidateReq();
 
   delete[] buf_;
@@ -298,7 +299,7 @@ void ReqHandler::ParseRecv(int fd) {
   idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
   // PrintMap(req_msg_->headers_);
   // entity 넣기
-  if (entity_flag == 1) ParseEntity(idx);
+  if (entity_flag_ == 1) ParseEntity(idx);
 
   ValidateReq();
 

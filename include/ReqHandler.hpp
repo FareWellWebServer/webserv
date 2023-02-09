@@ -21,7 +21,7 @@ class ReqHandler {
 
 
   t_req_msg* req_msg_;
-  int entity_flag;
+  int entity_flag_;
 
  private:
   char* buf_;  // 동적할당 / 해제

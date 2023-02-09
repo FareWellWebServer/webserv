@@ -42,7 +42,7 @@ Data::~Data(void) {
  */
 void Data::Init(void) {
   // Clear();
-  // req_message_ = new t_req_msg;
+  req_message_ = NULL;
   res_message_ = new t_res_msg;
 	memset(res_message_, 0, sizeof(t_res_msg));
   method_entity_ = new t_entity;
