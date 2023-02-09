@@ -6,13 +6,11 @@ void Config::InitServerConfigInfo(ServerConfigInfo &info) {
   info.port_ = -1;
   info.body_size_ = 0;
   info.root_path_ = "";
-
-  info.server_name_ = "";
-  info.directory_list_ = false;
   info.timeout_ = 0;
-
   info.methods_.clear();
   info.error_pages_.clear();
+
+  info.server_name_ = "";
   info.locations_.clear();
 }
 
@@ -49,12 +47,6 @@ void Config::ParseRoot(const std::vector<std::string> &vec) {
     ExitConfigParseError();
 }
 
-void Config::ParseFilePath(const std::vector<std::string> &vec) {
-  if (vec.size() != 1) ExitConfigParseError();
-
-  server_config_info_.file_path_ = vec[0];
-}
-
 void Config::ParseUploadPath(const std::vector<std::string> &vec) {
   if (vec.size() != 1) ExitConfigParseError();
 
@@ -64,17 +56,6 @@ void Config::ParseUploadPath(const std::vector<std::string> &vec) {
     server_config_info_.upload_path_ = upload_path;
   else
     ExitConfigParseError();
-}
-
-void Config::ParseServerName(const std::vector<std::string> &vec) {
-  if (vec.size() != 1) ExitConfigParseError();
-  server_config_info_.server_name_ = vec[0];
-}
-
-void Config::ParseDirectoryList(const std::vector<std::string> &vec) {
-  if (vec.size() != 1 || (vec[0] != "on" && vec[0] != "off"))
-    ExitConfigParseError();
-  server_config_info_.directory_list_ = (vec[0] == "on") ? true : false;
 }
 
 void Config::ParseTimeout(const std::vector<std::string> &vec) {
@@ -107,8 +88,11 @@ void Config::ParseErrorPage(const std::vector<std::string> &vec) {
 
   if (error_status_code < 100 || error_status_code > 511)
     ExitConfigParseError();
-  std::ifstream fs(error_page_path);
-  if (fs.fail()) ExitConfigParseError();
 
   server_config_info_.error_pages_[error_status_code] = error_page_path;
+}
+
+void Config::ParseServerName(const std::vector<std::string> &vec) {
+  if (vec.size() != 1) ExitConfigParseError();
+  server_config_info_.server_name_ = vec[0];
 }

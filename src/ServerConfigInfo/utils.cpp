@@ -89,9 +89,17 @@ void Config::PrintKeyVal(const std::string& key, const std::string& val) const {
 
 void Config::PrintLocation(const t_location& l) const {
   if (l.is_cgi_) {
-    std::cout << "cgi_pass: " << l.cgi_pass_ << std::endl;
+    std::cout << "cgi_pass: " << l.cgi_path_ << std::endl;
   } else {
-    std::cout << "file_path: " << l.file_path_ << std::endl;
+    std::cout << "file_path:";
+    for (size_t i = 0; i < l.file_path_.size(); ++i) {
+      std::cout << " " << l.file_path_[i];
+    }
+    std::cout << std::endl;
+
+    std::cout << "directory_list: " << l.directory_list_ << std::endl;
+    if (!l.root_path_.empty())
+      std::cout << "root_path: " << l.root_path_ << std::endl;
     if (!l.redir_path_.empty())
       std::cout << "redirection_path: " << l.redir_path_ << std::endl;
   }
@@ -121,11 +129,7 @@ void Config::PrintConfigInfo(const ServerConfigInfo& info) const {
   std::cout << "port: " << info.port_ << std::endl;
   std::cout << "body_size: " << info.body_size_ << std::endl;
   std::cout << "root_path: " << info.root_path_ << std::endl;
-  std::cout << "file_path: " << info.file_path_ << std::endl;
   std::cout << "upload_path: " << info.upload_path_ << std::endl;
-
-  std::cout << "server_name: " << info.server_name_ << std::endl;
-  std::cout << "directory_list: " << info.directory_list_ << std::endl;
   std::cout << "timeout: " << info.timeout_ << std::endl;
 
   std::cout << "methods:";
@@ -135,6 +139,8 @@ void Config::PrintConfigInfo(const ServerConfigInfo& info) const {
   for (it = info.error_pages_.begin(); it != info.error_pages_.end(); ++it)
     std::cout << " [" << it->first << " -> " << it->second << "]";
   std::cout << std::endl;
+
+  std::cout << "server_name: " << info.server_name_ << std::endl;
   PrintLocations(info.locations_);
 }
 

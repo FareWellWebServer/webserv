@@ -33,32 +33,35 @@ class Config {
   void ParseListen(const value &vec);
   void ParseBodySize(const value &vec);
   void ParseRoot(const value &vec);
-  void ParseFilePath(const value &vec);
   void ParseUploadPath(const value &vec);
-  void ParseServerName(const value &vec);
-  void ParseDirectoryList(const value &vec);
   void ParseTimeout(const value &vec);
   void ParseMethods(const value &vec);
   void ParseErrorPage(const value &vec);
+  void ParseServerName(const value &vec);
 
   /* ======================== Parsing Location ======================== */
-  void InitLocation(t_location &l, const std::string &uri);
+  void InitLocation(t_location &l);
 
   void ParseLocation(const std::string &key, const std::string &val);
   void SetLocation(t_location &l, const std::string &key,
                    const std::string &val);
 
-  void ParseLocationStatusCode(t_location &l, const value &vec);
-  void ParseLocationRedirection(t_location &l, const value &vec);
-  void ParseLocationMethods(t_location &l, const value &vec);
-  void ParseLocationRoot(t_location &l, const value &vec);
   void ParseLocationFilePath(t_location &l, const value &vec);
-  void ParseLocationCgi(t_location &l, const value &vec);
+  void ParseLocationMethods(t_location &l, const value &vec);
+  void ParseLocationDirectoryList(t_location &l, const value &vec);
+  void ParseLocationRoot(t_location &l, const value &vec);
+  void ParseLocationRedirection(t_location &l, const value &vec);
+
+  void ParseLocationIsCgi(t_location &l, const value &vec);
+  void ParseLocationCgiPass(t_location &l, const value &vec);
+
+  // void ParseLocationStatusCode(t_location &l, const value &vec);
 
   /* ======================== Validation ======================== */
   bool CheckDuplicatePort(int port) const;
+  bool CheckValidPath(const std::string &file_path) const;
   void CheckValidation(void);
-  void CheckLocation(t_location &loc, const ServerConfigInfo &info);
+  void CheckLocation(t_location &loc);
 
   /* ======================== Utils ======================== */
   // Error

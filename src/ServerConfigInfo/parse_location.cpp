@@ -1,16 +1,16 @@
 #include "../../include/Config.hpp"
 
 /* ========================== Location Init ========================== */
-void Config::InitLocation(t_location& l, const std::string& uri) {
-  l.is_cgi_ = (uri == ".py") ? true : false;
-  l.cgi_pass_ = "";
-
-  l.root_path_ = server_config_info_.root_path_;
+void Config::InitLocation(t_location& l) {
   l.file_path_.clear();
 
+  l.directory_list_ = false;
+  l.root_path_ = server_config_info_.root_path_;
   l.methods_ = server_config_info_.methods_;
-
   l.redir_path_ = "";
+
+  l.is_cgi_ = false;
+  l.cgi_path_ = "";
 }
 
 /* ========================== Parsing Location ========================== */
@@ -23,7 +23,7 @@ void Config::ParseLocation(const std::string& key, const std::string& val) {
 
   t_location l;
   std::string location_path = vec[0];
-  InitLocation(l, location_path);
+  InitLocation(l);
   while (true) {
     ++line_num_;
     std::getline(config_stream_, line_, '\n');
@@ -44,38 +44,37 @@ void Config::SetLocation(t_location& l, const std::string& key,
   std::vector<std::string> vec = Split(val, " ");
   PrintKeyVal(key, val);
 
-  if (key == "redirection") {
+  if (key == "file_path") {
+    ParseLocationFilePath(l, vec);
+  } else if (key == "directory_list") {
+    ParseLocationDirectoryList(l, vec);
+  } else if (key == "redirection") {
     ParseLocationRedirection(l, vec);
   } else if (key == "method") {
     ParseLocationMethods(l, vec);
   } else if (key == "root") {
     ParseLocationRoot(l, vec);
-  } else if (key == "file_path") {
-    ParseLocationFilePath(l, vec);
-  } else if (key == "cgi_pass") {
-    ParseLocationCgi(l, vec);
-  } else
+  } else if (key == "cgi") {
+    ParseLocationIsCgi(l, vec);
+  } else if (key == "cgi_path") {
+    ParseLocationCgiPass(l, vec);
+  } else {
     ExitConfigParseError();
+  }
 }
 
-void Config::ParseLocationRedirection(t_location& l,
-                                      const std::vector<std::string>& vec) {
-  if (vec.size() != 1) ExitConfigParseError();
-
-  std::string redir_path = vec[0];
-
-  struct stat sb;
-  if (stat(redir_path.c_str(), &sb) == 0) {
-    l.redir_path_ = redir_path;
-  } else
-    ExitConfigParseError();
+void Config::ParseLocationFilePath(t_location& l,
+                                   const std::vector<std::string>& vec) {
+  l.file_path_ = vec;
 }
 
 void Config::ParseLocationMethods(t_location& l,
                                   const std::vector<std::string>& vec) {
-  if (!vec.size()) ExitConfigParseError();
-  l.methods_.clear();
+  if (!vec.size()) {
+    ExitConfigParseError();
+  }
 
+  l.methods_.clear();
   std::string method;
   for (size_t i = 0; i < vec.size(); ++i) {
     method = vec[i];
@@ -86,31 +85,57 @@ void Config::ParseLocationMethods(t_location& l,
     l.methods_.push_back(method);
   }
 }
+void Config::ParseLocationDirectoryList(t_location& l,
+                                        const std::vector<std::string>& vec) {
+  if (vec.size() != 1 || (vec[0] != "on" && vec[0] != "off")) {
+    ExitConfigParseError();
+  }
+  l.directory_list_ = (vec[0] == "on") ? true : false;
+}
 
 void Config::ParseLocationRoot(t_location& l,
                                const std::vector<std::string>& vec) {
-  if (vec.size() != 1) ExitConfigParseError();
+  if (vec.size() != 1) {
+    ExitConfigParseError();
+  }
 
   std::string root_path = vec[0];
   struct stat sb;
-  if (stat(root_path.c_str(), &sb) == 0)
+  if (stat(root_path.c_str(), &sb) == 0) {
     l.root_path_ = vec[0];
-  else
+  } else {
+    ExitConfigParseError();
+  }
+}
+
+void Config::ParseLocationRedirection(t_location& l,
+                                      const std::vector<std::string>& vec) {
+  if (vec.size() != 1) {
+    ExitConfigParseError();
+  }
+
+  std::string redir_path = vec[0];
+
+  struct stat sb;
+  if (stat(redir_path.c_str(), &sb) == 0) {
+    l.redir_path_ = redir_path;
+  } else
     ExitConfigParseError();
 }
 
-void Config::ParseLocationFilePath(t_location& l,
-                                   const std::vector<std::string>& vec) {
-  if (vec.size() != 1) ExitConfigParseError();
-
-  l.file_path_ = vec[0];
+void Config::ParseLocationIsCgi(t_location& l,
+                                const std::vector<std::string>& vec) {
+  if (vec.size() != 1 || (vec[0] != "true" && vec[0] != "false")) {
+    ExitConfigParseError();
+  }
+  l.is_cgi_ = (vec[0] == "true") ? true : false;
 }
 
-void Config::ParseLocationCgi(t_location& l,
-                              const std::vector<std::string>& vec) {
-  if (l.is_cgi_ == false || vec.size() != 1) ExitConfigParseError();
-  std::string cgi_pass = vec[0];
-  std::ifstream fs(cgi_pass);
-  if (fs.fail()) ExitConfigParseError();
-  l.cgi_pass_ = cgi_pass;
+void Config::ParseLocationCgiPass(t_location& l,
+                                  const std::vector<std::string>& vec) {
+  if (vec.size() != 1) {
+    ExitConfigParseError();
+  }
+
+  l.cgi_path_ = vec[0];
 }

@@ -1,13 +1,6 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "ServerConfigInfo.hpp"
-#include "ClientMetaData.hpp"
-#include "ReqHandler.hpp"
-#include "MethodProcessor.hpp"
-#include "MsgComposer.hpp"
-#include "ResHandler.hpp"
-
 #include <arpa/inet.h> /* htons, htonl, ntohs, ntohl */
 #include <fcntl.h>     /* fcntl */
 #include <netdb.h>     /* getprotobyname */
@@ -24,6 +17,11 @@
 #include <set>
 #include <vector>
 
+#include "ClientMetaData.hpp"
+#include "MsgComposer.hpp"
+#include "ReqHandler.hpp"
+#include "ResHandler.hpp"
+#include "ServerConfigInfo.hpp"
 
 #define MAXLINE 1000000
 #define MAXBUF 1000000
@@ -37,12 +35,10 @@
 // #define FILE_FD 257
 // #define PIPE_FD 258
 
-
 // typedef struct s_fd_info {
 // 	int which_fd;
 // 	Data *parent;
 // } t_fd_info;
-
 
 typedef struct s_litening {
   std::string host;
@@ -60,30 +56,26 @@ class Server {
   // void Init(const std::vector<ServerConfigInfo>& server_infos);
   void Init(void);
 
+  // 임의로 public에 나둠 나중에 setter구현해야함
+  // server_info를 Method_Processor 호출할 때, 필요하기 때문에
+  // Class 내부에 저장함.
+  std::vector<ServerConfigInfo> server_infos_;
 
-	// 임의로 public에 나둠 나중에 setter구현해야함
-	// server_info를 Method_Processor 호출할 때, 필요하기 때문에
-	// Class 내부에 저장함.
-	std::vector<ServerConfigInfo> server_infos_;
+  /* ----- METHOD -----*/
 
-
-	/* ----- METHOD -----*/
-
-	void Get(int idx);
+  void Get(int idx);
   bool IsLocation(std::string& url, ServerConfigInfo& config);
-	void ReadFile(int idx);
-	void Send(int idx);
+  void ReadFile(int idx);
+  void Send(int idx);
 
-	/* ------------------*/
+  /* ------------------*/
  private:
   int kq_;
   struct kevent events_[MAXLISTEN + BACKLOG];
   std::set<t_listening*> servers_;
   ClientMetaData* clients_;
-	MethodProcessor* mp_;
   ReqHandler* req_handler_;
   ResHandler* res_handler_;
-  MethodProcessor* method_processor_;
   MsgComposer* msg_composer_;
 
   void Act(void);
