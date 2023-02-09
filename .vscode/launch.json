@@ -8,7 +8,15 @@
 			"type": "lldb",
 			"request": "launch",
 			"name": "Debug",
-			"program": "${workspaceFolder}/Req_handle",
+			"program": "${workspaceFolder}/farewell_webserv",
+			"cwd": "${workspaceFolder}",
+			"preLaunchTask": "make debug output",
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": " 짱초이 ",
+			"program": "${workspaceFolder}/farewell_webserv",
 			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "make debug output",
 		}

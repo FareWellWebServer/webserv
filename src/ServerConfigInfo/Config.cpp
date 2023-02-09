@@ -75,20 +75,16 @@ void Config::SetServerConfigInfo(const std::string& key,
     ParseBodySize(vec);
   } else if (key == "root") {
     ParseRoot(vec);
-  } else if (key == "file_path") {
-    ParseFilePath(vec);
   } else if (key == "upload_path") {
     ParseUploadPath(vec);
-  } else if (key == "server_name") {
-    ParseServerName(vec);
-  } else if (key == "directory_list") {
-    ParseDirectoryList(vec);
   } else if (key == "timeout") {
     ParseTimeout(vec);
   } else if (key == "method") {
     ParseMethods(vec);
   } else if (key == "error_page") {
     ParseErrorPage(vec);
+  } else if (key == "server_name") {
+    ParseServerName(vec);
   } else if (key == "location") {
     ParseLocation(key, val);
   } else
@@ -103,6 +99,15 @@ bool Config::CheckDuplicatePort(int port) const {
   return false;
 }
 
+bool Config::CheckValidPath(const std::string& file_path) const {
+  struct stat sb;
+  if (stat(file_path.c_str(), &sb) == 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 void Config::CheckValidation(void) {
 #if CONFIG
   std::cout << BOLDCYAN
@@ -111,23 +116,28 @@ void Config::CheckValidation(void) {
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
     ServerConfigInfo& info = server_config_infos_[i];
     if (info.port_ == -1 || info.body_size_ == 0 || info.root_path_.empty() ||
-        info.file_path_.empty() || info.upload_path_.empty() ||
+        info.upload_path_.empty() || info.timeout_ == 0 ||
         info.methods_.empty() || info.error_pages_.empty()) {
       ExitConfigValidateError("Missing Server Elements");
     }
 
-    std::string file_path = info.root_path_ + info.file_path_;
-    struct stat sb;
-    if (stat(file_path.c_str(), &sb) == 0) {
-      info.file_path_ = file_path;
-    } else {
-      ExitConfigValidateError("Wrong File Path\n-> " + info.root_path_ +
-                              info.file_path_);
+    std::map<int, std::string>::iterator error_it = info.error_pages_.begin();
+    for (; error_it != info.error_pages_.end(); ++error_it) {
+      int error_page_status_code = error_it->first;
+      std::string error_page_path = info.root_path_ + error_it->second;
+
+      if (CheckValidPath(error_page_path)) {
+        std::cout << error_page_path << std::endl;
+        info.error_pages_[error_page_status_code] = error_page_path;
+      } else {
+        ExitConfigValidateError("Wrong Error Page Path");
+      }
     }
 
-    std::map<std::string, t_location>::iterator it = info.locations_.begin();
-    for (; it != info.locations_.end(); ++it) {
-      CheckLocation(it->second, info);
+    std::map<std::string, t_location>::iterator loc_it =
+        info.locations_.begin();
+    for (; loc_it != info.locations_.end(); ++loc_it) {
+      CheckLocation(loc_it->second);
     }
   }
 #if CONFIG
@@ -135,24 +145,32 @@ void Config::CheckValidation(void) {
 #endif
 }
 
-void Config::CheckLocation(t_location& loc, const ServerConfigInfo& info) {
+void Config::CheckLocation(t_location& loc) {
   if (!loc.is_cgi_) {  // cgi가 아닌 경우
     if (loc.file_path_.empty()) {
       ExitConfigValidateError(
           "Missing Location Elements(status_code or file_path)");
     }
-    std::string file_path = info.root_path_ + loc.file_path_;
-    struct stat sb;
-    if (stat(file_path.c_str(), &sb) == 0) {
-      loc.file_path_ = file_path;
-    } else {
-      ExitConfigValidateError("Wrong Location File Path\n-> " +
-                              info.root_path_ + loc.file_path_);
+
+    for (size_t i = 0; i < loc.file_path_.size(); ++i) {
+      std::string file_path = loc.root_path_ + loc.file_path_[i];
+      if (CheckValidPath(file_path)) {
+        loc.file_path_[i] = file_path;
+      } else {
+        ExitConfigValidateError("Wrong File Path\n-> " + file_path);
+      }
     }
   } else {  // cgi인 경우
-    if (loc.cgi_pass_.empty()) {
+    if (loc.cgi_path_.empty()) {
       ExitConfigValidateError(
           "Missing Location Elements(status_code or cgi_pass)");
+    }
+
+    std::string cgi_path = loc.root_path_ + loc.cgi_path_;
+    if (CheckValidPath(cgi_path)) {
+      loc.cgi_path_ = cgi_path;
+    } else {
+      ExitConfigValidateError("Wrong CGI File Path\n-> " + cgi_path);
     }
   }
 }

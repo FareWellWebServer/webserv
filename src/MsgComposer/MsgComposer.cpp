@@ -106,13 +106,19 @@ void MsgComposer::SetData(Data* client) {
 void MsgComposer::SetHeaders(void) {
   // content-length
   std::stringstream ss;
-  ss << client_->GetResBodyLength();
+  ss << client_->GetMethodEntityLength();
   res_msg_.headers_["Content-length"] = ss.str();
   // content-type
-  // .headers_["Content-type"] = .body_data_->type;
-  res_msg_.headers_["Content-type"] = "text/plain";
+  res_msg_.headers_["Content-type"] = client_->GetMethodEntityType();
+	// res_msg_.headers_.insert(std::make_pair<std::string, std::string>("Content-type", "text/html"));
+  // res_msg_.headers_["Content-type"] = "text/html";
   // Connection -> keep-alive
   res_msg_.headers_["Connection"] = "keep-alive";
+
+
+	// std::map<std::string, std::string>::iterator it = res_msg_.headers_.begin();
+	// for(; it != res_msg_.headers_.end(); ++it)
+	// 	std::cout << it->first << ": " << it->second << "\n";
   // 헤더 필요하면 여기서 더 추가하기(set-cookie or ...)
 }
 
@@ -120,7 +126,7 @@ void MsgComposer::InitResMsg() {
   res_msg_.http_version_ = "HTTP/1.1";
   res_msg_.status_code_ = client_->status_code_;
   SetStatusText();
-  res_msg_.body_data_ = client_->GetResBody();
+  res_msg_.body_data_ = *(client_->GetMethodEntity());
   SetHeaders();
 }
 
@@ -134,31 +140,34 @@ const char* MsgComposer::GetResponse(void) {
   std::string str = res_msg_.http_version_ + " " + status_code + " " +
                     res_msg_.status_text_ + "\r\n";
 
-  std::size_t first_len = str.size();
-  std::cout << "first_line len: " << first_len << std::endl;
+  // std::size_t first_len = str.size();
+  // std::cout << "first_line len: " << first_len << std::endl;
 
   // headers 채우기
   std::map<std::string, std::string>::const_iterator it =
       res_msg_.headers_.begin();
   for (; it != res_msg_.headers_.end(); ++it)
+	{
     str.append(it->first + ": " + it->second + "\r\n");
+		// std::cout << it->first << ": " << it->second << "\n";
+	}
   str.append("\r\n");
 
-  std::size_t headers_len = str.size() - first_len;
-  std::cout << "headers len: " << headers_len << std::endl;
+  // std::size_t headers_len = str.size() - first_len;
+  // std::cout << "headers len: " << headers_len << std::endl;
 
   // response 생성
-  std::cout << "entity len: " << res_msg_.body_data_.length_ << std::endl;
+  // std::cout << "entity len: " << res_msg_.body_data_.length_ << std::endl;
   response_length_ = str.length() + res_msg_.body_data_.length_;
-  std::cout << "response len: " << response_length_ << std::endl << std::endl;
+  // std::cout << "response len: " << response_length_ << std::endl << std::endl;
 
   // response에 붙여넣기
-  char* res = (char*)malloc(sizeof(char) * response_length_);
+  char* res = new char[response_length_];
   size_t str_len = str.length();
-  for (std::size_t i = 0; i < str_len; ++i) {
+  for (size_t i = 0; i < str_len; ++i) {
     res[i] = str[i];
   }
-  for (std::size_t i = 0; i < res_msg_.body_data_.length_; ++i) {
+  for (size_t i = 0; i < res_msg_.body_data_.length_; ++i) {
     res[str_len + i] = res_msg_.body_data_.data_[i];
   }
   return res;

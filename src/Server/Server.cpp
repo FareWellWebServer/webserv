@@ -6,13 +6,12 @@
 // Server::Server() : kq_(kqueue()) {}
 Server::Server(std::vector<ServerConfigInfo> server_info) 
 : server_infos_(server_info), kq_(kqueue()) {
-  mp_ = new MethodProcessor(server_info);
+  // mp_ = new MethodProcessor(server_info);
   clients_ = new ClientMetaData;
   req_handler_ = new ReqHandler;
   res_handler_ = new ResHandler;
   msg_composer_ = new MsgComposer;
 }
-
 Server::~Server(void) {
   close(kq_);
   servers_.clear();
@@ -21,7 +20,6 @@ Server::~Server(void) {
   delete res_handler_;
   delete msg_composer_;
 }
-
 void Server::Run(void) {
   if (servers_.size() == 0) {
     throw std::runtime_error("[Server Error]: no listening server");
@@ -30,7 +28,6 @@ void Server::Run(void) {
     Act();
   }
 }
-
 void Server::Init(void) {
   for (size_t i = 0; i < server_infos_.size(); ++i) {
     #if SERVER
@@ -56,9 +53,10 @@ void Server::Init(void) {
     #endif
   }
 }
- // 임의로 public에 나둠 나중에 setter구현해야함
-// private
+	// 임의로 public에 나둠 나중에 setter구현해야함
 
+
+// private
 void Server::Act(void) {
   int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
   if (n == -1) {
@@ -78,7 +76,11 @@ void Server::Act(void) {
         #if SERVER
           std::cout << "[Server] Client READ fd : " << client->GetClientFd() << std::endl;
         #endif
-				ActCoreLogic(idx);
+				client->Init();
+				if (events_[idx].flags == EV_EOF)
+					std::cout << RED << "FUCK\n" << RESET;
+				else
+					ActCoreLogic(idx);
       }
       /* 내부에서 읽으려고 Open()한 File에 대한 이벤트 */
       else if (event_fd == client->GetFileFd()) {
@@ -86,6 +88,7 @@ void Server::Act(void) {
           std::cout << "[Server] File READ fd : " << event_fd << " == " << client->GetFileFd() << std::endl;
         #endif
         // 
+				ReadFile(idx);
       }
       /* CGI에게 반환받는 pipe[READ]에 대한 이벤트 */
       else if (event_fd == client->GetPipeRead()) {
@@ -99,8 +102,10 @@ void Server::Act(void) {
       /* response 보낼 때에 대한 이벤트 */
       if (event_fd == client->GetClientFd()) {
         #if SERVER
-          std::cout << "[Server] Client Write :" << client->GetClientFd() << std::endl;
+          std::cout << "[Server] Client Write : " << client->GetClientFd() << std::endl;
         #endif
+				Send(idx);
+				client->Clear();
       }
       /* POST, PUT file에 대한 write 발생시 */
       else if (event_fd == client->GetFileFd()) {
@@ -129,6 +134,53 @@ void Server::Act(void) {
     }
 		client = NULL;
 	}
+}
+
+void Server::ActCoreLogic(int idx) {
+	req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
+	req_handler_->SetReadLen(events_[idx].data);
+  if (events_[idx].data == 0)
+  {
+    std::cout << RED << "req len is 0\n" << RESET;
+    return;
+  }
+	req_handler_->RecvFromSocket();
+	req_handler_->ParseRecv();
+
+	// clients_->SetReqMessageByFd(req_handler_->req_msg_, events_[idx].ident);
+	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+
+
+	client->SetReqMessage(req_handler_->req_msg_);
+
+	// client->SetReqMessage(req_handler_->req_msg_);
+	// std::cout << req_handler_->req_msg_->method_ << " " << req_handler_->req_msg_->req_url_ << "\n";
+	// std::map<std::string, std::string>::iterator it = req_handler_->req_msg_->headers_.begin();
+	// for(; it != req_handler_->req_msg_->headers_.end(); ++it) {
+	// 	std::cout << it->first << ": " << it->second << "\n";
+	// }
+
+	// for(size_t i = 0; i < req_handler_->req_msg_->body_data_.length_; ++i)
+	// 	std::cout << req_handler_->req_msg_->body_data_.data_[i];
+	// std::cout << "\n";
+	req_handler_->Clear();
+
+
+	// Data* client = clients_->GetDataByFd(events_[idx].ident);
+	if (client->GetReqMethod() == "GET") {
+		Get(idx);
+  } else if (client->GetReqMethod() == "POST") {
+
+  } else if (client->GetReqMethod() == "DELETE") {
+
+  } else {
+    
+  }
+
+
+
+	// DisConnect(events_[idx].ident);
+
 }
 
 void Server::AcceptNewClient(int idx) {
@@ -165,64 +217,10 @@ void Server::AcceptNewClient(int idx) {
     throw std::runtime_error("Error: kevent()");
   }
 }
-
-void Server::ActCoreLogic(int idx) {
-	(void) idx;
-	req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
-	req_handler_->SetReadLen(events_[idx].data);
-	req_handler_->RecvFromSocket();
-	req_handler_->ParseRecv();
-
-	clients_->SetReqMessageByFd(req_handler_->req_msg_, events_[idx].ident);
-	std::cout << req_handler_->req_msg_->method_ << " " << req_handler_->req_msg_->req_url_ << "\n";
-	std::map<std::string, std::string>::iterator it = req_handler_->req_msg_->headers_.begin();
-	for(; it != req_handler_->req_msg_->headers_.end(); ++it) {
-		std::cout << it->first << ": " << it->second << "\n";
-	}
-
-	for(size_t i = 0; i < req_handler_->req_msg_->body_data_.length_; ++i)
-		std::cout << req_handler_->req_msg_->body_data_.data_[i];
-	std::cout << "\n";
-	req_handler_->Clear();
-	DisConnect(events_[idx].ident);
-	// system("leaks $PPID");
-
-  // TODO: call ReqHandler and run other process
-  // TODO: call ResHandler and send data to client
-}
-
-/* Init에 포함시켰음 */
-// void Server::SetHostPortAvaiable(const std::string& host, const int& port) {
-// #if SERVER
-//   if (servers_.size() == MAXLISTEN) {
-//     std::cerr << "Error: full of listening\n";
-//     return;
-//   }
-// #endif
-//   struct kevent event;
-//   int listenfd;
-
-//   BindListen(host, port, listenfd);
-
-// 	t_fd_info udata;
-// 	udata.parent = NULL;
-// 	udata.which_fd = LISTEN_FD;
-//   EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, &udata);
-//   if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
-//     throw std::runtime_error("Error: kevent()");
-//   }
-//   servers_.insert(CreateListening(host, port, listenfd));
-// #if SERVER
-//   std::cout << host << " is listening port on " << port << "\n";
-// #endif
-// }
-
 void Server::BindListen(const std::string& host, const int& port, int& listenfd) {
   struct addrinfo* listp;
   struct addrinfo* p;
   int optval = ENABLE;
-
-
 	GetAddrInfo(host, port, &listp);
   for (p = listp; p; p = p->ai_next) {
     listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
@@ -244,8 +242,7 @@ void Server::BindListen(const std::string& host, const int& port, int& listenfd)
     throw std::runtime_error("Error: listen()");
   }
 }
-
-	void Server::GetAddrInfo(const std::string& host, const int& port, struct addrinfo** listp) {
+void Server::GetAddrInfo(const std::string& host, const int& port, struct addrinfo** listp) {
   struct addrinfo hints;
   int status;
 
@@ -260,7 +257,6 @@ void Server::BindListen(const std::string& host, const int& port, int& listenfd)
     throw std::runtime_error(gai_strerror(status));
   }
 }
-
 t_listening* Server::CreateListening(const std::string& host, const int& port, const int& fd) {
   t_listening* new_listening = new t_listening;
   new_listening->host = host;
@@ -268,7 +264,6 @@ t_listening* Server::CreateListening(const std::string& host, const int& port, c
   new_listening->fd = fd;
   return new_listening;
 }
-
 bool Server::IsListenFd(const int& fd) {
   std::set<t_listening*>::iterator it = servers_.begin();
   for (; it != servers_.end(); ++it) {
@@ -278,11 +273,113 @@ bool Server::IsListenFd(const int& fd) {
   }
   return false;
 }
-
 void Server::DisConnect(const int& fd) {
-	// struct kevent event;
-	// EV_SET(&event, fd, EVFILT_READ, EV_DELETE, 0, 0, clients_->GetDataByFd(fd));
-	// kevent(kq_, &event, 1, NULL, 0, NULL);
   clients_->DeleteByFd(fd);
 	close(fd);
+}
+
+
+
+
+
+void Server::Get(int idx) {
+	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+	const ServerConfigInfo* config = client->config_;
+  t_req_msg* req_msg = client->GetReqMessage();
+  int client_fd = client->GetClientFd();
+
+  std::string req_url = req_msg->req_url_;
+  std::string file_path = "." + config->root_path_;
+  std::string location;
+
+  if (req_url == "/") {
+    file_path += "index.html";
+  // } else if (IsLocation(req_url, config)) {
+
+  // } 
+  } else {
+    file_path.pop_back();
+    file_path += req_url;
+  }
+
+	int file_fd = open(file_path.c_str(), O_RDONLY);
+  if (file_fd == -1) { // 존재하지 않는 파일.
+    file_path.clear();
+    file_path = "./" + config->error_pages_.find(404)->second;
+    file_fd = open(file_path.c_str(), O_RDONLY);
+    client->SetStatusCode(404);
+  }
+	client->SetFileFd(file_fd);
+
+	struct kevent event;
+	EV_SET(&event, file_fd, EVFILT_READ, EV_ADD, 0, 0, client);
+	kevent(kq_, &event, 1, NULL, 0, NULL);
+
+  EV_SET(&event, client_fd, EVFILT_READ, EV_DISABLE, 0, 0, client);
+  kevent(kq_, &event, 1, NULL, 0, NULL);
+
+}
+
+
+bool Server::IsLocation(std::string& url, ServerConfigInfo& config) {
+  // std::string path;
+  // std::string::iterator it = url.begin();
+  // ++it;
+  // for(; it != url.end(); ++it)
+  // {
+  //   path.push_back(*it);
+  //   if (strcmp(path.back(), '/') == 0)
+  // }
+  return true;
+  (void) url;
+  (void) config;
+}
+
+
+
+void Server::ReadFile(int idx) {
+	int file_fd = events_[idx].ident;
+	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+	// t_req_msg* req_msg = client->GetReqMessage();
+
+	int size = client->event_[idx].data;
+	char* buf = new char[size];
+	read(file_fd, buf, size);
+
+
+	client->SetMethodEntityData(buf);
+	client->SetMethodEntityLength(size);
+	client->SetMethodEntityType(strdup("text/html"));
+
+
+	struct kevent event;
+	EV_SET(&event, client->GetClientFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+	kevent(kq_, &event, 1, NULL, 0, NULL);
+}
+
+void Server::Send(int idx) {
+	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+
+	msg_composer_->SetData(client);
+	msg_composer_->InitResMsg();
+	int client_fd = client->GetClientFd();
+	int file_fd = client->GetFileFd();
+	const char* response = msg_composer_->GetResponse();
+	send(client_fd, response, msg_composer_->getLength(), 0);
+	delete[] response;
+	response = NULL;
+
+	struct kevent event;
+	EV_SET(&event, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, client);
+	kevent(kq_, &event, 1, NULL, 0, NULL);
+
+  EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
+  kevent(kq_, &event, 1, NULL, 0, NULL);
+
+	EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	kevent(kq_, &event, 1, NULL, 0, NULL);
+
+
+	close(file_fd);
+	// DisConnect(client_fd);
 }

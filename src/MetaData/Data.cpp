@@ -41,10 +41,13 @@ Data::~Data(void) {
  * 
  */
 void Data::Init(void) {
-  Clear();
-  req_message_ = new t_req_msg;
+  // Clear();
+  req_message_ = NULL;
   res_message_ = new t_res_msg;
+	memset(res_message_, 0, sizeof(t_res_msg));
   method_entity_ = new t_entity;
+	memset(method_entity_, 0, sizeof(t_entity));
+
 }
 
 /**
@@ -58,14 +61,44 @@ void Data::Clear(void) {
   pipe_[READ] = -1;
   pipe_[WRITE] = -1;
   if (req_message_ != NULL) {
+		if (req_message_->body_data_.data_ != NULL)
+		{
+			delete req_message_->body_data_.data_;
+			req_message_->body_data_.data_ = NULL;
+		}
+		if (req_message_->body_data_.type_ != NULL)
+		{
+			delete req_message_->body_data_.type_;
+			req_message_->body_data_.type_ = NULL;
+		}
     delete req_message_;
     req_message_ = NULL;
   }
   if (res_message_ != NULL) {
+		if (res_message_->body_data_.data_ != NULL)
+		{
+			delete res_message_->body_data_.data_;
+			res_message_->body_data_.data_ = NULL;
+		}
+		if (res_message_->body_data_.type_ != NULL)
+		{
+			delete res_message_->body_data_.type_;
+			res_message_->body_data_.type_ = NULL;
+		}
     delete res_message_;
     res_message_ = NULL;
   }
   if (method_entity_ != NULL) {
+		if (method_entity_->data_ != NULL)
+		{
+			delete method_entity_->data_;
+			method_entity_->data_ = NULL;
+		}
+		if (method_entity_->type_ != NULL)
+		{
+			delete method_entity_->type_;
+			method_entity_->type_ = NULL;
+		}
     delete method_entity_;
     method_entity_ = NULL;
   }
@@ -197,11 +230,12 @@ size_t Data::GetReqBodyLength(void) const { return req_message_->body_data_.leng
 //////////* Request Message Setter() *//////////
 
 void Data::SetReqMessage(t_req_msg* req_message) {
-  SetReqMethod(req_message->method_);
-  SetReqURL(req_message->req_url_);
-  SetReqProtocol(req_message->protocol_);
-  SetReqHeaders(req_message->headers_);
-  SetReqBody(&req_message->body_data_);
+	req_message_ = req_message;
+  // SetReqMethod(req_message_->method_);  //string
+  // SetReqURL(req_message_->req_url_); //string
+  // SetReqProtocol(req_message_->protocol_); //string
+  // SetReqHeaders(req_message_->headers_); //map<string, string>
+  // SetReqBody(&req_message_->body_data_);
 }
 
 void Data::SetReqMethod(std::string req_message_method) {
@@ -225,7 +259,7 @@ void Data::SetReqHeaders(std::map<std::string, std::string> &headers) {
 }
 
 void Data::SetReqBody(t_entity* body_entity) {
-  req_message_->body_data_ = *body_entity;
+	req_message_->body_data_ = *body_entity;
 }
 
 void Data::SetReqBodyData(char* req_body_data) {

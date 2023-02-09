@@ -1,6 +1,8 @@
 #include "../../include/ReqHandler.hpp"
 
-ReqHandler::ReqHandler(void) : req_msg_(NULL), buf_(NULL), read_len_(0), client_(0) {}
+
+ReqHandler::ReqHandler(void)
+    : req_msg_(NULL), entity_flag_(0), buf_(NULL), client_(0), read_len_(0) {}
 
 ReqHandler::~ReqHandler(void) { Clear(); }
 
@@ -14,24 +16,14 @@ void ReqHandler::Clear() {
     buf_ = NULL;
   }
   read_len_ = 0;
-
   client_ = NULL;
 	req_msg_ = NULL;
-	// req_msg_는 ClientMetaData가 가지고 있어야하니 여기서 할당해제하면 안될 듯.
 
+	// req_msg_는 ClientMetaData가 가지고 있어야하니 여기서 할당해제하면 안될 듯.
   // if (req_msg_ != NULL) {
   //   delete req_msg_;
   //   req_msg_ = NULL;
   // }
-}
-
-t_req_msg* ReqHandler::PopReqMassage() {
-  t_req_msg* req(req_msg_);
-#if REQ_HANDLER
-  if (req_msg_ == NULL) std::cout << "ReqHanlder is empty" << std::endl;
-#endif
-  req_msg_ = NULL;
-  return (req);
 }
 
 // void ReqHandler::SetReadLen(int64_t len) { read_len_ = len; }
@@ -49,7 +41,7 @@ void ReqHandler::RecvFromSocket() {
   if (client_ == NULL || read_len_ == 0) {
 #if REQ_HANDLER
     std::cout << " [ReqHandler] Recv error. Need client data. call SetClient() "
-              << "or SetReadLen() " << std::endl;
+              << "or SetReadLen() " << &client_ << read_len_ << std::endl;
 #endif
     return;
   }
@@ -94,7 +86,18 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   strncpy(tmp, buf_, find_idx);
   tmp[find_idx] = '\0';
   /* 메소드 유효성 확인 필요 */
-  req_msg_->method_.append(tmp);
+  req_msg_->method_ = tmp;
+  RemoveTabSpace(req_msg_->method_);
+  // 체크할 때 -1을 반환하는 형식으로 변경해도 될듯
+  //   if (req_msg_->method_ != "GET" || req_msg_->method_ != "POST" ||
+  //       req_msg_->method_ != "HEAD" || req_msg_->method_ != "DELETE") {
+  // #if REQ_HANDLER
+  //     std::cout << "[ReqHandler] Invalid method input ! : \
+//     loss data?"
+  //               << std::endl;
+  // #endif
+  //   }
+
   curr_idx += find_idx;
   /* 두번 째 URL 쪼개기 */
   find_idx = strcspn(&buf_[curr_idx + 1], " ");
@@ -105,7 +108,10 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
   /* 올바른 URL 인지 확인 필요 */
+  // TODO : config 파일에서 들어온 경로와 일치하는가 확인 ->파싱이 끝난 이후
   req_msg_->req_url_ = tmp;
+  ReduceSlash(req_msg_->req_url_);
+
   curr_idx += find_idx;
 
   /* 버전확인 406 Not Acceptable */
@@ -117,14 +123,16 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
 
-  if (strncmp(tmp, "HTTP/1.1", 8) == 0) {
+  req_msg_->protocol_ = tmp;
+  RemoveTabSpace(req_msg_->protocol_);
+  if (req_msg_->protocol_ != "HTTP/1.1") {
     // client_->SetStatusCode(400); // bad request
+    std::cout << "INVALID PROTOCOL" << std::endl;
+    // TODO : ERROR처리 필요
     return (read_len_);
   }
-  req_msg_->protocol_ = tmp;
 
   delete[] tmp;
-  RemoveTabSpace(req_msg_->protocol_);
   return (end_idx);
 }
 
@@ -143,9 +151,11 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
   }
   if (kv_tmp[0] == "Content-Length") {
     req_msg_->body_data_.length_ = atoi(kv_tmp[1].c_str());
+    entity_flag_ = 1;
   }
   if (kv_tmp[0] == "Content-type") {
     req_msg_->body_data_.type_ = strdup(kv_tmp[1].c_str());
+    entity_flag_ = 1;
   }
   req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
 }
@@ -184,6 +194,9 @@ void ReqHandler::ParseEntity(int start_idx) {
   start_idx += 1;
   while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
     start_idx++;
+    // TODO : read_len 은 임의 지정값이라 실제 데이터의 길이를 반영하지
+    // 못할것으로 생각되어 read로 읽어온
+    // byte로 봐야하지 않나..
     if (start_idx == read_len_) {
 #if DG
       std::cout << "[ReqHandler] There is no entity(body)" << std::endl;
@@ -196,6 +209,54 @@ void ReqHandler::ParseEntity(int start_idx) {
   req_msg_->body_data_.data_ = entity;
 }
 
+// /cgi-bin/process.cgi
+void ReqHandler::ValidateReq(void) {
+  if (req_msg_->req_url_ == "/") {
+    client_->e_stage = REQ_FINISHED;
+    return;
+  }
+
+  std::vector<std::string> modi_url = split(req_msg_->req_url_, '/', 0);
+
+  if (!client_->config_->CheckAvailableMethod("/" + modi_url[1],
+                                              req_msg_->method_)) {
+    client_->e_stage = REQ_ERROR;
+    // TODO : 에러처리
+    return;
+  }
+
+  t_location* loc = client_->config_->GetCurrentLocation("/" + modi_url[1]);
+  if (loc != 0) {
+    std::string result;
+    if (loc->redir_path_.empty()) {
+      result = loc->root_path_;
+    } else {
+      result = loc->redir_path_;
+    }
+    for (size_t i = 2; i < modi_url.size(); ++i) {
+      result.append("/" + modi_url[i]);
+    }
+    req_msg_->req_url_ = result;
+    client_->e_stage = REQ_FINISHED;
+    ReduceSlash(req_msg_->req_url_);
+    modi_url.clear();
+    result.clear();
+  } else {
+    client_->e_stage = REQ_ERROR;
+    modi_url.clear();
+    return;
+    // TODO : 에러처리
+  }
+  // 실제 유효한 경로인지 확인 필요.
+  struct stat sb;
+  if (stat(("." + req_msg_->req_url_).c_str(), &sb) != 0) {
+    client_->e_stage = REQ_ERROR;
+    std::cout << "no valid path : " << req_msg_->req_url_ << std::endl;
+  } else
+    std::cout << "valid path : " << req_msg_->req_url_ << std::endl;
+  return;
+}
+
 void ReqHandler::ParseRecv() {
   if (buf_ == NULL) {
 #if DG
@@ -204,14 +265,51 @@ void ReqHandler::ParseRecv() {
 #endif
     return;
   }
+  client_->e_stage = REQ_PROCESSING;
   if (req_msg_ == NULL) req_msg_ = new t_req_msg;
+  memset(&req_msg_->body_data_, 0, sizeof(t_entity));
   int64_t idx(0);
   // 첫줄 파싱
   idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
   // 헤더 파싱
   idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
   // entity 넣기
-  ParseEntity(idx);
+  if (entity_flag_ == 1) ParseEntity(idx);
+
+  ValidateReq();
+
+
   delete[] buf_;
   buf_ = NULL;
+}
+
+void ReqHandler::ParseRecv(int fd) {
+  read_len_ = 414;
+  buf_ = new char[sizeof(char) * read_len_];
+
+  // 첫줄 파싱 //414
+  read(fd, buf_, read_len_);
+  client_->e_stage = REQ_PROCESSING;
+  if (req_msg_ == NULL) req_msg_ = new t_req_msg;
+  int64_t idx(0);
+  // 첫줄 파싱
+  idx = ParseFirstLine();   // buf[idx] = 첫줄의 \n
+                            // 헤더 파싱
+  idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
+  // PrintMap(req_msg_->headers_);
+  // entity 넣기
+  if (entity_flag_ == 1) ParseEntity(idx);
+
+  ValidateReq();
+
+  delete[] buf_;
+  buf_ = NULL;
+}
+
+void ReduceSlash(std::string& tmp) {
+  size_t pos;
+
+  while ((pos = tmp.find("//")) != std::string::npos) {
+    tmp.replace(pos, 2, "/");
+  }
 }

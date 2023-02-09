@@ -4,12 +4,6 @@ ServerConfigInfo::ServerConfigInfo(void) {}
 
 ServerConfigInfo::~ServerConfigInfo(void) {}
 
-bool ServerConfigInfo::CheckHostPortMatching(const std::string& host,
-                                             const int& port) const {
-  if (host_ == host && port_ == port) return true;
-  return false;
-}
-
 t_location* ServerConfigInfo::GetCurrentLocation(
     const std::string& req_uri) const {
   if (locations_.empty()) return NULL;
@@ -26,15 +20,18 @@ t_location* ServerConfigInfo::GetCurrentLocation(
 
 bool ServerConfigInfo::IsInLocation(const std::string& location_path,
                                     const std::string& req_uri) const {
-  if (req_uri.compare(location_path)) return false;
+  if (req_uri.compare(location_path)) {
+    return false;
+  }
   if (req_uri[location_path.length()]) {
-    if (req_uri[location_path.length()] == '/' ||
-        req_uri[location_path.length()] == '?')
+    if (req_uri[location_path.length()] == '/') {
       return true;
-    else
+    } else {
       return false;
-  } else
+    }
+  } else {
     return true;
+  }
 }
 
 bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
@@ -49,15 +46,6 @@ bool ServerConfigInfo::CheckAvailableMethod(const std::string& req_uri,
   }
   return false;
 }
-
-// std::string ServerConfigInfo::GetRequestFilePath(
-//     const std::string& req_uri) const {
-//   t_location* loc = GetCurrentLocation(req_uri);
-//   if (loc) {
-//     return NULL;
-//   }
-//   return file_path_;
-// }
 
 std::string ServerConfigInfo::GetCurrentDate(void) const {
   time_t raw_time;
