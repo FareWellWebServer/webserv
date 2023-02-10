@@ -45,6 +45,7 @@ Data::~Data(void) {
  */
 void Data::Init(void) {
   // Clear();
+	is_working = true;
   req_message_ = NULL;
   res_message_ = new t_res_msg;
   res_message_->body_data_.data_ = NULL;

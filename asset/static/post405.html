@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>POST PAGE</title>
+</head>
+
+<body>
+	<div style="width: 20vw;">
+		<h4>TEXT POST TEST</h4>
+		<form action="http://localhost:8080/test/" method="post" style="display: flex; flex-direction: column;">
+			<input type="text" name="title" placeholder="title">
+			<br>
+			<input type="text" name="content" placeholder="content">
+			<br>
+			<input type="submit" value="Submit">
+		</form>
+	</div>
+	<br><br><br><br>
+	<div style="width: 20vw;">
+		<h4>PNG / JPEG POST TEST</h4>
+		<form action="http://localhost:8080/test/" method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column;">
+			<input type="file" placeholder="title" accept="image/png, image/jpeg" name="file_name">
+			<input type="submit" value="Submit">
+		</form>
+	</div>
+</body>
+
+</html>

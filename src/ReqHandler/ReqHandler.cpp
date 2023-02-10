@@ -232,17 +232,9 @@ void ReqHandler::ParseRecv() {
   std::cout << BLUE << "original req_url: " << req_msg_->req_url_ << std::endl;
   ValidateReq();
 
-  // GET -> body_size 유호성 확인
-  // if (req_msg_->method_ == "GET") {
-  //   struct stat st;
-  //   stat(req_msg_->req_url_.c_str(), &st);
-  //   req_msg_->body_data_.length_ = static_cast<size_t>(st.st_size);
-  //   if (client_->config_->body_size_ <
-  //       static_cast<int>(req_msg_->body_data_.length_)) {
-  //     client_->SetStatusCode(501);
-  //     req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
-  //   }
-  // }
+	// if (req_msg_->method_ == "POST" && client_->GetStatusCode() > 399) {
+	// 	req_msg_->method_ = "GET";
+	// }
 
   std::cout << "status code: " << client_->status_code_ << std::endl;
   std::cout << "served req_url: " << req_msg_->req_url_ << RESET << std::endl;
@@ -259,7 +251,6 @@ void ReqHandler::ValidateReq(void) {
           static_cast<int>(req_msg_->body_data_.length_)) {
     client_->SetStatusCode(501);
     req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
-    req_msg_->method_ = "GET";
     return;
   }
 

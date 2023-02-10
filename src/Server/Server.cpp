@@ -143,7 +143,7 @@ void Server::ActCoreLogic(int idx) {
   req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
   req_handler_->SetReadLen(events_[idx].data);
   if (events_[idx].data == 0) {
-    // 핑처리 해야함.
+    // DisConnect(events_[idx].ident);
     std::cout << RED << "req len is 0\n" << RESET;
     return;
   }
@@ -201,9 +201,9 @@ void Server::AcceptNewClient(int idx) {
   EV_SET(&event[0], connfd, EVFILT_READ, EV_ADD, 0, 0, clients_->GetData());
   EV_SET(&event[1], connfd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0,
          clients_->GetData());
-  EV_SET(&event[2], connfd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS,
-         config->timeout_, clients_->GetData());
-  if (kevent(kq_, event, 3, NULL, 0, NULL) == -1) {
+  // EV_SET(&event[2], connfd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS,
+  //        config->timeout_, clients_->GetData());
+  if (kevent(kq_, event, 2, NULL, 0, NULL) == -1) {
     throw std::runtime_error("Error: kevent()");
   }
 }
@@ -390,10 +390,10 @@ void Server::Post(int idx) {
     std::string encoded_title = encoded_string.substr(0, and_pos);
     equal_pos = encoded_title.find('=');
     encoded_title = encoded_title.substr(equal_pos + 1, and_pos - equal_pos);
-    client->res_message_->headers_["Location"] =
-        config->upload_path_ + encoded_title;
-    client->res_message_->headers_["Content-Type"] =
-        "text/plain; charset=UTF-8";
+    client->res_message_->headers_["Location"] = config->upload_path_ + encoded_title;
+    client->res_message_->headers_["Content-Type"] = "text/plain; charset=UTF-8";
+		client->res_message_->body_data_.data_ = strdup("HELLO");
+		client->res_message_->body_data_.length_ = 5;
   } else {
     size_t semicolon_pos = content_type.find(';');
     std::string boundary = content_type.substr(semicolon_pos + 1);
