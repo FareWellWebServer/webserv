@@ -16,7 +16,7 @@ class MsgComposer {
 
  private:
   Data* client_;
-  std::size_t response_length_;
+  size_t response_length_;
   std::map<int, std::string> status_infos_;
 
   void SetHeaders(void);

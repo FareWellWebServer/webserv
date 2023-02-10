@@ -147,7 +147,7 @@ void Server::ActCoreLogic(int idx) {
 	client->SetReqMessage(req_handler_->req_msg_);
 	req_handler_->Clear();
 
-  
+
 
 
 	// Data* client = clients_->GetDataByFd(events_[idx].ident);
@@ -294,7 +294,7 @@ void Server::Get(int idx) {
     } else {
       std::string file_extention = file_name.substr(pos + 1);
       if (file_extention == "html") {
-        client->res_message_->headers_["Content-Type"] = strdup("text/plain");
+        client->res_message_->headers_["Content-Type"] = strdup("text/html");
       } else if (file_extention == "png") {
         client->res_message_->headers_["Content-Type"] = strdup("image/png");
       } else if (file_extention == "jpg") {
@@ -375,7 +375,6 @@ void Server::Post(int idx) {
       client->SetStatusCode(501);
     }
   }
-  
 }
 void Server::ReadFile(int idx) {
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
@@ -387,7 +386,6 @@ void Server::ReadFile(int idx) {
 	read(file_fd, buf, size);
 
   client->res_message_->headers_["Content-Length"] = to_string(size);
-
   client->res_message_->body_data_.data_ = buf;
   client->res_message_->body_data_.length_ = size;
 
@@ -417,7 +415,7 @@ void Server::Send(int idx) {
 	int client_fd = client->GetClientFd();
 	int file_fd = client->GetFileFd();
 	const char* response = msg_composer_->GetResponse(client);
-  write(1, response, msg_composer_->GetLength());
+  // write(1, response, msg_composer_->GetLength());
 	send(client_fd, response, msg_composer_->GetLength(), 0);
 	delete[] response;
 	response = NULL;
