@@ -331,7 +331,7 @@ void Server::Post(int idx) {
     std::string decoded_string;
     size_t len = req_msg->body_data_.length_;
     for(size_t i = 0; i < len; ++i)
-      encoded_string.push_back(i);
+      encoded_string.push_back(req_msg->body_data_.data_[i]);
 
     decoded_string = decode(encoded_string);
 
