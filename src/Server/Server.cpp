@@ -427,11 +427,12 @@ void Server::Send(int idx) {
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 
 	msg_composer_->SetData(client);
-	msg_composer_->InitResMsg();
+	msg_composer_->InitResMsg(client);
 	int client_fd = client->GetClientFd();
 	int file_fd = client->GetFileFd();
-	const char* response = msg_composer_->GetResponse();
-	send(client_fd, response, msg_composer_->getLength(), 0);
+	const char* response = msg_composer_->GetResponse(client);
+  write(1, response, msg_composer_->GetLength());
+	send(client_fd, response, msg_composer_->GetLength(), 0);
 	delete[] response;
 	response = NULL;
 
