@@ -12,8 +12,8 @@
 #include <sys/types.h>  /* kqueue kevent */
 #include <unistd.h>     /* execve, dup, dup2, pipe */
 #include <stdlib.h>
+#include <netdb.h>
 
-#include <regex>
 #include <cstring> /* memset, strerror */
 #include <iostream>
 #include <set>

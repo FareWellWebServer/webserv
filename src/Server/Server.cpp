@@ -1,11 +1,7 @@
 #include "../../include/Server.hpp"
 
-#include <netdb.h>
-
-// Server::Server() : kq_(kqueue()) {}
 Server::Server(std::vector<ServerConfigInfo> server_info)
     : server_infos_(server_info), kq_(kqueue()) {
-  // mp_ = new MethodProcessor(server_info);
   clients_ = new ClientMetaData;
   req_handler_ = new ReqHandler;
   res_handler_ = new ResHandler;
@@ -56,7 +52,6 @@ void Server::Init(void) {
 #endif
   }
 }
-// 임의로 public에 나둠 나중에 setter구현해야함
 
 // private
 void Server::Act(void) {
@@ -322,7 +317,7 @@ void Server::Get(int idx) {
     } else {
       std::string file_extention = file_name.substr(pos + 1);
       if (file_extention == "html") {
-        client->res_message_->headers_["Content-Type"] = strdup("text/plain");
+        client->res_message_->headers_["Content-Type"] = strdup("text/html");
       } else if (file_extention == "png") {
         client->res_message_->headers_["Content-Type"] = strdup("image/png");
       } else if (file_extention == "jpg") {
@@ -356,7 +351,8 @@ void Server::Post(int idx) {
     std::string encoded_string;
     std::string decoded_string;
     size_t len = req_msg->body_data_.length_;
-    for (size_t i = 0; i < len; ++i) encoded_string.push_back(i);
+    for (size_t i = 0; i < len; ++i)
+      encoded_string.push_back(req_msg->body_data_.data_[i]);
 
     decoded_string = decode(encoded_string);
 
@@ -386,6 +382,19 @@ void Server::Post(int idx) {
 
     client->SetStatusCode(201);
     client->res_message_->headers_["Location"] = config->upload_path_ + title;
+  } else {
+    size_t semicolon_pos = content_type.find(';');
+    std::string boundary = content_type.substr(semicolon_pos + 1);
+    size_t equal_pos = boundary.find('=');
+    boundary = boundary.substr(equal_pos + 1);
+    content_type = content_type.substr(0, semicolon_pos);
+
+    if (content_type == "multipart/form-data") {
+      for (size_t i = 0; i < client->req_message_->body_data_.length_; ++i)
+        write(1, &client->req_message_->body_data_.data_[i], 1);
+    } else {
+      client->SetStatusCode(501);
+    }
   }
 }
 void Server::ReadFile(int idx) {
@@ -398,7 +407,6 @@ void Server::ReadFile(int idx) {
   read(file_fd, buf, size);
 
   client->res_message_->headers_["Content-Length"] = to_string(size);
-
   client->res_message_->body_data_.data_ = buf;
   client->res_message_->body_data_.length_ = size;
 
@@ -424,11 +432,12 @@ void Server::Send(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 
   msg_composer_->SetData(client);
-  msg_composer_->InitResMsg();
+  msg_composer_->InitResMsg(client);
   int client_fd = client->GetClientFd();
   int file_fd = client->GetFileFd();
-  const char* response = msg_composer_->GetResponse();
-  send(client_fd, response, msg_composer_->getLength(), 0);
+  const char* response = msg_composer_->GetResponse(client);
+  // write(1, response, msg_composer_->GetLength());
+  send(client_fd, response, msg_composer_->GetLength(), 0);
   delete[] response;
   response = NULL;
 
