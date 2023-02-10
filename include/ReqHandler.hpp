@@ -1,6 +1,8 @@
 #ifndef REQHANDLER_HPP
 #define REQHANDLER_HPP
 
+#include <sys/stat.h>
+
 #include <cstring>
 #include <string>
 

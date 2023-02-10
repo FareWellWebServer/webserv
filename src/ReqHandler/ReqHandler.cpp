@@ -231,6 +231,19 @@ void ReqHandler::ParseRecv() {
   // request 유효성 검사 -> body_size, method
   std::cout << BLUE << "original req_url: " << req_msg_->req_url_ << std::endl;
   ValidateReq();
+
+  // GET -> body_size 유호성 확인
+  // if (req_msg_->method_ == "GET") {
+  //   struct stat st;
+  //   stat(req_msg_->req_url_.c_str(), &st);
+  //   req_msg_->body_data_.length_ = static_cast<size_t>(st.st_size);
+  //   if (client_->config_->body_size_ <
+  //       static_cast<int>(req_msg_->body_data_.length_)) {
+  //     client_->SetStatusCode(501);
+  //     req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
+  //   }
+  // }
+
   std::cout << "status code: " << client_->status_code_ << std::endl;
   std::cout << "served req_url: " << req_msg_->req_url_ << RESET << std::endl;
 
@@ -239,11 +252,15 @@ void ReqHandler::ParseRecv() {
 }
 
 void ReqHandler::ValidateReq(void) {
-  // body_size가 너무 큰 경우
-  if (client_->config_->body_size_ <
-      static_cast<int>(req_msg_->body_data_.length_)) {
+  // POST -> body_size 유호성 확인
+  // GET은 나중에 처리
+  if (req_msg_->method_ == "POST" &&
+      client_->config_->body_size_ <
+          static_cast<int>(req_msg_->body_data_.length_)) {
     client_->SetStatusCode(501);
     req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
+    req_msg_->method_ = "GET";
+    return;
   }
 
   std::string req_url = decode(req_msg_->req_url_);
