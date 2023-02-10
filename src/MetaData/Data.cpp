@@ -13,7 +13,6 @@ Data::Data(void)
       timeout_(false),
       cgi_(false),
       is_directory_list_(false),
-      is_post(false),
       is_download(false),
       file_fd_(-1),
       log_file_fd_(-1),

@@ -1,5 +1,5 @@
-#include <iostream>
 #include <ctime>
+#include <iostream>
 #include <sstream>
 
 std::string decode(std::string encoded_string);

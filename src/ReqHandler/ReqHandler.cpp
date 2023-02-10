@@ -246,7 +246,8 @@ void ReqHandler::ValidateReq(void) {
     req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
   }
 
-  std::string req_url = req_msg_->req_url_;
+  std::string req_url = decode(req_msg_->req_url_);
+  std::cout << "decode req_url: " << req_url << std::endl;
   // 중복 slash 제거 EX) ////// -> /
   ReduceSlash(req_msg_->req_url_);
   size_t last_slash_idx = req_url.find_last_of("/");
