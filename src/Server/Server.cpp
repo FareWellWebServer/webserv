@@ -147,6 +147,11 @@ void Server::ActCoreLogic(int idx) {
   client->SetReqMessage(req_handler_->req_msg_);
   req_handler_->Clear();
 
+  // req body data 출력 for 문
+  // for(size_t i = 0; i < client->req_message_->body_data_.length_; ++i)
+  //   write(1, &client->req_message_->body_data_.data_[i], 1);
+
+
   // Data* client = clients_->GetDataByFd(events_[idx].ident);
   if (client->GetReqMethod() == "GET") {
     Get(idx);
@@ -335,6 +340,7 @@ void Server::Get(int idx) {
 
   EV_SET(&event, client_fd, EVFILT_READ, EV_DISABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
+  client->res_message_->headers_["Connection"] = strdup("Keep-Alive");
 }
 void Server::Post(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
@@ -377,7 +383,14 @@ void Server::Post(int idx) {
     client->post_data_ = content;
 
     client->SetStatusCode(201);
-    client->res_message_->headers_["Location"] = config->upload_path_ + title;
+
+
+    and_pos = encoded_string.find('&');
+    std::string encoded_title = encoded_string.substr(0, and_pos);
+    equal_pos = encoded_title.find('=');
+    encoded_title = encoded_title.substr(equal_pos + 1, and_pos - equal_pos);
+    client->res_message_->headers_["Location"] = config->upload_path_ + encoded_title;
+    client->res_message_->headers_["Content-Type"] = strdup("text/plain; charset=UTF-8");
   } else {
     size_t semicolon_pos = content_type.find(';');
     std::string boundary = content_type.substr(semicolon_pos + 1);
@@ -386,12 +399,12 @@ void Server::Post(int idx) {
     content_type = content_type.substr(0, semicolon_pos);
 
     if (content_type == "multipart/form-data") {
-      for (size_t i = 0; i < client->req_message_->body_data_.length_; ++i)
-        write(1, &client->req_message_->body_data_.data_[i], 1);
+      
     } else {
       client->SetStatusCode(501);
     }
   }
+  client->res_message_->headers_["Connection"] = strdup("Keep-Alive");
 }
 void Server::ReadFile(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
@@ -424,6 +437,7 @@ void Server::WriteFile(int idx) {
   EV_SET(&event, file_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 }
+
 void Server::Send(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 

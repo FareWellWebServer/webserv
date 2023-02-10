@@ -48,6 +48,7 @@ void Data::Init(void) {
   res_message_ = new t_res_msg;
   res_message_->body_data_.data_ = NULL;
   res_message_->body_data_.type_ = NULL;
+  res_message_->body_data_.length_ = 0;
   method_entity_ = new t_entity;
   memset(method_entity_, 0, sizeof(t_entity));
 }

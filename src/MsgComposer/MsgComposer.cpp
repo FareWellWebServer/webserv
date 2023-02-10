@@ -86,6 +86,7 @@ const char* MsgComposer::GetResponse(Data* client) {
   }
 
   // response 생성
+
   response_length_ = str.size() + client_->res_message_->body_data_.length_;
   char* res = new char[response_length_];
 
