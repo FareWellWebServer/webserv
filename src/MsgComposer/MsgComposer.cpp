@@ -104,16 +104,31 @@ void MsgComposer::SetData(Data* client) {
 }
 
 void MsgComposer::SetHeaders(void) {
-  // content-length
+  if (client_->GetReqMethod() == "GET") {
   std::stringstream ss;
   ss << client_->GetMethodEntityLength();
   res_msg_.headers_["Content-length"] = ss.str();
-  // content-type
   res_msg_.headers_["Content-type"] = client_->GetMethodEntityType();
+  }
+
+  if (client_->GetReqMethod() == "POST") {
+
+  }
+
+  if (client_->is_download == true) {
+    // 다운로드 파일 설정할 때, 이렇게.
+    res_msg_.headers_["Content-Disposition"] = "attachment; filename=";
+  }
+  // content-length
+  // content-type
 	// res_msg_.headers_.insert(std::make_pair<std::string, std::string>("Content-type", "text/html"));
   // res_msg_.headers_["Content-type"] = "text/html";
   // Connection -> keep-alive
+
   res_msg_.headers_["Connection"] = "keep-alive";
+
+
+  
 
 
 	// std::map<std::string, std::string>::iterator it = res_msg_.headers_.begin();
@@ -126,8 +141,6 @@ void MsgComposer::InitResMsg() {
   res_msg_.http_version_ = "HTTP/1.1";
   res_msg_.status_code_ = client_->status_code_;
   SetStatusText();
-  res_msg_.body_data_ = *(client_->GetMethodEntity());
-  SetHeaders();
 }
 
 const char* MsgComposer::GetResponse(void) {

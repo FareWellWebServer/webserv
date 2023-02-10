@@ -1,5 +1,4 @@
-#include <ctime>
-#include <iostream>
+#include "../../include/Utils.hpp"
 
 std::string GetCurrentDate(void) {
   time_t raw_time;

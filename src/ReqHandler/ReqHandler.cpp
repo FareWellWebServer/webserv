@@ -203,9 +203,9 @@ void ReqHandler::ParseEntity(int start_idx) {
       return;
     }
   }
-  char* entity = new char[req_msg_->body_data_.length_ + 1];
+
+  char* entity = new char[req_msg_->body_data_.length_];
   memcpy(entity, &buf_[start_idx], req_msg_->body_data_.length_);
-  entity[req_msg_->body_data_.length_] = '\0';
   req_msg_->body_data_.data_ = entity;
 }
 
