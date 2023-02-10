@@ -86,7 +86,6 @@ void Server::Act(void) {
         std::cout << "[Server] File READ fd : " << event_fd
                   << " == " << client->GetFileFd() << std::endl;
 #endif
-        //
         ReadFile(idx);
       }
       /* CGI에게 반환받는 pipe[READ]에 대한 이벤트 */
@@ -127,6 +126,14 @@ void Server::Act(void) {
     }
     // /* timeout 발생시 */
     else if (events_[idx].filter == EVFILT_TIMER) {
+      if (client->is_working == true) {
+        client->timeout_ = true;
+      } else {
+        std::cout << RED << "[Server] Client fd : " << client->GetClientFd()
+                  << " Time Out!\n"
+                  << RESET;
+        DisConnect(event_fd);
+      }
     }
     client = NULL;
   }
@@ -167,7 +174,7 @@ void Server::AcceptNewClient(int idx) {
   struct sockaddr_storage client_addr;
   char host[MAXBUF];
   char port[MAXBUF];
-  struct kevent event[2];
+  struct kevent event[3];
 
   client_len = sizeof(client_addr);
   connfd =
@@ -180,12 +187,11 @@ void Server::AcceptNewClient(int idx) {
   /* non-block 세팅 필요 */
 
   /* Data 만들기 */
+  ServerConfigInfo* config =
+      reinterpret_cast<ServerConfigInfo*>(events_[idx].udata);
   getnameinfo(reinterpret_cast<struct sockaddr*>(&client_addr), client_len,
               host, MAXBUF, port, MAXBUF, 0);
-  clients_->AddData(
-      events_[idx].ident, connfd,
-      (reinterpret_cast<ServerConfigInfo*>(events_[idx].udata))->port_, host,
-      port);
+  clients_->AddData(events_[idx].ident, connfd, config->port_, host, port);
   clients_->SetEvent(&events_[idx]);
   clients_->SetConfig();
   std::cout << "Connected to (" << host << ", " << port
@@ -194,8 +200,10 @@ void Server::AcceptNewClient(int idx) {
   /* event setting */
   EV_SET(&event[0], connfd, EVFILT_READ, EV_ADD, 0, 0, clients_->GetData());
   EV_SET(&event[1], connfd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0,
-         clients_->GetData());  // 추가
-  if (kevent(kq_, event, 2, NULL, 0, NULL) == -1) {
+         clients_->GetData());
+  EV_SET(&event[2], connfd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS,
+         config->timeout_, clients_->GetData());
+  if (kevent(kq_, event, 3, NULL, 0, NULL) == -1) {
     throw std::runtime_error("Error: kevent()");
   }
 }
@@ -261,15 +269,19 @@ bool Server::IsListenFd(const int& fd) {
   return false;
 }
 void Server::DisConnect(const int& fd) {
+  struct kevent event[3];
+
+  EV_SET(&event[0], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+  EV_SET(&event[1], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+  EV_SET(&event[2], fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+  kevent(kq_, event, 3, NULL, 0, NULL);
   clients_->DeleteByFd(fd);
   close(fd);
 }
 
 void Server::Get(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  const ServerConfigInfo* config = client->GetConfig();
-  ;
-  (void)config;
+  // const ServerConfigInfo* config = client->GetConfig();
   t_req_msg* req_msg = client->GetReqMessage();
   int client_fd = client->GetClientFd();
   struct kevent event;
@@ -278,15 +290,7 @@ void Server::Get(int idx) {
   std::string file_path;
 
   if (client->is_directory_list_ == true) {
-    // directory list
-    //  TODO:
-    //  client->res_message_->body_data_.data_
-    //  client->res_message_->body_data_.length_
-
-    // directory list html 생성
     const std::string html_str = generate_directory_list(req_url);
-
-    // client에 data 저장
     char* tmp_html_str = new char[html_str.size()];
     for (size_t i = 0; i < html_str.size(); ++i) {
       tmp_html_str[i] = html_str[i];
@@ -295,7 +299,7 @@ void Server::Get(int idx) {
     client->res_message_->body_data_.data_ = tmp_html_str;
     client->res_message_->body_data_.length_ = html_str.size();
 
-    client->res_message_->headers_["Content-Type"] = strdup("text/html");
+    client->res_message_->headers_["Content-Type"] = "text/html";
     client->res_message_->headers_["Content-Length"] =
         to_string(html_str.size());
 
@@ -313,20 +317,19 @@ void Server::Get(int idx) {
     size_t pos = file_name.rfind('.');
 
     if (pos == std::string::npos) {
-      client->res_message_->headers_["Content-Type"] = strdup("text/plain");
+      client->res_message_->headers_["Content-Type"] = "text/plain";
     } else {
       std::string file_extention = file_name.substr(pos + 1);
       if (file_extention == "html") {
-        client->res_message_->headers_["Content-Type"] = strdup("text/html");
+        client->res_message_->headers_["Content-Type"] = "text/html";
       } else if (file_extention == "png") {
-        client->res_message_->headers_["Content-Type"] = strdup("image/png");
+        client->res_message_->headers_["Content-Type"] = "image/png";
       } else if (file_extention == "jpg") {
-        client->res_message_->headers_["Content-Type"] = strdup("image/jpeg");
+        client->res_message_->headers_["Content-Type"] = "image/jpeg";
       } else if (file_extention == "txt") {
-        client->res_message_->headers_["Content-Type"] = strdup("ext/plain");
+        client->res_message_->headers_["Content-Type"] = "ext/plain";
       } else if (file_extention == "py") {
-        client->res_message_->headers_["Content-Type"] =
-            strdup("text/x-python");
+        client->res_message_->headers_["Content-Type"] = "text/x-python";
       } else {
         // 지원하지 않는 타입.
       }
@@ -339,8 +342,8 @@ void Server::Get(int idx) {
 
   EV_SET(&event, client_fd, EVFILT_READ, EV_DISABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
-  client->res_message_->headers_["Connection"] = strdup("Keep-Alive");
 }
+
 void Server::Post(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   const ServerConfigInfo* config = client->config_;
@@ -390,7 +393,7 @@ void Server::Post(int idx) {
     client->res_message_->headers_["Location"] =
         config->upload_path_ + encoded_title;
     client->res_message_->headers_["Content-Type"] =
-        strdup("text/plain; charset=UTF-8");
+        "text/plain; charset=UTF-8";
   } else {
     size_t semicolon_pos = content_type.find(';');
     std::string boundary = content_type.substr(semicolon_pos + 1);
@@ -403,8 +406,8 @@ void Server::Post(int idx) {
       client->SetStatusCode(501);
     }
   }
-  client->res_message_->headers_["Connection"] = strdup("Keep-Alive");
 }
+
 void Server::ReadFile(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int client_fd = client->GetClientFd();
@@ -440,12 +443,17 @@ void Server::WriteFile(int idx) {
 void Server::Send(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 
+  if (client->timeout_ == true) {
+    client->res_message_->headers_["Connection"] = "close";
+  } else {
+    client->res_message_->headers_["Connection"] = "keep-alive";
+  }
+
   msg_composer_->SetData(client);
   msg_composer_->InitResMsg(client);
   int client_fd = client->GetClientFd();
   int file_fd = client->GetFileFd();
   const char* response = msg_composer_->GetResponse(client);
-  // write(1, response, msg_composer_->GetLength());
   send(client_fd, response, msg_composer_->GetLength(), 0);
   delete[] response;
   response = NULL;
@@ -461,5 +469,6 @@ void Server::Send(int idx) {
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
   close(file_fd);
-  DisConnect(client_fd);
+  client->is_working = false;
+  // DisConnect(client_fd);
 }

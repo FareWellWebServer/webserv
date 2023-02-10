@@ -80,7 +80,6 @@ void ClientMetaData::DeleteByFd(const int& client_fd) {
   datas_[client_fd]->Clear();
 	delete datas_[client_fd];
   datas_.erase(client_fd);
-	// system("leaks $PPID");
 }
 
 void ClientMetaData::SetReqMessage(t_req_msg* req_message)

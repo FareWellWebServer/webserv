@@ -128,6 +128,7 @@ class Data {
   bool cgi_;
   bool is_directory_list_;
   bool is_download;
+  bool is_working;
   int file_fd_;
   int log_file_fd_;
   int pipe_[2];
