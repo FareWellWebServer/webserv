@@ -1,12 +1,7 @@
 #include "../../include/Server.hpp"
 
-
-#include <netdb.h>
-
-// Server::Server() : kq_(kqueue()) {}
 Server::Server(std::vector<ServerConfigInfo> server_info) 
 : server_infos_(server_info), kq_(kqueue()) {
-  // mp_ = new MethodProcessor(server_info);
   clients_ = new ClientMetaData;
   req_handler_ = new ReqHandler;
   res_handler_ = new ResHandler;
@@ -54,7 +49,6 @@ void Server::Init(void) {
     #endif
   }
 }
-	// 임의로 public에 나둠 나중에 setter구현해야함
 
 
 // private
@@ -152,6 +146,8 @@ void Server::ActCoreLogic(int idx) {
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 	client->SetReqMessage(req_handler_->req_msg_);
 	req_handler_->Clear();
+
+  
 
 
 	// Data* client = clients_->GetDataByFd(events_[idx].ident);
@@ -336,9 +332,8 @@ void Server::Post(int idx) {
     size_t len = req_msg->body_data_.length_;
     for(size_t i = 0; i < len; ++i)
       encoded_string.push_back(i);
-    
-    decoded_string = decode(encoded_string);
 
+    decoded_string = decode(encoded_string);
 
     std::string query = decoded_string;
     int and_pos = query.find('&');
@@ -346,7 +341,6 @@ void Server::Post(int idx) {
     std::string title = query.substr(0, and_pos);
     int equal_pos = title.find('=');
     title = title.substr(equal_pos + 1, and_pos - equal_pos);
-
 
     std::string content = query.substr(and_pos);
     equal_pos = content.find('=');
@@ -358,7 +352,6 @@ void Server::Post(int idx) {
       std::cout << RED << "OPEN ERROR\n";
     }
 
-
     fchmod(file_fd, S_IRWXU | S_IRWXG | S_IRWXO);
     client->SetFileFd(file_fd);
     EV_SET(&event, file_fd, EVFILT_WRITE, EV_ADD, 0, 0, client);
@@ -368,8 +361,21 @@ void Server::Post(int idx) {
 
     client->SetStatusCode(201);
     client->res_message_->headers_["Location"] = config->upload_path_ + title;
-  }
+  } else {
+    size_t semicolon_pos = content_type.find(';');
+    std::string boundary = content_type.substr(semicolon_pos + 1);
+    size_t equal_pos = boundary.find('=');
+    boundary = boundary.substr(equal_pos + 1);
+    content_type = content_type.substr(0, semicolon_pos);
 
+    if (content_type == "multipart/form-data") {
+      for(size_t i = 0; i < client->req_message_->body_data_.length_; ++i)
+        write(1, &client->req_message_->body_data_.data_[i], 1);
+    } else {
+      client->SetStatusCode(501);
+    }
+  }
+  
 }
 void Server::ReadFile(int idx) {
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
