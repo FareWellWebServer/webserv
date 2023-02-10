@@ -12,7 +12,8 @@ def caesar(s):
 
 plain_text = sys.argv[1]
 
-print ("Content-type: text/html\r\n\r\n")
+print ("Content-type: text/html")
+print ()
 print ("<!DOCTYPE html>")
 print ("<html>")
 print ("<head>")
