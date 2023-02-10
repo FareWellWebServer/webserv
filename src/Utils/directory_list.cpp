@@ -3,30 +3,20 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <sstream>
+#include "../../include/Utils.hpp"
 
 #define HTML_HEAD_TITLE "<html>\r\n<head><title>Index of "
 #define HTML_HEAD_TO_BODY \
   "</title><meta charset=\"utf-8\"></head>\r\n<body>\r\n<h1>Index of "
 #define HTML_BEFORE_LIST "</h1><hr>\r\n<pre>\r\n"
 #define HTML_AFTER_LIST "</pre>\r\n<hr>\r\n</body>\r\n</html>"
-#define TD_STYLE "style=\"padding-left: 100px;padding-right: 50px;\""
+#define TD_STYLE "style=\"padding-left: 20px;padding-right: 20px;\""
 
-#define A_TAG_START "<a href=\""
-#define A_TAG_END "\">"
+#define A_TAG_START "<a>"
 #define CLOSE_A_TAG "</a>"
 #define CRLF "\r\n"
 
-void SaveIndexHtml(std::string str) {
-  std::ofstream html;
-  html.open("./index.html");
-  html.write(str.c_str(), str.size());
-}
-
-std::string get_file_timetable(struct stat file_status) {
+static std::string get_file_timetable(struct stat file_status) {
   std::stringstream result;
   size_t size = file_status.st_size;
   time_t mtime = file_status.st_mtime;
@@ -39,7 +29,8 @@ std::string get_file_timetable(struct stat file_status) {
   return result.str();
 }
 
-void generate_root_path(std::string& full_path, std::string& path) {
+static void generate_root_path(std::string& full_path,
+                               const std::string& path) {
   // (req_uri = /) => root가 아닌 경우
   if (path.size() != 1) {
     full_path = path;
@@ -58,8 +49,9 @@ void generate_root_path(std::string& full_path, std::string& path) {
   }
 }
 
-void generate_file_path(std::string& full_path, std::string& filename,
-                        std::string& path) {
+static void generate_file_path(std::string& full_path,
+                               const std::string& filename,
+                               const std::string& path) {
   if (path.size() != 1) {
     full_path = path + "/" + filename;
   } else {
@@ -67,8 +59,9 @@ void generate_file_path(std::string& full_path, std::string& filename,
   }
 }
 
-void generate_file_status(std::stringstream& result, std::string& filename,
-                          std::string& path) {
+static void generate_file_status(std::stringstream& result,
+                                 std::string& filename,
+                                 const std::string& path) {
   struct stat file_status;
   filename = path + "/" + filename;
   if (stat(filename.c_str(), &file_status) == 0) {
@@ -76,11 +69,11 @@ void generate_file_status(std::stringstream& result, std::string& filename,
   }
 }
 
-int main(void) {
+// 앞에 ./가 붙어있어야 되는 것 같음 EX) ../ -> ./../
+std::string generate_directory_list(const std::string& path) {
   DIR* dir;
   struct dirent* entry;
   std::stringstream result;
-  std::string path = "./../";
   std::string full_path;
 
   char* base_name = basename((char*)path.c_str());
@@ -97,12 +90,10 @@ int main(void) {
                << "<td>";
         if (filename.compare("..") == 0) {
           generate_root_path(full_path, path);
-          result << A_TAG_START << full_path << A_TAG_END;
           result << "📁 " << filename << CLOSE_A_TAG << CRLF;
           continue;
         } else {
           generate_file_path(full_path, filename, path);
-          result << A_TAG_START << full_path << A_TAG_END;
         }
         result << "📁 " << filename << "/" << CLOSE_A_TAG << "</td>"
                << "<td " << TD_STYLE << ">";
@@ -120,14 +111,12 @@ int main(void) {
         result << "<tr>";
         result << "<td>";
         if (path.size() != 1) {
-          full_path = path + "/" + filename;
+          full_path = path + filename;
         } else {
           full_path = filename;
         }
-        result << A_TAG_START << full_path << A_TAG_END;
-        result << filename << CLOSE_A_TAG << "</td>"
+        result << "📄 " << filename << CLOSE_A_TAG << "</td>"
                << "<td " << TD_STYLE << ">";
-
         generate_file_status(result, filename, path);
         result << "</td>"
                << "</tr>" << CRLF;
@@ -136,6 +125,5 @@ int main(void) {
     result << "</table>" << HTML_AFTER_LIST;
     closedir(dir);
   }
-  SaveIndexHtml(result.str());
-  return 1;
+  return result.str();
 }
