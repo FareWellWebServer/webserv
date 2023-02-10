@@ -14,6 +14,7 @@ Data::Data(void)
       cgi_(false),
       is_directory_list_(false),
       is_download(false),
+      is_working(true),
       file_fd_(-1),
       log_file_fd_(-1),
       event_(NULL),
@@ -61,6 +62,8 @@ void Data::Clear(void) {
   status_code_ = 200;
   cgi_ = false;
   is_directory_list_ = false;
+  is_download = false;
+  is_working = false;
   file_fd_ = -1;
   pipe_[READ] = -1;
   pipe_[WRITE] = -1;
