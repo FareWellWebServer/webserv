@@ -290,11 +290,7 @@ void Server::Get(int idx) {
     client->res_message_->status_code_ = 200;
     client->res_message_->body_data_.data_ = tmp_html_str;
     client->res_message_->body_data_.length_ = html_str.size();
-    std::cout << "html" << std::endl;
-    std::cout << client->res_message_->body_data_.data_ << std::endl;
-    std::cout << "html len: " << client->res_message_->body_data_.length_
-              << std::endl;
-    exit(1);
+
     client->res_message_->headers_["Content-Type"] = strdup("text/html");
     client->res_message_->headers_["Content-Length"] =
         to_string(html_str.size());
