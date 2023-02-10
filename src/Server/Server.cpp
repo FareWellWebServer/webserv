@@ -129,7 +129,7 @@ void Server::Act(void) {
       if (client->is_working == true) {
         client->timeout_ = true;
       } else {
-        std::cout << "[Server] Client fd : " << client->GetClientFd() << " Time Out!\n";
+        std::cout << RED << "[Server] Client fd : " << client->GetClientFd() << " Time Out!\n" << RESET;
         DisConnect(event_fd);
       }
     }
