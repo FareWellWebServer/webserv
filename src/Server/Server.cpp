@@ -129,9 +129,8 @@ void Server::Act(void) {
       if (client->is_working == true) {
         client->timeout_ = true;
       } else {
-        
-        DisConnect(event_fd);
         std::cout << "[Server] Client fd : " << client->GetClientFd() << " Time Out!\n";
+        DisConnect(event_fd);
       }
     }
     client = NULL;
