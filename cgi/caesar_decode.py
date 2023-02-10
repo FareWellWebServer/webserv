@@ -11,6 +11,8 @@ def caesar(s):
     return "".join(s)
 
 plain_text = sys.argv[1]
+
+print ("Content-type: text/html\r\n\r\n")
 print ("<!DOCTYPE html>")
 print ("<html>")
 print ("<head>")
