@@ -129,18 +129,9 @@ void Server::Act(void) {
       if (client->is_working == true) {
         client->timeout_ = true;
       } else {
-        struct kevent event;
-
-        EV_SET(&event, event_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-        kevent(kq_, &event, 1, NULL, 0, NULL);
-
-        EV_SET(&event, event_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-        kevent(kq_, &event, 1, NULL, 0, NULL);
         
-        EV_SET(&event, event_fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-        kevent(kq_, &event, 1, NULL, 0, NULL);
-        std::cout << "[Server] Client fd : " << client->GetClientFd() << " Time Out!\n";
         DisConnect(event_fd);
+        std::cout << "[Server] Client fd : " << client->GetClientFd() << " Time Out!\n";
       }
     }
     client = NULL;
@@ -272,6 +263,12 @@ bool Server::IsListenFd(const int& fd) {
   return false;
 }
 void Server::DisConnect(const int& fd) {
+  struct kevent event[3];
+
+  EV_SET(&event[0], fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+  EV_SET(&event[1], fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+  EV_SET(&event[2], fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+  kevent(kq_, event, 3, NULL, 0, NULL);
   clients_->DeleteByFd(fd);
   close(fd);
 }
