@@ -127,6 +127,7 @@ class Data {
   bool timeout_;
   bool cgi_;
   bool is_directory_list_;
+  bool is_download;
   int file_fd_;
   int log_file_fd_;
   int pipe_[2];
@@ -134,6 +135,8 @@ class Data {
   const ServerConfigInfo* config_;
   t_req_msg* req_message_;
   t_res_msg* res_message_;   // ResHandler 에게 보내줄 내용 정리
+
+
   t_entity* method_entity_;  // method가 넣어주는 곳
   // message 구조체들은 요청 들어왔을 때 동적할당해주고, 응답할 때 프리해주면
   // 될듯

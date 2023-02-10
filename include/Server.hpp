@@ -11,7 +11,7 @@
 #include <sys/socket.h> /* AF_INET, SOCK_STREAM, gai_strerror, socket, accept, listen, send, recv, bind, connect, getaddrinfo, freeaddrinfo, setsockopt, getsockname */
 #include <sys/types.h>  /* kqueue kevent */
 #include <unistd.h>     /* execve, dup, dup2, pipe */
-
+#include <stdlib.h>
 
 #include <regex>
 #include <cstring> /* memset, strerror */
@@ -25,6 +25,7 @@
 #include "ResHandler.hpp"
 #include "ServerConfigInfo.hpp"
 #include "CGIManager.hpp"
+#include "Utils.hpp"
 
 #define MAXLINE 1000000
 #define MAXBUF 1000000
@@ -75,6 +76,7 @@ class Server {
   /* ------------------*/
  private:
   int kq_;
+  //  TODO: logger fd
   struct kevent events_[MAXLISTEN + BACKLOG];
   std::set<t_listening*> servers_;
   ClientMetaData* clients_;
