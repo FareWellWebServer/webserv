@@ -14,7 +14,7 @@ Data::Data(void)
       cgi_(false),
       is_directory_list_(false),
       is_download(false),
-      is_working(true),
+      is_working(false),
       file_fd_(-1),
       log_file_fd_(-1),
       event_(NULL),

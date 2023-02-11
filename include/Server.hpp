@@ -72,6 +72,7 @@ class Server {
   void ReadFile(int idx);
   void WriteFile(int idx);
   void Send(int idx);
+  void Pong(int idx);
 
   /* ------------------*/
  private:
@@ -81,7 +82,7 @@ class Server {
   std::set<t_listening*> servers_;
   ClientMetaData* clients_;
   ReqHandler* req_handler_;
-  ResHandler* res_handler_;
+  // ResHandler* res_handler_;
   MsgComposer* msg_composer_;
   CGIManager* cgi_manager_;
 
