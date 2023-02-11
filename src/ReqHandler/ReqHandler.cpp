@@ -5,7 +5,12 @@ ReqHandler::ReqHandler(void)
 
 ReqHandler::~ReqHandler(void) { Clear(); }
 
-void ReqHandler::SetClient(Data* client) { client_ = client; }
+void ReqHandler::SetClient(Data* client) {
+  client_ = client;
+  if (client_->is_remain == true) {
+    req_msg_ = client->req_message_;
+  }
+}
 
 void ReqHandler::SetReadLen(int64_t kevent_data) { read_len_ = kevent_data; }
 
@@ -62,6 +67,7 @@ void ReqHandler::RecvFromSocket() {
               << std::endl;
 #endif
   }
+  // write(1, buf_, read_len_);
 }
 
 int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
@@ -206,20 +212,25 @@ void ReqHandler::ParseRecv() {
 #endif
     return;
   }
-  client_->e_stage = REQ_PROCESSING;
-  if (req_msg_ == NULL) req_msg_ = new t_req_msg;
-  memset(&req_msg_->body_data_, 0, sizeof(t_entity));
-  int64_t idx(0);
-  // 첫줄 파싱
-  idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
-  // 헤더 파싱
-  idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
-  // entity 넣기
-  if (entity_flag_ == 1) ParseEntity(idx);
+  if (client_->is_remain == true) {
+    client_->req_message_->body_data_.data_ = new char[read_len_];
+    memcpy(client_->req_message_->body_data_.data_, buf_, read_len_);
+  } else {
+    if (req_msg_ == NULL) req_msg_ = new t_req_msg;
+    memset(&req_msg_->body_data_, 0, sizeof(t_entity));
+    int64_t idx(0);
+    // 첫줄 파싱
+    idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
+    // 헤더 파싱
+    idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
+    // entity 넣기
+    if (entity_flag_ == 1) ParseEntity(idx);
+    ValidateReq();
+  }
 
   // request 유효성 검사 -> body_size, method
   std::cout << BLUE << "original req_url: " << req_msg_->req_url_ << std::endl;
-  ValidateReq();
+  std::cout << "method: " << req_msg_->method_ << std::endl;
   std::cout << "status code: " << client_->status_code_ << std::endl;
   std::cout << "served req_url: " << req_msg_->req_url_ << RESET << std::endl;
 

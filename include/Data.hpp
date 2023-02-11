@@ -129,8 +129,11 @@ class Data {
   bool is_directory_list_;
   bool is_download;
   bool is_working;
+  bool is_remain;
   int file_fd_;
   int log_file_fd_;
+  int binary_start_idx;
+  int binary_size;
   int pipe_[2];
   struct kevent* event_;  // fd(ident), flag들
   const ServerConfigInfo* config_;
