@@ -223,10 +223,6 @@ void ReqHandler::ParseRecv() {
   std::cout << "status code: " << client_->status_code_ << std::endl;
   std::cout << "served req_url: " << req_msg_->req_url_ << RESET << std::endl;
 
-  // if (req_msg_->method_ == "POST" && client_->GetStatusCode() > 399) {
-  // 	req_msg_->method_ = "GET";
-  // }
-
   delete[] buf_;
   buf_ = NULL;
 }
@@ -237,6 +233,9 @@ void ReqHandler::ValidateReq(void) {
   if (req_msg_->method_ == "POST") {
     if (client_->config_->body_size_ <
         static_cast<int>(req_msg_->body_data_.length_)) {
+      // body size error의 경우에는 메서드를 GET으로 바꿔줘야 브라우저에
+      // 501페이지가 나옴
+      req_msg_->method_ = "GET";
       client_->SetStatusCode(501);
       req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
     } else {
