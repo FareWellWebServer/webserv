@@ -410,8 +410,26 @@ void Server::Post(int idx) {
     content_type = content_type.substr(0, semicolon_pos);
     boundary = boundary.substr(equal_pos + 1);
     if (content_type == "multipart/form-data") {
-      
-			
+      if (client->req_message_->body_data_.data_ == NULL)
+      {
+        client->SetStatusCode(501);
+        client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+        Get(idx);
+        return;
+      }
+
+      std::string data_info;
+      int idx = 0;
+      for(; strncmp(&client->req_message_->body_data_.data_[idx], "\r\n\r\n", 4); ++idx)
+      {
+        data_info.push_back(client->req_message_->body_data_.data_[idx]);
+        write(1, &client->req_message_->body_data_.data_[idx], 1);
+      }
+
+      // std::cout << data_info << "\n\n";
+      // idx += 4;
+
+			// write(1, &client->req_message_->body_data_.data_[4], client->req_message_->body_data_.length_ - data_info.size() - 4);
     } else {
       client->SetStatusCode(501);
     }

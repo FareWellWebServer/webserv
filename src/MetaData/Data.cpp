@@ -66,7 +66,7 @@ void Data::Clear(void) {
   is_download = false;
   is_working = false;
   file_fd_ = -1;
-  pipe_[READ] = -1;
+pipe_[READ] = -1;
   pipe_[WRITE] = -1;
   if (req_message_ != NULL) {
     if (req_message_->body_data_.data_ != NULL) {
