@@ -44,7 +44,9 @@ void Config::SetLocation(t_location& l, const std::string& key,
   std::vector<std::string> vec = Split(val, " ");
   PrintKeyVal(key, val);
 
-  if (key == "file_path") {
+  if (key[0] == '#') {
+    return;
+  } else if (key == "file_path") {
     ParseLocationFilePath(l, vec);
   } else if (key == "directory_list") {
     ParseLocationDirectoryList(l, vec);

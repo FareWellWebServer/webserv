@@ -68,7 +68,9 @@ void Config::SetServerConfigInfo(const std::string& key,
   std::vector<std::string> vec = Split(val, " ");
   PrintKeyVal(key, val);
 
-  if (key == "listen") {
+  if (key[0] == '#') {
+    return;
+  } else if (key == "listen") {
     vec = Split(val, ":");
     ParseListen(vec);
   } else if (key == "body_size") {
