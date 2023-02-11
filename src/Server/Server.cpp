@@ -410,7 +410,8 @@ void Server::Post(int idx) {
     content_type = content_type.substr(0, semicolon_pos);
     boundary = boundary.substr(equal_pos + 1);
     if (content_type == "multipart/form-data") {
-			write(1, client->req_message_->body_data_.data_, client->req_message_->body_data_.length_);
+      
+			
     } else {
       client->SetStatusCode(501);
     }
