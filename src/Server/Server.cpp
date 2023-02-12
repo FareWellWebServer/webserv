@@ -21,7 +21,6 @@ void Server::Run(void) {
     throw std::runtime_error("[Server Error]: no listening server");
   }
   while (true) {
-    logger_.error("HELLO");
     Act();
   }
 }
@@ -61,6 +60,11 @@ void Server::Act(void) {
     throw std::runtime_error("Error: kevent()");
   }
   for (int idx = 0; idx < n; ++idx) {
+    if ((int)events_[idx].ident == logger_.GetLogFileFD()) {
+      const std::string log_msg = reinterpret_cast<char*>(events_[idx].udata);
+      write(logger_.GetLogFileFD(), log_msg.c_str(), log_msg.length());
+    };
+
     /* listen port로 새로운 connect 요청이 들어옴 */
     if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ) {
       AcceptNewClient(idx);
@@ -68,12 +72,6 @@ void Server::Act(void) {
     }
     Data* client = reinterpret_cast<Data*>(events_[idx].udata);
     int event_fd = events_[idx].ident;
-
-    if (events_[idx].filter == EVFILT_WRITE &&
-        event_fd == logger_.GetLogFileFD()) {
-      std::cout << "hhd" << std::endl;
-    };
-
     if (events_[idx].filter == EVFILT_READ) {
       /* accept 된 port로 request 요청메세지 들어옴 */
       if (event_fd == client->GetClientFd()) {
@@ -122,10 +120,6 @@ void Server::Act(void) {
       /* CGI에게 보내줄 pipe[WRITE]에 대한 이벤트 */
       else if (event_fd == client->GetPipeRead()) {
       }
-      /* log file에 대한 write 발생시 */
-      else if (event_fd == logger_.GetLogFileFD()) {
-        // TODO: client->GetLogFileFd() 함수 논의 필요
-      };
     } else if (events_[idx].flags == EV_EOF) {
       /* socket이 닫혔을 때 */
       if (event_fd == client->GetClientFd()) {
