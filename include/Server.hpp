@@ -4,27 +4,27 @@
 #include <arpa/inet.h> /* htons, htonl, ntohs, ntohl */
 #include <fcntl.h>     /* fcntl */
 #include <netdb.h>     /* getprotobyname */
-#include <poll.h>      /* poll */
+#include <netdb.h>
+#include <poll.h> /* poll */
+#include <stdlib.h>
 #include <sys/errno.h> /* errno */
 #include <sys/event.h>
 #include <sys/select.h> /* select */
 #include <sys/socket.h> /* AF_INET, SOCK_STREAM, gai_strerror, socket, accept, listen, send, recv, bind, connect, getaddrinfo, freeaddrinfo, setsockopt, getsockname */
 #include <sys/types.h>  /* kqueue kevent */
 #include <unistd.h>     /* execve, dup, dup2, pipe */
-#include <stdlib.h>
-#include <netdb.h>
 
 #include <cstring> /* memset, strerror */
 #include <iostream>
 #include <set>
 #include <vector>
 
+#include "CGIManager.hpp"
 #include "ClientMetaData.hpp"
 #include "MsgComposer.hpp"
 #include "ReqHandler.hpp"
 #include "ResHandler.hpp"
 #include "ServerConfigInfo.hpp"
-#include "CGIManager.hpp"
 #include "Utils.hpp"
 
 #define MAXLINE 1000000
@@ -77,7 +77,7 @@ class Server {
   /* ------------------*/
  private:
   int kq_;
-  //  TODO: logger fd
+  Logger logger_;
   struct kevent events_[MAXLISTEN + BACKLOG];
   std::set<t_listening*> servers_;
   ClientMetaData* clients_;
