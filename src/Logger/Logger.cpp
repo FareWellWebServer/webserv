@@ -1,6 +1,6 @@
 #include "../../include/Logger.hpp"
 
-Logger::Logger(void) {
+Logger::Logger(int kq) : server_kq_(kq) {
   const char* file_name = "./log/log.txt";
 
   logger_file_fd_ = open(file_name, O_CREAT | O_NONBLOCK | O_APPEND | O_WRONLY);
@@ -19,6 +19,7 @@ void Logger::info(std::string msg) const {
   write(logger_file_fd_, log_msg.c_str(), log_msg.length());
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
+  kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
 
 void Logger::warn(std::string msg) const {
@@ -29,6 +30,7 @@ void Logger::warn(std::string msg) const {
   write(logger_file_fd_, log_msg.c_str(), log_msg.length());
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
+  kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
 
 void Logger::error(std::string msg) const {
@@ -39,6 +41,7 @@ void Logger::error(std::string msg) const {
   write(logger_file_fd_, log_msg.c_str(), log_msg.length());
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
+  kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
 
 fd Logger::GetLogFileFD(void) const { return logger_file_fd_; }

@@ -13,7 +13,7 @@ class Logger {
  public:
   /// @brief logger.info("message") 같은 방식으로 로깅에 사용.
   /// @param msg
-  Logger(void);
+  Logger(int kq);
   virtual ~Logger(void);
   void info(std::string msg) const;
   void warn(std::string msg) const;
@@ -22,6 +22,7 @@ class Logger {
 
  private:
   fd logger_file_fd_;
+  int server_kq_;
   static Logger* instance_;
 };
 

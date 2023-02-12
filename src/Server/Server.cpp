@@ -1,7 +1,7 @@
 #include "../../include/Server.hpp"
 
 Server::Server(std::vector<ServerConfigInfo> server_info)
-    : server_infos_(server_info), kq_(kqueue()) {
+    : server_infos_(server_info), kq_(kqueue()), logger_(Logger(kq_)) {
   clients_ = new ClientMetaData;
   req_handler_ = new ReqHandler;
   // res_handler_ = new ResHandler;
@@ -21,6 +21,7 @@ void Server::Run(void) {
     throw std::runtime_error("[Server Error]: no listening server");
   }
   while (true) {
+    logger_.error("HELLO");
     Act();
   }
 }
@@ -67,6 +68,12 @@ void Server::Act(void) {
     }
     Data* client = reinterpret_cast<Data*>(events_[idx].udata);
     int event_fd = events_[idx].ident;
+
+    if (events_[idx].filter == EVFILT_WRITE &&
+        event_fd == logger_.GetLogFileFD()) {
+      std::cout << "hhd" << std::endl;
+    };
+
     if (events_[idx].filter == EVFILT_READ) {
       /* accept 된 port로 request 요청메세지 들어옴 */
       if (event_fd == client->GetClientFd()) {
@@ -116,8 +123,9 @@ void Server::Act(void) {
       else if (event_fd == client->GetPipeRead()) {
       }
       /* log file에 대한 write 발생시 */
-      else if (event_fd == client->GetLogFileFd())
-        ;
+      else if (event_fd == logger_.GetLogFileFD()) {
+        // TODO: client->GetLogFileFd() 함수 논의 필요
+      };
     } else if (events_[idx].flags == EV_EOF) {
       /* socket이 닫혔을 때 */
       if (event_fd == client->GetClientFd()) {
