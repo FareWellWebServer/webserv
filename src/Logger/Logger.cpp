@@ -11,29 +11,34 @@ Logger::Logger(void) {
 
 Logger::~Logger(void) { close(logger_file_fd_); }
 
-void Logger::info(std::string msg) {
+void Logger::info(std::string msg) const {
   const std::string current_time = GetCurrentDate();
   const std::string log_msg = current_time + " " + msg;
   struct kevent event;
 
+  write(logger_file_fd_, log_msg.c_str(), log_msg.length());
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
 }
 
-void Logger::warn(std::string msg) {
+void Logger::warn(std::string msg) const {
   const std::string current_time = GetCurrentDate();
   const std::string log_msg = YELLOW + current_time + " " + msg + RESET;
   struct kevent event;
 
+  write(logger_file_fd_, log_msg.c_str(), log_msg.length());
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
 }
 
-void Logger::error(std::string msg) {
+void Logger::error(std::string msg) const {
   const std::string current_time = GetCurrentDate();
   const std::string log_msg = RED + current_time + " " + msg + RESET;
   struct kevent event;
 
+  write(logger_file_fd_, log_msg.c_str(), log_msg.length());
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
 }
+
+fd Logger::GetLogFileFD(void) const { return logger_file_fd_; }
