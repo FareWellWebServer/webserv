@@ -69,9 +69,10 @@ class Server {
   void Get(int idx);
   void Post(int idx);
   void Continue(int idx);
-  void ReadFile(int idx);
-  void WriteFile(int idx);
-  void Send(int idx);
+  void ExecuteReadEventFileFd(int idx);
+  void ExecuteWriteEventFileFd(int idx);
+  void ExecuteWriteEventClientFd(int idx); // Send()를 이거로 바꿈
+
   void Pong(int idx);
 
   /* ------------------*/
@@ -82,7 +83,6 @@ class Server {
   std::set<t_listening*> servers_;
   ClientMetaData* clients_;
   ReqHandler* req_handler_;
-  // ResHandler* res_handler_;
   MsgComposer* msg_composer_;
   CGIManager* cgi_manager_;
 
@@ -97,6 +97,11 @@ class Server {
                                const int& fd);
   bool IsListenFd(const int& fd);
   void DisConnect(const int& fd);
+  void ExecuteReadEvent(const int& idx);
+  void ExecuteReadEventClientFd(const int& idx);
+  void ExecuteWriteEvent(const int& idx);
+  void ExcuteTimerEvent(const int& idx);
+  void ExcuteLogEvent(const int& idx);
 };
 
 #endif

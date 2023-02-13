@@ -61,11 +61,6 @@ void Server::Prompt(void) { std::cout << "\n-------- [ " BOLDBLUE << "FareWell W
               << std::endl;
   }
   std::cout << "----------------------------------------------" << std::endl;
-
-  // #if SERVER
-  //     std::cout << server_infos_[i].host_ << " is listening port on "
-  //               << server_infos_[i].port_ << "\n";
-  // #endif
 }
 
 // private
@@ -76,94 +71,34 @@ void Server::Act(void) {
   }
   for (int idx = 0; idx < n; ++idx) {
 
+    // log file
     if (static_cast<int>(events_[idx].ident) == logger_.GetLogFileFD()) {
-      struct kevent event;
-
-      const std::string log_msg = reinterpret_cast<char*>(events_[idx].udata);
-      write(logger_.GetLogFileFD(), log_msg.c_str(), log_msg.length());
-      EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DISABLE, 0, 0,  NULL);
-      kevent(kq_, &event, 1, 0, 0, NULL);
+      ExcuteLogEvent(idx);
+      continue;
     };
-
 
     /* listen port로 새로운 connect 요청이 들어옴 */
     if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ) {
       AcceptNewClient(idx);
       continue;
     }
-    Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-    int event_fd = events_[idx].ident;
+
+    /* accept 된 port로 request 요청메세지 들어옴 */
     if (events_[idx].filter == EVFILT_READ) {
-      /* accept 된 port로 request 요청메세지 들어옴 */
-      if (event_fd == client->GetClientFd()) {
-      logger_.info("access log", client);
-#if SERVER
-        std::cout << "[Server] Client READ fd : " << client->GetClientFd()
-                  << std::endl;
-#endif
-        if (client->is_remain == false) {
-          client->Init();
-        }
-        if (events_[idx].flags == EV_EOF)
-          std::cout << RED << "FUCK\n" << RESET;
-        else
-          ActCoreLogic(idx);
-      }
-      /* 내부에서 읽으려고 Open()한 File에 대한 이벤트 */
-      else if (event_fd == client->GetFileFd()) {
-#if SERVER
-        std::cout << "[Server] File READ fd : " << event_fd
-                  << " == " << client->GetFileFd() << std::endl;
-#endif
-        ReadFile(idx);
-      }
-      /* CGI에게 반환받는 pipe[READ]에 대한 이벤트 */
-      else if (event_fd == client->GetPipeRead()) {
-#if SERVER
-        std::cout << "[Server] Pipe READ fd : " << event_fd
-                  << " == " << client->GetPipeRead() << std::endl;
-#endif
-        // pipe 읽기
-      }
-    } else if (events_[idx].filter == EVFILT_WRITE) {
-      /* response 보낼 때에 대한 이벤트 */
-      if (event_fd == client->GetClientFd()) {
-#if SERVER
-        std::cout << "[Server] Client Write : " << client->GetClientFd()
-                  << std::endl;
-#endif
-        Send(idx);
-        if (client->is_remain == false) {
-          client->Clear();
-        }
-      }
-      /* POST, PUT file에 대한 write 발생시 */
-      else if (event_fd == client->GetFileFd()) {
-        WriteFile(idx);
-      }
-      /* CGI에게 보내줄 pipe[WRITE]에 대한 이벤트 */
-      else if (event_fd == client->GetPipeRead()) {
-      }
-    } else if (events_[idx].flags == EV_EOF) {
-      /* socket이 닫혔을 때 */
-      if (event_fd == client->GetClientFd()) {
-      }
-      /* file, pipe 등이 예상치 못하게 닫혔을 경우도 있을지 나중에 보기 */
-      else {
-      }
+      ExecuteReadEvent(idx);
+      continue;
     }
+    
+    if (events_[idx].filter == EVFILT_WRITE) { 
+      ExecuteWriteEvent(idx);
+      continue;
+    }
+     
     // /* timeout 발생시 */
-    else if (events_[idx].filter == EVFILT_TIMER) {
-      if (client->is_working == true) {
-        client->timeout_ = true;
-      } else {
-        std::cout << RED << "[Server] Client fd : " << client->GetClientFd()
-                  << " Time Out!\n"
-                  << RESET;
-        DisConnect(event_fd);
-      }
+    if (events_[idx].filter == EVFILT_TIMER) {
+      ExcuteTimerEvent(idx);
+      continue;
     }
-    client = NULL;
   }
 }
 
@@ -570,13 +505,14 @@ void Server::Post(int idx) {
   }
 }
 
-
-
-
-void Server::ReadFile(int idx) {
+void Server::ExecuteReadEventFileFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int client_fd = client->GetClientFd();
   int file_fd = client->GetFileFd();
+  #if SERVER
+      std::cout << "[Server] File READ fd : " << events_[idx].ident
+              << " == " << client->GetFileFd() << std::endl;
+  #endif
 
   int size = client->event_[idx].data;
   char* buf = new char[size];
@@ -591,14 +527,7 @@ void Server::ReadFile(int idx) {
   kevent(kq_, &event, 1, NULL, 0, NULL);
 }
 
-
-
-
-
-
-
-
-void Server::WriteFile(int idx) {
+void Server::ExecuteWriteEventFileFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int client_fd = client->GetClientFd();
   int file_fd = client->GetFileFd();
@@ -622,12 +551,12 @@ void Server::WriteFile(int idx) {
   kevent(kq_, &event, 1, NULL, 0, NULL);
 }
 
-
-
-
-void Server::Send(int idx) {
+void Server::ExecuteWriteEventClientFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-
+  #if SERVER
+      std::cout << "[Server] Client Write : " << client->GetClientFd()
+              << std::endl;
+  #endif
   client->res_message_->headers_["Server"] = "farewell_webserv";
 
   if (client->timeout_ == true || client->GetStatusCode() == 413) {
@@ -691,4 +620,89 @@ void Server::Continue(int idx) {
     
   // } else {
   // }
+}
+
+void Server::ExecuteReadEventClientFd(const int& idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  #if SERVER
+    std::cout << "[Server] Client READ fd : " << client->GetClientFd()
+      << std::endl;
+  #endif
+  if (client->is_remain == false) {
+    client->Init();
+  }
+  if (events_[idx].flags == EV_EOF)
+    std::cout << RED << "FUCK\n" << RESET;
+  else
+    ActCoreLogic(idx);
+}
+
+void Server::ExecuteReadEvent(const int& idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  int event_fd = events_[idx].ident;
+
+  if (event_fd == client->GetClientFd()) {
+    ExecuteReadEventClientFd(idx);
+    return ;
+  }
+  /* 내부에서 읽으려고 Open()한 File에 대한 이벤트 */
+  if (event_fd == client->GetFileFd()) {
+      ExecuteReadEventFileFd(idx);
+      return;
+  }
+  /* CGI에게 반환받는 pipe[READ]에 대한 이벤트 */
+  if (event_fd == client->GetPipeRead()) {
+    #if SERVER
+      std::cout << "[Server] Pipe READ fd : " << event_fd
+              << " == " << client->GetPipeRead() << std::endl;
+    #endif
+    // TODO: implement ExcuteReadEventPipeFd();
+    return;
+  }
+}
+
+void Server::ExecuteWriteEvent(const int& idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  int event_fd = events_[idx].ident;
+  
+  if (event_fd == client->GetClientFd()) {
+    ExecuteWriteEventClientFd(idx);
+    if (client->is_remain == false) {
+      client->Clear();
+    }
+    return;
+  }
+  /* POST, PUT file에 대한 write 발생시 */
+  if (event_fd == client->GetFileFd()) {
+    ExecuteWriteEventFileFd(idx);
+    return;
+  }
+  /* CGI에게 보내줄 pipe[WRITE]에 대한 이벤트 */
+  if (event_fd == client->GetPipeRead()) {
+    // TODO: implement ExcuteWriteEventPipeFd();
+    return;
+  }
+}
+
+void Server::ExcuteTimerEvent(const int& idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  int event_fd = events_[idx].ident;
+
+  if (client->is_working == true) {
+    client->timeout_ = true;
+  } else {
+    std::cout << RED << "[Server] Client fd : " << client->GetClientFd()
+              << " Time Out!\n"
+              << RESET;
+    DisConnect(event_fd);
+  }
+}
+
+void Server::ExcuteLogEvent(const int& idx) {
+  struct kevent event;
+
+  const std::string log_msg = reinterpret_cast<char*>(events_[idx].udata);
+  write(logger_.GetLogFileFD(), log_msg.c_str(), log_msg.length());
+  EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DISABLE, 0, 0,  NULL);
+  kevent(kq_, &event, 1, 0, 0, NULL);
 }
