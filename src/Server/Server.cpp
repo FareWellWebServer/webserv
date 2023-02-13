@@ -80,6 +80,7 @@ void Server::Act(void) {
     if (events_[idx].filter == EVFILT_READ) {
       /* accept 된 port로 request 요청메세지 들어옴 */
       if (event_fd == client->GetClientFd()) {
+      logger_.info("access log", client);
 #if SERVER
         std::cout << "[Server] Client READ fd : " << client->GetClientFd()
                   << std::endl;

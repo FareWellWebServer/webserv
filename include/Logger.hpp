@@ -5,6 +5,7 @@
 #include <sys/event.h>
 #include <unistd.h>
 
+#include "Data.hpp"
 #include "Color.hpp"
 #include "Utils.hpp"
 
@@ -15,9 +16,9 @@ class Logger {
   /// @param msg
   Logger(int kq, const std::string& log_dir_path);
   virtual ~Logger(void);
-  void info(std::string msg) const;
-  void warn(std::string msg) const;
-  void error(std::string msg) const;
+  void info(std::string msg, Data* data = NULL) const;
+  void warn(std::string msg, Data* data = NULL) const;
+  void error(std::string msg, Data* data = NULL) const;
   fd GetLogFileFD(void) const;
 
  private:
