@@ -338,7 +338,6 @@ void Server::Get(int idx) {
   } else if (client->cgi_ == true) {
     cgi_manager_->SetData(client);
     cgi_manager_->SendToCGI(client, kq_);
-
   } else {
     int file_fd = open(req_msg->req_url_.c_str(), O_RDONLY);
 
