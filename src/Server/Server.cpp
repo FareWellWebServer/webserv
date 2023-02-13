@@ -78,7 +78,8 @@ void Server::Act(void) {
         if (events_[idx].flags == EV_EOF)
           std::cout << RED << "FUCK\n" << RESET;
         else
-          ActCoreLogic(idx);
+          cgi_manager_->SendToCGI(client, kq_);
+          // ActCoreLogic(idx);
       }
       /* 내부에서 읽으려고 Open()한 File에 대한 이벤트 */
       else if (event_fd == client->GetFileFd()) {
@@ -95,6 +96,8 @@ void Server::Act(void) {
                   << " == " << client->GetPipeRead() << std::endl;
 #endif
         // pipe 읽기
+        cgi_manager_->GetFromCGI(client, events_[idx].data, kq_);
+        Send(idx);
       }
     } else if (events_[idx].filter == EVFILT_WRITE) {
       /* response 보낼 때에 대한 이벤트 */
