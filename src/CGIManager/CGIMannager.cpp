@@ -95,7 +95,7 @@ void CGIManager::SendToCGI(Data* client, int kq)
         // if (execve(client_->GetReqURL().c_str(), NULL, environ) < 0) {
         char **argv = new char*[3];
         argv[0] = strdup("python3");
-        argv[1] = strdup("/Users/dongchoi/webserv/asset/cgi-bin/cgitest.py");
+        argv[1] = strdup("/Users/dongchoi/webserv_cgi/cgi/cgitest.py");
         argv[2] = NULL;
         if (execve("/usr/bin/python3", argv, environ) < 0) {
             #if CGI
@@ -122,8 +122,9 @@ void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
     SetData(client);
 
     std::cout << "len : " << len << std::endl;
-    char* buf = new char[len];
+    char* buf = new char[len + 1];
     read(client_->GetPipeRead(), buf, len);
+    buf[len] = '\0';
     write(2, buf, len);
     struct kevent event;
     EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
@@ -131,6 +132,9 @@ void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
     close(client_->GetPipeRead());
     ParseCGIData(buf);
     delete[] buf;
+
+    EV_SET(&event, client->GetClientFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+    kevent(kq, &event, 1, NULL, 0, NULL);
 }
 
 // bool CGIManager::CheckValid(char* buf) {
@@ -151,9 +155,9 @@ void CGIManager::SetFirstLine() {
 }
 
 void CGIManager::ParseCGIData(char* buf) {
-    std::string body(buf);
+    
+    std::string body = buf;
     size_t idx(0);
-
     // 헤더 세팅
     idx = SetHeaders(body);
     // 본문 길이 설정
@@ -170,12 +174,14 @@ void CGIManager::ParseCGIData(char* buf) {
 size_t CGIManager::SetHeaders(std::string& body) {
     size_t start_idx(0), endline_idx(0), delimiter_idx(0);
     std::string key, val;
+    
     while (1) {
 		endline_idx = body.find_first_of('\n', start_idx);
 		delimiter_idx = body.find_first_of(":", start_idx);
 		key = body.substr(start_idx, delimiter_idx - start_idx);
 		val = body.substr(delimiter_idx + 1, endline_idx - delimiter_idx - 1);
 		RemoveTabSpace(val);
+        std::cout << "@ " << key << ": " << val << std::endl;
 		client_->res_message_->headers_[key] = val;
         start_idx = endline_idx + 1;
 		if (body[endline_idx + 1] == '\n')
@@ -189,38 +195,12 @@ size_t CGIManager::SetHeaders(std::string& body) {
 void CGIManager::SetBodyLength(std::string& body, size_t idx) {
     size_t len(body.length() - (idx + 1));
     client_->res_message_->body_data_.length_ = len;
-    client_->res_message_->headers_["Content-Lengh"] = to_string(len);
+    if (len > 0)
+        client_->res_message_->headers_["Content-Lengh"] = to_string(len);
 }
 
 void CGIManager::SetBody(char* buf, size_t idx) {
-    client_->res_message_->body_data_.data_ = strdup(&buf[idx]);
+    if (client_->res_message_->body_data_.length_ != 0)
+        client_->res_message_->body_data_.data_ = new char[client_->res_message_->body_data_.length_];
+    memcpy(client_->res_message_->body_data_.data_, &buf[idx], client_->res_message_->body_data_.length_);
 }
-
-
-// void CGIManager::ParseFirstLine(char* buf) {
-//   int64_t curr_idx(0), find_idx(0), end_idx(0);
-//   /* 첫 줄 찾기 */
-//   find_idx = strcspn(buf, "\n");  // buf 에서 "\n"의 인덱스 찾는 함수
-//   end_idx = find_idx;
-
-//   char* tmp = new char[end_idx + 1];
-//   tmp[end_idx] = '\0';
-//   strncpy(tmp, buf, end_idx + 1);
-
-//   /* 첫 단어 Version 쪼개기 */
-//   find_idx = strcspn(tmp, " ");
-//   tmp[find_idx] = '\0';
-//   client_->res_message_->http_version_ = tmp;
-
-//   /* 두번째 Status code 쪼개기 */
-//   curr_idx = find_idx + 1;
-//   find_idx = strcspn(&tmp[curr_idx], " ");
-//   tmp[find_idx] = '\0';
-//   client_->res_message_->status_code_ = atoi(&tmp[curr_idx]);
-  
-//   /* 세번째 Status text 쪼개기 */
-//   curr_idx = find_idx + 1;
-//   tmp[end_idx] = '\0';
-//   client_->res_message_->status_text_ = &tmp[curr_idx];
-//   delete[] tmp;
-// }

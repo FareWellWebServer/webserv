@@ -4,27 +4,27 @@
 #include <arpa/inet.h> /* htons, htonl, ntohs, ntohl */
 #include <fcntl.h>     /* fcntl */
 #include <netdb.h>     /* getprotobyname */
-#include <poll.h>      /* poll */
+#include <netdb.h>
+#include <poll.h> /* poll */
+#include <stdlib.h>
 #include <sys/errno.h> /* errno */
 #include <sys/event.h>
 #include <sys/select.h> /* select */
 #include <sys/socket.h> /* AF_INET, SOCK_STREAM, gai_strerror, socket, accept, listen, send, recv, bind, connect, getaddrinfo, freeaddrinfo, setsockopt, getsockname */
 #include <sys/types.h>  /* kqueue kevent */
 #include <unistd.h>     /* execve, dup, dup2, pipe */
-#include <stdlib.h>
-#include <netdb.h>
 
 #include <cstring> /* memset, strerror */
 #include <iostream>
 #include <set>
 #include <vector>
 
+#include "CGIManager.hpp"
 #include "ClientMetaData.hpp"
 #include "MsgComposer.hpp"
 #include "ReqHandler.hpp"
 #include "ResHandler.hpp"
 #include "ServerConfigInfo.hpp"
-#include "CGIManager.hpp"
 #include "Utils.hpp"
 
 #define MAXLINE 1000000
@@ -52,13 +52,12 @@ typedef struct s_litening {
 
 class Server {
  public:
-  // Server(void);
-  Server(std::vector<ServerConfigInfo>);
+  Server(const Config& config);
   ~Server(void);
 
   void Run(void);
-  // void Init(const std::vector<ServerConfigInfo>& server_infos);
   void Init(void);
+  void Prompt(void);
 
   // 임의로 public에 나둠 나중에 setter구현해야함
   // server_info를 Method_Processor 호출할 때, 필요하기 때문에
@@ -69,19 +68,21 @@ class Server {
 
   void Get(int idx);
   void Post(int idx);
-  void ReadFile(int idx);
-  void WriteFile(int idx);
-  void Send(int idx);
+  void Continue(int idx);
+  void ExecuteReadEventFileFd(int idx);
+  void ExecuteWriteEventFileFd(int idx);
+  void ExecuteWriteEventClientFd(int idx); // Send()를 이거로 바꿈
+
+  void Pong(int idx);
 
   /* ------------------*/
  private:
   int kq_;
-  //  TODO: logger fd
+  Logger logger_;
   struct kevent events_[MAXLISTEN + BACKLOG];
   std::set<t_listening*> servers_;
   ClientMetaData* clients_;
   ReqHandler* req_handler_;
-  ResHandler* res_handler_;
   MsgComposer* msg_composer_;
   CGIManager* cgi_manager_;
 
@@ -96,6 +97,11 @@ class Server {
                                const int& fd);
   bool IsListenFd(const int& fd);
   void DisConnect(const int& fd);
+  void ExecuteReadEvent(const int& idx);
+  void ExecuteReadEventClientFd(const int& idx);
+  void ExecuteWriteEvent(const int& idx);
+  void ExcuteTimerEvent(const int& idx);
+  void ExcuteLogEvent(const int& idx);
 };
 
 #endif

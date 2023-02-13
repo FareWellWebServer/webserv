@@ -1,8 +1,6 @@
 #include "../../include/Config.hpp"
 
 Config::Config(const char* file_path) {
-  std::cout << "Config file path: " << file_path << std::endl;
-
   std::ifstream fs(file_path);
   std::string content;
   std::string line;
@@ -25,6 +23,18 @@ Config::~Config(void) {}
 void Config::Parse(int print_mode) {
   print_mode_ = print_mode;
   line_num_ = 0;
+
+  while (true) {
+    ++line_num_;
+    std::getline(config_stream_, line_, '\n');
+    if (IsWhiteLine()) continue;
+    if (!IsLogPath()) {
+      ExitConfigParseError("Log path not exist");
+    } else {
+      break;
+    }
+  }
+
   while (true) {
     ++line_num_;
     std::getline(config_stream_, line_, '\n');
@@ -68,7 +78,9 @@ void Config::SetServerConfigInfo(const std::string& key,
   std::vector<std::string> vec = Split(val, " ");
   PrintKeyVal(key, val);
 
-  if (key == "listen") {
+  if (key[0] == '#') {
+    return;
+  } else if (key == "listen") {
     vec = Split(val, ":");
     ParseListen(vec);
   } else if (key == "body_size") {
@@ -109,10 +121,6 @@ bool Config::CheckValidPath(const std::string& file_path) const {
 }
 
 void Config::CheckValidation(void) {
-#if CONFIG
-  std::cout << BOLDCYAN
-            << "======== Validation Check Start ========" << std::endl;
-#endif
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
     ServerConfigInfo& info = server_config_infos_[i];
     if (info.port_ == -1 || info.body_size_ == 0 || info.root_path_.empty() ||
@@ -127,7 +135,6 @@ void Config::CheckValidation(void) {
       std::string error_page_path = info.root_path_ + error_it->second;
 
       if (CheckValidPath(error_page_path)) {
-        std::cout << error_page_path << std::endl;
         info.error_pages_[error_page_status_code] = error_page_path;
       } else {
         ExitConfigValidateError("Wrong error_page path");
@@ -140,9 +147,6 @@ void Config::CheckValidation(void) {
       CheckLocation(loc_it->second);
     }
   }
-#if CONFIG
-  std::cout << "======= Validation Check Finish ========" << RESET << std::endl;
-#endif
 }
 
 void Config::CheckLocation(t_location& loc) {
@@ -191,6 +195,8 @@ void Config::CheckLocation(t_location& loc) {
 }
 
 /* ======================== Getter ======================== */
-std::vector<ServerConfigInfo> Config::GetServerConfigInfos(void) {
+std::vector<ServerConfigInfo> Config::GetServerConfigInfos(void) const {
   return server_config_infos_;
 }
+
+std::string Config::GetLogPath(void) const { return log_path_; }

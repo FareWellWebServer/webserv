@@ -14,9 +14,13 @@ Data::Data(void)
       cgi_(false),
       is_directory_list_(false),
       is_download(false),
-      is_working(true),
+      is_working(false),
+      is_remain(false),
+      is_first(true),
       file_fd_(-1),
       log_file_fd_(-1),
+      binary_start_idx(0),
+      binary_size(0),
       event_(NULL),
       config_(NULL),
       req_message_(NULL),
@@ -44,7 +48,7 @@ Data::~Data(void) {
  *
  */
 void Data::Init(void) {
-  // Clear();
+	is_working = true;
   req_message_ = NULL;
   res_message_ = new t_res_msg;
   res_message_->body_data_.data_ = NULL;
@@ -64,7 +68,13 @@ void Data::Clear(void) {
   is_directory_list_ = false;
   is_download = false;
   is_working = false;
+  is_first = true;
   file_fd_ = -1;
+  binary_start_idx = 0;
+  binary_size = 0;
+  post_data_.clear();
+  boundary.clear();
+  file_name.clear();
   pipe_[READ] = -1;
   pipe_[WRITE] = -1;
   if (req_message_ != NULL) {

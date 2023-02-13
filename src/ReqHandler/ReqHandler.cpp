@@ -5,7 +5,12 @@ ReqHandler::ReqHandler(void)
 
 ReqHandler::~ReqHandler(void) { Clear(); }
 
-void ReqHandler::SetClient(Data* client) { client_ = client; }
+void ReqHandler::SetClient(Data* client) {
+  client_ = client;
+  if (client_->is_remain == true) {
+    req_msg_ = client->req_message_;
+  }
+}
 
 void ReqHandler::SetReadLen(int64_t kevent_data) { read_len_ = kevent_data; }
 
@@ -62,6 +67,7 @@ void ReqHandler::RecvFromSocket() {
               << std::endl;
 #endif
   }
+  // write(1, buf_, read_len_);
 }
 
 int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
@@ -87,18 +93,9 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   /* 메소드 유효성 확인 필요 */
   req_msg_->method_ = tmp;
   RemoveTabSpace(req_msg_->method_);
-  // 체크할 때 -1을 반환하는 형식으로 변경해도 될듯
-  //   if (req_msg_->method_ != "GET" || req_msg_->method_ != "POST" ||
-  //       req_msg_->method_ != "HEAD" || req_msg_->method_ != "DELETE") {
-  // #if REQ_HANDLER
-  //     std::cout << "[ReqHandler] Invalid method input ! : \
-//     loss data?"
-  //               << std::endl;
-  // #endif
-  //   }
 
   curr_idx += find_idx;
-  /* 두번 째 URL 쪼개기 */
+  // 두번 째 URL 쪼개기
   find_idx = strcspn(&buf_[curr_idx + 1], " ");
   if (find_idx >= end_idx) {
     // client_->SetStatusCode(400); // bad request
@@ -106,9 +103,8 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   }
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
-  /* 올바른 URL 인지 확인 필요 */
-  // TODO : config 파일에서 들어온 경로와 일치하는가 확인 ->파싱이 끝난 이후
   req_msg_->req_url_ = tmp;
+  // 중복 slash 제거 EX) ////// -> /
   ReduceSlash(req_msg_->req_url_);
 
   curr_idx += find_idx;
@@ -160,7 +156,7 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
 }
 
 int64_t ReqHandler::ParseHeaders(int start_idx) {
-  /* buf_[start_idx]를 헤더의 첫줄로 만들기 */
+  // buf_[start_idx]를 헤더의 첫줄로 만들기
   while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
     ++start_idx;
     if (start_idx == read_len_) {
@@ -168,7 +164,7 @@ int64_t ReqHandler::ParseHeaders(int start_idx) {
     }
   }
   int64_t curr_idx(start_idx), end_idx(start_idx);
-  /* buf_에서 한줄씩 찾아서 key-value로 만들어서 넣어주기 */
+  // buf_에서 한줄씩 찾아서 key-value로 만들어서 넣어주기
   int i(0);
 
   while (start_idx + i < read_len_) {
@@ -193,13 +189,13 @@ void ReqHandler::ParseEntity(int start_idx) {
   start_idx += 1;
   while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
     start_idx++;
-    // TODO : read_len 은 임의 지정값이라 실제 데이터의 길이를 반영하지
-    // 못할것으로 생각되어 read로 읽어온
-    // byte로 봐야하지 않나..
+    // TODO : read_len은 임의 지정값이라 실제 데이터의 길이를 반영하지
+    // 못할것으로 생각되어 read로 읽어온 byte로 봐야하지 않나..
     if (start_idx == read_len_) {
 #if DG
       std::cout << "[ReqHandler] There is no entity(body)" << std::endl;
 #endif
+      client_->is_remain = true;
       return;
     }
   }
@@ -217,33 +213,27 @@ void ReqHandler::ParseRecv() {
 #endif
     return;
   }
-  client_->e_stage = REQ_PROCESSING;
-  if (req_msg_ == NULL) req_msg_ = new t_req_msg;
-  memset(&req_msg_->body_data_, 0, sizeof(t_entity));
-  int64_t idx(0);
-  // 첫줄 파싱
-  idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
-  // 헤더 파싱
-  idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
-  // entity 넣기
-  if (entity_flag_ == 1) ParseEntity(idx);
+  if (client_->is_remain == true) {
+    if (client_->req_message_->body_data_.data_)
+      delete[] client_->req_message_->body_data_.data_;
+    client_->req_message_->body_data_.data_ = new char[read_len_];
+    memcpy(client_->req_message_->body_data_.data_, buf_, read_len_);
+  } else {
+    if (req_msg_ == NULL) req_msg_ = new t_req_msg;
+    memset(&req_msg_->body_data_, 0, sizeof(t_entity));
+    int64_t idx(0);
+    // 첫줄 파싱
+    idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
+    // 헤더 파싱
+    idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
+    // entity 넣기
+    if (entity_flag_ == 1) ParseEntity(idx);
+    ValidateReq();
+  }
 
   // request 유효성 검사 -> body_size, method
   std::cout << BLUE << "original req_url: " << req_msg_->req_url_ << std::endl;
-  ValidateReq();
-
-  // GET -> body_size 유호성 확인
-  // if (req_msg_->method_ == "GET") {
-  //   struct stat st;
-  //   stat(req_msg_->req_url_.c_str(), &st);
-  //   req_msg_->body_data_.length_ = static_cast<size_t>(st.st_size);
-  //   if (client_->config_->body_size_ <
-  //       static_cast<int>(req_msg_->body_data_.length_)) {
-  //     client_->SetStatusCode(501);
-  //     req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
-  //   }
-  // }
-
+  std::cout << "method: " << req_msg_->method_ << std::endl;
   std::cout << "status code: " << client_->status_code_ << std::endl;
   std::cout << "served req_url: " << req_msg_->req_url_ << RESET << std::endl;
 
@@ -251,22 +241,29 @@ void ReqHandler::ParseRecv() {
   buf_ = NULL;
 }
 
-void ReqHandler::ValidateReq(void) {
+void ReqHandler::ValidateReq() {
   // POST -> body_size 유호성 확인
-  // GET은 나중에 처리
-  if (req_msg_->method_ == "POST" &&
-      client_->config_->body_size_ <
-          static_cast<int>(req_msg_->body_data_.length_)) {
-    client_->SetStatusCode(501);
-    req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
-    req_msg_->method_ = "GET";
+  // POST인 경우에는 아래의 유호성 검사가 필요가 없다
+  if (req_msg_->method_ == "POST") {
+    if (client_->config_->body_size_ <
+        static_cast<int>(req_msg_->body_data_.length_)) {
+      // body size error의 경우에는 메서드를 GET으로 바꿔줘야 브라우저에
+      // 501페이지가 나옴
+      // req_msg_->method_ = "GET";
+      // client_->SetStatusCode(501);
+
+      req_msg_->method_ = "GET";
+      client_->SetStatusCode(413);
+      // req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
+    } else {
+      client_->SetStatusCode(200);
+      req_msg_->req_url_.clear();
+    }
     return;
   }
 
   std::string req_url = decode(req_msg_->req_url_);
-  std::cout << "decode req_url: " << req_url << std::endl;
-  // 중복 slash 제거 EX) ////// -> /
-  ReduceSlash(req_msg_->req_url_);
+  std::cout << BLUE << "decode req_url: " << req_url << RESET << std::endl;
   size_t last_slash_idx = req_url.find_last_of("/");
   std::string req_location_path = req_url.substr(0, last_slash_idx + 1);
   std::string req_file_path = req_url.substr(last_slash_idx + 1);
