@@ -15,7 +15,7 @@ void Logger::info(std::string msg, Data* data) const {
   const std::string current_time = GetCurrentDate();
   const std::string log_msg = data != NULL ?
      current_time + "\t" + msg + "\n" : 
-     current_time + "\t" + msg + "\t" + data->GetMethodEntityType() + "\tclient fd:\t" + to_string(data->GetClientFd()) + "\n";
+     current_time + "\t" + msg + "\t" + data->GetReqMethod() + "\tclient fd:\t" + to_string(data->GetClientFd()) + "\n";
   struct kevent event;
 
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
@@ -23,24 +23,11 @@ void Logger::info(std::string msg, Data* data) const {
   kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
 
-void Logger::warn(std::string msg, Data* data) const {
-  const std::string current_time = GetCurrentDate();
-  const std::string log_msg = data != NULL ?
-     current_time + "\t" + msg + "\n" : 
-     current_time + "\t" + msg + "\t" + data->GetMethodEntityType() + "\tclient fd:\t" + to_string(data->GetClientFd()) + "\n";
-  const std::string warn_msg = YELLOW + log_msg + RESET;
-  struct kevent event;
-
-  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
-         static_cast<void*>(const_cast<char*>(warn_msg.c_str())));
-  kevent(server_kq_, &event, 1, NULL, 0, NULL);
-}
-
 void Logger::error(std::string msg, Data* data) const {
   const std::string current_time = GetCurrentDate();
   const std::string log_msg = data != NULL ?
      current_time + "\t" + msg + "\n" : 
-     current_time + "\t" + msg + "\t" + data->GetMethodEntityType() + "\tclient fd:\t" + to_string(data->GetClientFd()) + "\n";
+     current_time + "\t" + msg + "\t" + data->GetReqMethod() + "\tclient fd:\t" + to_string(data->GetClientFd()) + "\n";
   const std::string error_msg = RED + log_msg + RESET;
   struct kevent event;
 

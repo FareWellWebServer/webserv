@@ -17,7 +17,6 @@ class Logger {
   Logger(int kq, const std::string& log_dir_path);
   virtual ~Logger(void);
   void info(std::string msg, Data* data = NULL) const;
-  void warn(std::string msg, Data* data = NULL) const;
   void error(std::string msg, Data* data = NULL) const;
   fd GetLogFileFD(void) const;
 
