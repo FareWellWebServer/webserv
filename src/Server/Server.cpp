@@ -80,7 +80,9 @@ void Server::Act(void) {
         std::cout << "[Server] Client READ fd : " << client->GetClientFd()
                   << std::endl;
 #endif
-        client->Init();
+        if (client->is_remain == false) {
+          client->Init();
+        }
         if (events_[idx].flags == EV_EOF)
           std::cout << RED << "FUCK\n" << RESET;
         else
@@ -162,7 +164,6 @@ void Server::ActCoreLogic(int idx) {
   req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
   req_handler_->SetReadLen(events_[idx].data);
   if (events_[idx].data == 0) {
-    // DisConnect(events_[idx].ident);
 		Pong(idx);
     std::cout << RED << "Pong! to " << client_fd << "\n" << RESET;
     return;
@@ -177,18 +178,15 @@ void Server::ActCoreLogic(int idx) {
   // for(size_t i = 0; i < client->req_message_->body_data_.length_; ++i)
   //   write(1, &client->req_message_->body_data_.data_[i], 1);
 
-  // Data* client = clients_->GetDataByFd(events_[idx].ident);
   if (client->GetReqMethod() == "GET") {
     Get(idx);
   } else if (client->GetReqMethod() == "POST") {
-    if (client->req_message_->body_data_.data_ == NULL) {
-      client->is_remain = true;
+    if (client->is_remain == true && client->req_message_->body_data_.data_ == NULL) {
       client->SetStatusCode(100);
       std::cout << RED << client_fd << " Continue!\n" << RESET;
       EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
       kevent(kq_, &event, 1, NULL, 0, NULL);
     } else {
-      client->is_remain = false;
       Post(idx);
     }
   } else if (client->GetReqMethod() == "DELETE") {
@@ -436,10 +434,10 @@ void Server::Post(int idx) {
     if (content_type == "multipart/form-data") {
       if (client->req_message_->body_data_.data_ == NULL)
       {
-        // client->SetReqMethod("GET");
-        // client->SetStatusCode(501);
-        // client->req_message_->req_url_ = config->error_pages_.find(501)->second;
-        // Get(idx);
+        client->SetReqMethod("GET");
+        client->SetStatusCode(501);
+        client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+        Get(idx);
         return;
       }
 
@@ -551,7 +549,7 @@ void Server::Send(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 
 	client->res_message_->headers_["Server"] = "farewell_webserv";
-  if (client->timeout_ == true) {
+  if (client->timeout_ == true || client->GetStatusCode() == 413) {
     client->res_message_->headers_["Connection"] = "close";
   } else {
     client->res_message_->headers_["Connection"] = "keep-alive";
@@ -580,9 +578,12 @@ void Server::Send(int idx) {
   EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
-  close(file_fd);
-  // DisConnect(client_fd);
+  if(file_fd != -1)
+    close(file_fd);
+  if (client->GetStatusCode() == 413)
+  DisConnect(client_fd);
 }
+
 void Server::Pong(int idx) {
 	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 	int client_fd = client->GetClientFd();
