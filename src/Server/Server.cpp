@@ -1,7 +1,7 @@
 #include "../../include/Server.hpp"
 
-Server::Server(std::vector<ServerConfigInfo> server_info)
-    : server_infos_(server_info), kq_(kqueue()) {
+Server::Server(const Config& config)
+    : server_infos_(config.GetServerConfigInfos()), kq_(kqueue()), logger_(Logger(kq_, config.GetLogPath())) {
   clients_ = new ClientMetaData;
   req_handler_ = new ReqHandler;
   msg_composer_ = new MsgComposer;
@@ -78,6 +78,15 @@ void Server::Act(void) {
   }
   for (int idx = 0; idx < n; ++idx) {
 
+    if (static_cast<int>(events_[idx].ident) == logger_.GetLogFileFD()) {
+      struct kevent event;
+
+      const std::string log_msg = reinterpret_cast<char*>(events_[idx].udata);
+      write(logger_.GetLogFileFD(), log_msg.c_str(), log_msg.length());
+      EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DISABLE, 0, 0,  NULL);
+      kevent(kq_, &event, 1, 0, 0, NULL);
+    };
+
 
     /* listen port로 새로운 connect 요청이 들어옴 */
     if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ) {
@@ -89,6 +98,7 @@ void Server::Act(void) {
     if (events_[idx].filter == EVFILT_READ) {
       /* accept 된 port로 request 요청메세지 들어옴 */
       if (event_fd == client->GetClientFd()) {
+      logger_.info("access log", client);
 #if SERVER
         std::cout << "[Server] Client READ fd : " << client->GetClientFd()
                   << std::endl;
@@ -136,9 +146,6 @@ void Server::Act(void) {
       /* CGI에게 보내줄 pipe[WRITE]에 대한 이벤트 */
       else if (event_fd == client->GetPipeRead()) {
       }
-      /* log file에 대한 write 발생시 */
-      else if (event_fd == client->GetLogFileFd())
-        ;
     } else if (events_[idx].flags == EV_EOF) {
       /* socket이 닫혔을 때 */
       if (event_fd == client->GetClientFd()) {
@@ -227,7 +234,8 @@ void Server::AcceptNewClient(int idx) {
 
   client_len = sizeof(client_addr);
   connfd =
-      accept(events_[idx].ident, reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
+      accept(events_[idx].ident,
+             reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
   if (connfd == -1) {
     throw std::runtime_error("Error: accept()");
   }
@@ -283,7 +291,7 @@ void Server::BindListen(const std::string& host, const int& port,
   }
 }
 void Server::GetAddrInfo(const std::string& host, const int& port,
-                          struct addrinfo** listp) {
+                         struct addrinfo** listp) {
   struct addrinfo hints;
   int status;
 
@@ -300,7 +308,7 @@ void Server::GetAddrInfo(const std::string& host, const int& port,
   }
 }
 t_listening* Server::CreateListening(const std::string& host, const int& port,
-                                      const int& fd) {
+                                     const int& fd) {
   t_listening* new_listening = new t_listening;
   new_listening->host = host;
   new_listening->port = port;
@@ -356,7 +364,6 @@ void Server::Get(int idx) {
   } else if (client->cgi_ == true) {
     cgi_manager_->SetData(client);
     cgi_manager_->SendToCGI(client, kq_);
-
   } else {
     int file_fd = open(req_msg->req_url_.c_str(), O_RDONLY);
 
@@ -452,8 +459,6 @@ void Server::Post(int idx) {
     content_type = content_type.substr(0, semicolon_pos);
     boundary = boundary.substr(equal_pos + 1);
     if (content_type == "multipart/form-data") {
-
-
       if (client->req_message_->body_data_.data_ == NULL) {
         client->SetReqMethod("GET");
         client->SetStatusCode(501);
@@ -461,6 +466,7 @@ void Server::Post(int idx) {
         Get(idx);
         return;
       }
+
 
       std::string data_info;
       size_t idx = 0;
@@ -503,9 +509,6 @@ void Server::Post(int idx) {
         client->file_name = file_name;
       }
 
-
-
-
       size_t size = 0;
       size_t tmp_idx = idx;
       const char* cbody_data = client->req_message_->body_data_.data_;
@@ -529,7 +532,6 @@ void Server::Post(int idx) {
         for (; strncmp(&cbody_data[idx], boundary.c_str(), boundary.size()); ++idx) {
           ++size;
         }
-
 
         if (client->is_first == true) {
           client->binary_start_idx = tmp_idx + 4;
@@ -560,10 +562,6 @@ void Server::Post(int idx) {
         EV_SET(&event, client->GetFileFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
         kevent(kq_, &event, 1, NULL, 0, NULL);
       }
-
-
-
-
     } else {
       client->SetReqMethod("GET");
       client->SetStatusCode(501);
@@ -632,6 +630,7 @@ void Server::Send(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 
   client->res_message_->headers_["Server"] = "farewell_webserv";
+
   if (client->timeout_ == true || client->GetStatusCode() == 413) {
     client->res_message_->headers_["Connection"] = "close";
   } else {

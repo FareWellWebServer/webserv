@@ -52,12 +52,10 @@ typedef struct s_litening {
 
 class Server {
  public:
-  // Server(void);
-  Server(std::vector<ServerConfigInfo>);
+  Server(const Config& config);
   ~Server(void);
 
   void Run(void);
-  // void Init(const std::vector<ServerConfigInfo>& server_infos);
   void Init(void);
   void prompt(void);
 
@@ -79,7 +77,7 @@ class Server {
   /* ------------------*/
  private:
   int kq_;
-  //  TODO: logger fd
+  Logger logger_;
   struct kevent events_[MAXLISTEN + BACKLOG];
   std::set<t_listening*> servers_;
   ClientMetaData* clients_;

@@ -36,6 +36,7 @@ class ServerConfigInfo {
   int body_size_;                           // 필수 입력 O
   std::string root_path_;                   // 필수 입력 O
   std::string upload_path_;                 // 필수 입력 O
+  std::string log_path_;                 // 필수 입력 O
   int timeout_;                             // 필수 입력 O
   std::vector<std::string> methods_;        // 필수 입력 O
   std::map<int, std::string> error_pages_;  // 필수 입력 O

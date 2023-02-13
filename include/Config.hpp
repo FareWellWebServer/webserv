@@ -21,7 +21,8 @@ class Config {
   typedef std::vector<std::string> value;
 
   /* ======================== Getter ======================== */
-  std::vector<ServerConfigInfo> GetServerConfigInfos(void);
+  std::vector<ServerConfigInfo> GetServerConfigInfos(void) const;
+  std::string GetLogPath(void) const;
 
   /* ======================== Parsing Server ======================== */
   void InitServerConfigInfo(ServerConfigInfo &info);
@@ -70,6 +71,7 @@ class Config {
   // Parsing
   bool IsNumber(const std::string &str) const;
   bool IsWhiteLine(void) const;
+  bool IsLogPath(void);
   bool IsOpenServerBracket(void) const;
   bool IsOpenLocationBracket(const value &vec) const;
   bool IsCloseBracket(const value &vec) const;
@@ -90,6 +92,7 @@ class Config {
   int line_num_;
   std::string line_;
 
+  std::string log_path_;
   ServerConfigInfo server_config_info_;
   std::vector<ServerConfigInfo> server_config_infos_;
 };

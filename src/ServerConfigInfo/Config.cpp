@@ -23,6 +23,18 @@ Config::~Config(void) {}
 void Config::Parse(int print_mode) {
   print_mode_ = print_mode;
   line_num_ = 0;
+
+  while (true) {
+    ++line_num_;
+    std::getline(config_stream_, line_, '\n');
+    if (IsWhiteLine()) continue;
+    if (!IsLogPath()) {
+      ExitConfigParseError("Log path not exist");
+    } else {
+      break;
+    }
+  }
+
   while (true) {
     ++line_num_;
     std::getline(config_stream_, line_, '\n');
@@ -183,6 +195,8 @@ void Config::CheckLocation(t_location& loc) {
 }
 
 /* ======================== Getter ======================== */
-std::vector<ServerConfigInfo> Config::GetServerConfigInfos(void) {
+std::vector<ServerConfigInfo> Config::GetServerConfigInfos(void) const {
   return server_config_infos_;
 }
+
+std::string Config::GetLogPath(void) const { return log_path_; }
