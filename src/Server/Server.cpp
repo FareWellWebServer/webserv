@@ -66,6 +66,8 @@ void Server::Act(void) {
     throw std::runtime_error("Error: kevent()");
   }
   for (int idx = 0; idx < n; ++idx) {
+
+
     /* listen port로 새로운 connect 요청이 들어옴 */
     if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ) {
       AcceptNewClient(idx);
