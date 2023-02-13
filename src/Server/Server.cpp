@@ -542,13 +542,16 @@ void Server::ExecuteWriteEventFileFd(int idx) {
   struct kevent event;
 
   if (client->is_remain) {
+    EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
     EV_SET(&event, file_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
   } else {
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
     kevent(kq_, &event, 1, NULL, 0, NULL);
     EV_SET(&event, file_fd, EVFILT_WRITE, EV_DELETE, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
   }
-  kevent(kq_, &event, 1, NULL, 0, NULL);
 }
 
 void Server::ExecuteWriteEventClientFd(int idx) {
