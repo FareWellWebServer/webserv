@@ -16,7 +16,6 @@ void Logger::info(std::string msg) const {
   const std::string log_msg = current_time + " " + msg + "\n";
   struct kevent event;
 
-  write(logger_file_fd_, log_msg.c_str(), log_msg.length());
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
   kevent(server_kq_, &event, 1, NULL, 0, NULL);
