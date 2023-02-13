@@ -15,8 +15,7 @@ class ReqHandler {
   void SetClient(Data* client);
   void SetReadLen(int64_t kevent_data);
   void RecvFromSocket(void);
-  void ParseRecv(void);
-  void ParseRecv(int fd);
+  void ParseRecv();
   // void SetReadLen(int64_t len);
   void SetBuf(int fd);
   void Clear();
@@ -32,7 +31,7 @@ class ReqHandler {
   int64_t ParseHeaders(int start_idx);
   void ParseHeadersSetKeyValue(char* line);
   void ParseEntity(int start_idx);
-  void ValidateReq(void);
+  void ValidateReq();
 };
 
 void PrintMap(std::map<std::string, std::string>& map);
