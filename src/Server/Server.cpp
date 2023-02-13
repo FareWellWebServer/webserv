@@ -38,13 +38,13 @@ void Server::Init(void) {
 
     BindListen(server_infos_[i].host_, server_infos_[i].port_, listenfd);
     EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0,
-           (void*)&server_infos_[i]);
+            (void*)&server_infos_[i]);
     // EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
       throw std::runtime_error("Error: kevent()");
     }
     t_listening* tmp = CreateListening(server_infos_[i].host_,
-                                       server_infos_[i].port_, listenfd);
+                                        server_infos_[i].port_, listenfd);
     servers_.insert(tmp);
     // delete tmp;
   }
@@ -93,7 +93,7 @@ void Server::Act(void) {
       ExecuteWriteEvent(idx);
       continue;
     }
-     
+    
     // /* timeout 발생시 */
     if (events_[idx].filter == EVFILT_TIMER) {
       ExcuteTimerEvent(idx);
@@ -540,12 +540,12 @@ void Server::ExecuteWriteEventFileFd(int idx) {
           client->binary_size);
 
   struct kevent event;
-  EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
-  kevent(kq_, &event, 1, NULL, 0, NULL);
 
   if (client->is_remain) {
     EV_SET(&event, file_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, client);
   } else {
+    EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
     EV_SET(&event, file_fd, EVFILT_WRITE, EV_DELETE, 0, 0, client);
   }
   kevent(kq_, &event, 1, NULL, 0, NULL);
@@ -586,10 +586,14 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
-  EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-  kevent(kq_, &event, 1, NULL, 0, NULL);
 
   if (file_fd != -1 && client->is_remain == false){
+    EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
+
+    EV_SET(&event, file_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
+
     close(file_fd);
   } 
   if (client->GetStatusCode() == 413) {
