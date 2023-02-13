@@ -46,11 +46,27 @@ void Server::Init(void) {
                                        server_infos_[i].port_, listenfd);
     servers_.insert(tmp);
     // delete tmp;
-#if SERVER
-    std::cout << server_infos_[i].host_ << " is listening port on "
-              << server_infos_[i].port_ << "\n";
-#endif
   }
+}
+
+void Server::prompt(void) {
+  std::cout << "\n-------- [ " BOLDBLUE << "FareWell Web Server Info" << RESET
+            << " ] --------\n"
+            << std::endl;
+
+  std::set<t_listening*>::const_iterator it = servers_.begin();
+  for (; it != servers_.end(); ++it) {
+    std::cout << "socket: " << BOLDGREEN << (*it)->fd << RESET;
+    std::cout << "   | host: " << BOLDGREEN << (*it)->host << RESET;
+    std::cout << "   | port: " << BOLDGREEN << (*it)->port << RESET << std::endl
+              << std::endl;
+  }
+  std::cout << "----------------------------------------------" << std::endl;
+
+  // #if SERVER
+  //     std::cout << server_infos_[i].host_ << " is listening port on "
+  //               << server_infos_[i].port_ << "\n";
+  // #endif
 }
 
 // private
