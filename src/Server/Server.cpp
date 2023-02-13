@@ -15,7 +15,6 @@ Server::~Server(void) {
   delete msg_composer_;
 }
 
-
 void Server::Run(void) {
   if (servers_.size() == 0) {
     throw std::runtime_error("[Server Error]: no listening server");
@@ -24,11 +23,6 @@ void Server::Run(void) {
     Act();
   }
 }
-
-
-
-
-
 
 void Server::Init(void) {
   for (size_t i = 0; i < server_infos_.size(); ++i) {
@@ -43,13 +37,13 @@ void Server::Init(void) {
 
     BindListen(server_infos_[i].host_, server_infos_[i].port_, listenfd);
     EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0,
-            (void*)&server_infos_[i]);
+           (void*)&server_infos_[i]);
     // EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
       throw std::runtime_error("Error: kevent()");
     }
     t_listening* tmp = CreateListening(server_infos_[i].host_,
-                                        server_infos_[i].port_, listenfd);
+                                       server_infos_[i].port_, listenfd);
     servers_.insert(tmp);
     // delete tmp;
 #if SERVER
@@ -154,19 +148,17 @@ void Server::Act(void) {
 void Server::ActCoreLogic(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   const ServerConfigInfo* config = client->GetConfig();
-	struct kevent event;
-	int client_fd = client->GetClientFd();
+  struct kevent event;
+  int client_fd = client->GetClientFd();
 
-
-
-	EV_SET(&event, client_fd, EVFILT_READ, EV_DISABLE, 0, 0, client);
+  EV_SET(&event, client_fd, EVFILT_READ, EV_DISABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
-
 
   req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
   req_handler_->SetReadLen(events_[idx].data);
   if (events_[idx].data == 0) {
-		Pong(idx);
+    // DisConnect(events_[idx].ident);
+    Pong(idx);
     std::cout << RED << "Pong! to " << client_fd << "\n" << RESET;
     return;
   }
@@ -180,10 +172,15 @@ void Server::ActCoreLogic(int idx) {
   // for(size_t i = 0; i < client->req_message_->body_data_.length_; ++i)
   //   write(1, &client->req_message_->body_data_.data_[i], 1);
 
-  if (client->GetReqMethod() == "GET") {
+  // Data* client = clients_->GetDataByFd(events_[idx].ident);
+  if (client->GetStatusCode() == 413) {
+    EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
+  } else if (client->GetReqMethod() == "GET") {
     Get(idx);
   } else if (client->GetReqMethod() == "POST") {
-    if (client->is_remain == true && client->req_message_->body_data_.data_ == NULL) {
+    if (client->is_remain == true &&
+        client->req_message_->body_data_.data_ == NULL) {
       client->SetStatusCode(100);
       std::cout << RED << client_fd << " Continue!\n" << RESET;
       EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
@@ -211,7 +208,7 @@ void Server::AcceptNewClient(int idx) {
   client_len = sizeof(client_addr);
   connfd =
       accept(events_[idx].ident,
-              reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
+             reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
   if (connfd == -1) {
     throw std::runtime_error("Error: accept()");
   }
@@ -232,9 +229,9 @@ void Server::AcceptNewClient(int idx) {
   /* event setting */
   EV_SET(&event[0], connfd, EVFILT_READ, EV_ADD, 0, 0, clients_->GetData());
   EV_SET(&event[1], connfd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0,
-          clients_->GetData());
+         clients_->GetData());
   EV_SET(&event[2], connfd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS,
-          config->timeout_, clients_->GetData());
+         config->timeout_, clients_->GetData());
   if (kevent(kq_, event, 3, NULL, 0, NULL) == -1) {
     throw std::runtime_error("Error: kevent()");
   }
@@ -251,7 +248,7 @@ void Server::BindListen(const std::string& host, const int& port,
       throw std::runtime_error("failed at socket create");
     }
     setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
-                reinterpret_cast<const void*>(&optval), sizeof(int));
+               reinterpret_cast<const void*>(&optval), sizeof(int));
     if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0) {
       break;
     }
@@ -267,7 +264,7 @@ void Server::BindListen(const std::string& host, const int& port,
   }
 }
 void Server::GetAddrInfo(const std::string& host, const int& port,
-                          struct addrinfo** listp) {
+                         struct addrinfo** listp) {
   struct addrinfo hints;
   int status;
 
@@ -284,7 +281,7 @@ void Server::GetAddrInfo(const std::string& host, const int& port,
   }
 }
 t_listening* Server::CreateListening(const std::string& host, const int& port,
-                                      const int& fd) {
+                                     const int& fd) {
   t_listening* new_listening = new t_listening;
   new_listening->host = host;
   new_listening->port = port;
@@ -314,9 +311,9 @@ void Server::DisConnect(const int& fd) {
 void Server::Get(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   const ServerConfigInfo* config = client->config_;
-  (void) config;
+  (void)config;
   t_req_msg* req_msg = client->GetReqMessage();
-	struct kevent event;
+  struct kevent event;
 
   std::string req_url = req_msg->req_url_;
   std::string file_path;
@@ -349,7 +346,8 @@ void Server::Get(int idx) {
     size_t pos = file_name.rfind('.');
 
     if (pos == std::string::npos) {
-      client->res_message_->headers_["Content-Type"] = "text/plain; charset=UTF-8";
+      client->res_message_->headers_["Content-Type"] =
+          "text/plain; charset=UTF-8";
     } else {
       std::string file_extention = file_name.substr(pos + 1);
       if (file_extention == "html") {
@@ -359,7 +357,8 @@ void Server::Get(int idx) {
       } else if (file_extention == "jpg") {
         client->res_message_->headers_["Content-Type"] = "image/jpeg";
       } else if (file_extention == "txt") {
-        client->res_message_->headers_["Content-Type"] = "ext/plain; charset=UTF-8";
+        client->res_message_->headers_["Content-Type"] =
+            "ext/plain; charset=UTF-8";
       } else if (file_extention == "py") {
         client->res_message_->headers_["Content-Type"] = "text/x-python";
       } else {
@@ -401,7 +400,7 @@ void Server::Post(int idx) {
     content = content.substr(equal_pos + 1);
 
     int file_fd = open((config->upload_path_ + title).c_str(),
-												O_WRONLY | O_CREAT | O_TRUNC);
+                       O_WRONLY | O_CREAT | O_TRUNC);
     if (file_fd == -1) {
       // 오픈에러 처리
       std::cout << RED << "OPEN ERROR\n";
@@ -414,17 +413,17 @@ void Server::Post(int idx) {
     std::string encoded_title = encoded_string.substr(0, and_pos);
     equal_pos = encoded_title.find('=');
     encoded_title = encoded_title.substr(equal_pos + 1, and_pos - equal_pos);
-    client->res_message_->headers_["Location"] = config->upload_path_ + encoded_title;
+    client->res_message_->headers_["Location"] =
+        config->upload_path_ + encoded_title;
     client->res_message_->headers_["Content-Type"] = "text/html; charset=UTF-8";
     client->res_message_->headers_["Content-Length"] = "23";
-		client->res_message_->body_data_.data_ = strdup("<h1>Success Upload</h1>");
-		client->res_message_->body_data_.length_ = 23;
+    client->res_message_->body_data_.data_ = strdup("<h1>Success Upload</h1>");
+    client->res_message_->body_data_.length_ = 23;
     client->SetStatusCode(201);
     client->SetFileFd(file_fd);
 
     EV_SET(&event, file_fd, EVFILT_WRITE, EV_ADD, 0, 0, client);
     kevent(kq_, &event, 1, NULL, 0, NULL);
-
 
   } else {
     size_t semicolon_pos = content_type.find(';');
@@ -434,8 +433,7 @@ void Server::Post(int idx) {
     content_type = content_type.substr(0, semicolon_pos);
     boundary = boundary.substr(equal_pos + 1);
     if (content_type == "multipart/form-data") {
-      if (client->req_message_->body_data_.data_ == NULL)
-      {
+      if (client->req_message_->body_data_.data_ == NULL) {
         client->SetReqMethod("GET");
         client->SetStatusCode(501);
         client->req_message_->req_url_ = config->error_pages_.find(501)->second;
@@ -445,11 +443,12 @@ void Server::Post(int idx) {
 
       std::string data_info;
       int idx = 0;
-      for(; strncmp(&client->req_message_->body_data_.data_[idx], "\r\n\r\n", 4); ++idx) {
+      for (;
+           strncmp(&client->req_message_->body_data_.data_[idx], "\r\n\r\n", 4);
+           ++idx) {
         data_info.push_back(client->req_message_->body_data_.data_[idx]);
       }
 
-      
       if (data_info.size() == client->req_message_->body_data_.length_) {
         client->SetReqMethod("GET");
         client->SetStatusCode(501);
@@ -458,7 +457,8 @@ void Server::Post(int idx) {
         return;
       }
 
-      std::string content_type = data_info.substr(data_info.find("Content-Type"));
+      std::string content_type =
+          data_info.substr(data_info.find("Content-Type"));
       content_type = content_type.substr(content_type.find(':') + 2);
 
       if (content_type != "image/png" && content_type != "image/jpeg") {
@@ -483,19 +483,25 @@ void Server::Post(int idx) {
 
       int size = 0;
       int tmp_idx = idx;
-      for(; strncmp(&client->req_message_->body_data_.data_[idx], boundary.c_str(), boundary.size()); ++idx) {
+      for (; strncmp(&client->req_message_->body_data_.data_[idx],
+                     boundary.c_str(), boundary.size());
+           ++idx) {
         ++size;
       }
       client->binary_start_idx = tmp_idx + 4;
       client->binary_size = size;
 
-      int file_fd = open((config->upload_path_ + file_name).c_str(), O_RDWR | O_CREAT | O_TRUNC);
+      int file_fd = open((config->upload_path_ + file_name).c_str(),
+                         O_RDWR | O_CREAT | O_TRUNC);
       fchmod(file_fd, S_IRWXU | S_IRWXG | S_IRWXO);
 
-      client->res_message_->headers_["Location"] = config->upload_path_ + file_name;
-      client->res_message_->headers_["Content-Type"] = "text/html; charset=UTF-8";
+      client->res_message_->headers_["Location"] =
+          config->upload_path_ + file_name;
+      client->res_message_->headers_["Content-Type"] =
+          "text/html; charset=UTF-8";
       client->res_message_->headers_["Content-Length"] = "23";
-      client->res_message_->body_data_.data_ = strdup("<h1>Success Upload</h1>");
+      client->res_message_->body_data_.data_ =
+          strdup("<h1>Success Upload</h1>");
       client->res_message_->body_data_.length_ = 23;
 
       client->SetFileFd(file_fd);
@@ -537,7 +543,9 @@ void Server::WriteFile(int idx) {
   if (client->binary_size == 0)
     write(file_fd, client->post_data_.c_str(), client->post_data_.size());
   else
-    write(file_fd, &client->req_message_->body_data_.data_[client->binary_start_idx], client->binary_size);
+    write(file_fd,
+          &client->req_message_->body_data_.data_[client->binary_start_idx],
+          client->binary_size);
 
   struct kevent event;
   EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
@@ -550,14 +558,15 @@ void Server::WriteFile(int idx) {
 void Server::Send(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
 
-	client->res_message_->headers_["Server"] = "farewell_webserv";
+  client->res_message_->headers_["Server"] = "farewell_webserv";
   if (client->timeout_ == true || client->GetStatusCode() == 413) {
     client->res_message_->headers_["Connection"] = "close";
   } else {
     client->res_message_->headers_["Connection"] = "keep-alive";
   }
 
-  client->res_message_->headers_["Cache-Control"] = "no-cache, no-store, must-revalidate";
+  client->res_message_->headers_["Cache-Control"] =
+      "no-cache, no-store, must-revalidate";
   client->res_message_->headers_["Pragma"] = "no-cache";
   client->res_message_->headers_["Expires"] = "0";
 
@@ -580,22 +589,20 @@ void Server::Send(int idx) {
   EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
-  if(file_fd != -1)
-    close(file_fd);
-  if (client->GetStatusCode() == 413)
-  DisConnect(client_fd);
+  if (file_fd != -1) close(file_fd);
+  if (client->GetStatusCode() == 413) DisConnect(client_fd);
 }
 
 void Server::Pong(int idx) {
-	Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-	int client_fd = client->GetClientFd();
-	struct kevent event;
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  int client_fd = client->GetClientFd();
+  struct kevent event;
 
-	client->res_message_->headers_["Content-Type"] = "text/plain";
-	client->res_message_->headers_["Content-Length"] = "4";
-	client->res_message_->body_data_.data_ = strdup("pong");
-	client->res_message_->body_data_.length_ = 4;
+  client->res_message_->headers_["Content-Type"] = "text/plain";
+  client->res_message_->headers_["Content-Length"] = "4";
+  client->res_message_->body_data_.data_ = strdup("pong");
+  client->res_message_->body_data_.length_ = 4;
 
-	EV_SET(&event, client_fd, EVFILT_WRITE, ENABLE, 0, 0, client);
-	kevent(kq_, &event, 1, NULL, 0, NULL);
+  EV_SET(&event, client_fd, EVFILT_WRITE, ENABLE, 0, 0, client);
+  kevent(kq_, &event, 1, NULL, 0, NULL);
 }

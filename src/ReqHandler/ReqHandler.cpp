@@ -67,7 +67,7 @@ void ReqHandler::RecvFromSocket() {
               << std::endl;
 #endif
   }
-  // write(1, buf_, read_len_);
+  write(1, buf_, read_len_);
 }
 
 int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
@@ -238,7 +238,7 @@ void ReqHandler::ParseRecv() {
   buf_ = NULL;
 }
 
-void ReqHandler::ValidateReq(void) {
+void ReqHandler::ValidateReq() {
   // POST -> body_size 유호성 확인
   // POST인 경우에는 아래의 유호성 검사가 필요가 없다
   if (req_msg_->method_ == "POST") {
@@ -246,9 +246,12 @@ void ReqHandler::ValidateReq(void) {
         static_cast<int>(req_msg_->body_data_.length_)) {
       // body size error의 경우에는 메서드를 GET으로 바꿔줘야 브라우저에
       // 501페이지가 나옴
+      // req_msg_->method_ = "GET";
+      // client_->SetStatusCode(501);
+
       req_msg_->method_ = "GET";
-      client_->SetStatusCode(501);
-      req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
+      client_->SetStatusCode(413);
+      // req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
     } else {
       client_->SetStatusCode(200);
       req_msg_->req_url_.clear();

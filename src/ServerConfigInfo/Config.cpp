@@ -1,8 +1,6 @@
 #include "../../include/Config.hpp"
 
 Config::Config(const char* file_path) {
-  std::cout << "Config file path: " << file_path << std::endl;
-
   std::ifstream fs(file_path);
   std::string content;
   std::string line;
@@ -111,10 +109,6 @@ bool Config::CheckValidPath(const std::string& file_path) const {
 }
 
 void Config::CheckValidation(void) {
-#if CONFIG
-  std::cout << BOLDCYAN
-            << "======== Validation Check Start ========" << std::endl;
-#endif
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
     ServerConfigInfo& info = server_config_infos_[i];
     if (info.port_ == -1 || info.body_size_ == 0 || info.root_path_.empty() ||
@@ -129,7 +123,6 @@ void Config::CheckValidation(void) {
       std::string error_page_path = info.root_path_ + error_it->second;
 
       if (CheckValidPath(error_page_path)) {
-        std::cout << error_page_path << std::endl;
         info.error_pages_[error_page_status_code] = error_page_path;
       } else {
         ExitConfigValidateError("Wrong error_page path");
@@ -142,9 +135,6 @@ void Config::CheckValidation(void) {
       CheckLocation(loc_it->second);
     }
   }
-#if CONFIG
-  std::cout << "======= Validation Check Finish ========" << RESET << std::endl;
-#endif
 }
 
 void Config::CheckLocation(t_location& loc) {
