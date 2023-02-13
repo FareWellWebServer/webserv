@@ -78,7 +78,7 @@ void Server::Act(void) {
   }
   for (int idx = 0; idx < n; ++idx) {
 
-    if (events_[idx].ident == logger_.GetLogFileFD()) {
+    if (static_cast<int>(events_[idx].ident) == logger_.GetLogFileFD()) {
       struct kevent event;
 
       const std::string log_msg = reinterpret_cast<char*>(events_[idx].udata);
