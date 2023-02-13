@@ -79,6 +79,8 @@ void Config::SetServerConfigInfo(const std::string& key,
     ParseRoot(vec);
   } else if (key == "upload_path") {
     ParseUploadPath(vec);
+  } else if (key == "log_path") {
+    ParseLogPath(vec);
   } else if (key == "timeout") {
     ParseTimeout(vec);
   } else if (key == "method") {

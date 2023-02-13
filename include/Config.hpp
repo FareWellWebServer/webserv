@@ -34,6 +34,7 @@ class Config {
   void ParseBodySize(const value &vec);
   void ParseRoot(const value &vec);
   void ParseUploadPath(const value &vec);
+  void ParseLogPath(const value &vec);
   void ParseTimeout(const value &vec);
   void ParseMethods(const value &vec);
   void ParseErrorPage(const value &vec);
