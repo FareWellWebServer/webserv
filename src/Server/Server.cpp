@@ -4,7 +4,6 @@ Server::Server(std::vector<ServerConfigInfo> server_info)
     : server_infos_(server_info), kq_(kqueue()) {
   clients_ = new ClientMetaData;
   req_handler_ = new ReqHandler;
-  // res_handler_ = new ResHandler;
   msg_composer_ = new MsgComposer;
   cgi_manager_ = new CGIManager;
 }
@@ -13,9 +12,10 @@ Server::~Server(void) {
   servers_.clear();
   delete clients_;
   delete req_handler_;
-  // delete res_handler_;
   delete msg_composer_;
 }
+
+
 void Server::Run(void) {
   if (servers_.size() == 0) {
     throw std::runtime_error("[Server Error]: no listening server");
@@ -24,6 +24,12 @@ void Server::Run(void) {
     Act();
   }
 }
+
+
+
+
+
+
 void Server::Init(void) {
   for (size_t i = 0; i < server_infos_.size(); ++i) {
 #if SERVER
