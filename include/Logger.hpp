@@ -23,7 +23,6 @@ class Logger {
  private:
   fd logger_file_fd_;
   int server_kq_;
-  static Logger* instance_;
 };
 
 #endif

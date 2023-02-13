@@ -58,7 +58,6 @@ void Config::ParseUploadPath(const std::vector<std::string> &vec) {
     ExitConfigParseError();
 }
 
-
 void Config::ParseTimeout(const std::vector<std::string> &vec) {
   if (!IsNumber(vec[0])) ExitConfigParseError();
 
