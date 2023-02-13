@@ -205,8 +205,8 @@ void Config::CheckLocation(t_location& loc) {
 }
 
 /* ======================== Getter ======================== */
-std::vector<ServerConfigInfo> Config::GetServerConfigInfos(void) {
+std::vector<ServerConfigInfo> Config::GetServerConfigInfos(void) const {
   return server_config_infos_;
 }
 
-std::string Config::GetLogPath(void) { return log_path_; }
+std::string Config::GetLogPath(void) const { return log_path_; }

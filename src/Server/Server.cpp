@@ -1,7 +1,7 @@
 #include "../../include/Server.hpp"
 
-Server::Server(std::vector<ServerConfigInfo> server_info)
-    : server_infos_(server_info), kq_(kqueue()), logger_(Logger(kq_)) {
+Server::Server(const Config& config)
+    : server_infos_(config.GetServerConfigInfos()), kq_(kqueue()), logger_(Logger(kq_, config.GetLogPath())) {
   clients_ = new ClientMetaData;
   req_handler_ = new ReqHandler;
   // res_handler_ = new ResHandler;
@@ -55,14 +55,21 @@ void Server::Init(void) {
 
 // private
 void Server::Act(void) {
+  logger_.error("error test 222");
+
   int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
   if (n == -1) {
     throw std::runtime_error("Error: kevent()");
   }
   for (int idx = 0; idx < n; ++idx) {
     if ((int)events_[idx].ident == logger_.GetLogFileFD()) {
+      struct kevent event;
+
+      std::cout << "hello" << std::endl;
       const std::string log_msg = reinterpret_cast<char*>(events_[idx].udata);
       write(logger_.GetLogFileFD(), log_msg.c_str(), log_msg.length());
+      EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DISABLE, 0, 0,  NULL);
+      kevent(kq_, &event, 1, 0, 0, NULL);
     };
 
     /* listen port로 새로운 connect 요청이 들어옴 */

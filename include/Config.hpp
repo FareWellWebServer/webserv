@@ -21,8 +21,8 @@ class Config {
   typedef std::vector<std::string> value;
 
   /* ======================== Getter ======================== */
-  std::vector<ServerConfigInfo> GetServerConfigInfos(void);
-  std::string GetLogPath(void);
+  std::vector<ServerConfigInfo> GetServerConfigInfos(void) const;
+  std::string GetLogPath(void) const;
 
   /* ======================== Parsing Server ======================== */
   void InitServerConfigInfo(ServerConfigInfo &info);

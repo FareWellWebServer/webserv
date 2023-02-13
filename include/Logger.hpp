@@ -13,7 +13,7 @@ class Logger {
  public:
   /// @brief logger.info("message") 같은 방식으로 로깅에 사용.
   /// @param msg
-  Logger(int kq);
+  Logger(int kq, const std::string& log_dir_path);
   virtual ~Logger(void);
   void info(std::string msg) const;
   void warn(std::string msg) const;

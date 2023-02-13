@@ -52,12 +52,10 @@ typedef struct s_litening {
 
 class Server {
  public:
-  // Server(void);
-  Server(std::vector<ServerConfigInfo>);
+  Server(const Config& config);
   ~Server(void);
 
   void Run(void);
-  // void Init(const std::vector<ServerConfigInfo>& server_infos);
   void Init(void);
 
   // 임의로 public에 나둠 나중에 setter구현해야함
