@@ -7,6 +7,7 @@ Server::Server(std::vector<ServerConfigInfo> server_info)
   msg_composer_ = new MsgComposer;
   cgi_manager_ = new CGIManager;
 }
+
 Server::~Server(void) {
   close(kq_);
   servers_.clear();
@@ -146,7 +147,9 @@ void Server::Act(void) {
 }
 
 void Server::ActCoreLogic(int idx) {
-  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  Data* 
+  client = reinterpret_cast<Data*>(
+    events_[idx].udata);
   const ServerConfigInfo* config = client->GetConfig();
   struct kevent event;
   int client_fd = client->GetClientFd();
@@ -173,22 +176,23 @@ void Server::ActCoreLogic(int idx) {
   //   write(1, &client->req_message_->body_data_.data_[i], 1);
 
   // Data* client = clients_->GetDataByFd(events_[idx].ident);
-  if (client->GetStatusCode() == 413) {
+  if (
+    client->GetStatusCode() == 413) {
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
     kevent(kq_, &event, 1, NULL, 0, NULL);
   } else if (client->GetReqMethod() == "GET") {
     Get(idx);
   } else if (client->GetReqMethod() == "POST") {
-    if (client->is_remain == true &&
-        client->req_message_->body_data_.data_ == NULL) {
+    if (client->is_remain == true && client->req_message_->body_data_.data_ == NULL) {
       client->SetStatusCode(100);
-      std::cout << RED << client_fd << " Continue!\n" << RESET;
       EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
       kevent(kq_, &event, 1, NULL, 0, NULL);
+      std::cout << RED << client_fd << " Continue!\n" << RESET;
     } else {
       Post(idx);
     }
   } else if (client->GetReqMethod() == "DELETE") {
+
   } else {
     client->SetStatusCode(501);
     client->SetReqURL(config->error_pages_.find(501)->second);
@@ -207,8 +211,7 @@ void Server::AcceptNewClient(int idx) {
 
   client_len = sizeof(client_addr);
   connfd =
-      accept(events_[idx].ident,
-             reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
+      accept(events_[idx].ident, reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
   if (connfd == -1) {
     throw std::runtime_error("Error: accept()");
   }
@@ -264,7 +267,7 @@ void Server::BindListen(const std::string& host, const int& port,
   }
 }
 void Server::GetAddrInfo(const std::string& host, const int& port,
-                         struct addrinfo** listp) {
+                          struct addrinfo** listp) {
   struct addrinfo hints;
   int status;
 
@@ -281,7 +284,7 @@ void Server::GetAddrInfo(const std::string& host, const int& port,
   }
 }
 t_listening* Server::CreateListening(const std::string& host, const int& port,
-                                     const int& fd) {
+                                      const int& fd) {
   t_listening* new_listening = new t_listening;
   new_listening->host = host;
   new_listening->port = port;
@@ -433,6 +436,8 @@ void Server::Post(int idx) {
     content_type = content_type.substr(0, semicolon_pos);
     boundary = boundary.substr(equal_pos + 1);
     if (content_type == "multipart/form-data") {
+
+
       if (client->req_message_->body_data_.data_ == NULL) {
         client->SetReqMethod("GET");
         client->SetStatusCode(501);
@@ -442,72 +447,106 @@ void Server::Post(int idx) {
       }
 
       std::string data_info;
-      int idx = 0;
-      for (;
-           strncmp(&client->req_message_->body_data_.data_[idx], "\r\n\r\n", 4);
-           ++idx) {
-        data_info.push_back(client->req_message_->body_data_.data_[idx]);
+      size_t idx = 0;
+      if (client->is_first) {
+        for (; strncmp(&client->req_message_->body_data_.data_[idx], "\r\n\r\n", 4); ++idx) {
+          data_info.push_back(client->req_message_->body_data_.data_[idx]);
+        }
+
+        /* 바운더리 정보만 오고 뒤에 아무것도 안 올 때 */
+        if (data_info.size() == client->req_message_->body_data_.length_) {
+          client->SetReqMethod("GET");
+          client->SetStatusCode(501);
+          client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+          Get(idx);
+          return;
+        }
+        std::string content_type =
+            data_info.substr(data_info.find("Content-Type"));
+        content_type = content_type.substr(content_type.find(':') + 2);
+
+        if (content_type != "image/png" && content_type != "image/jpeg") {
+          client->SetReqMethod("GET");
+          client->SetStatusCode(501);
+          client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+          Get(idx);
+          return;
+        }
+
+        std::string file_name = data_info.substr(data_info.find("filename="));
+        file_name = file_name.substr(file_name.find('"') + 1);
+        file_name = file_name.substr(0, file_name.find('"'));
+
+        if (file_name.size() == 0) {
+          client->SetReqMethod("GET");
+          client->SetStatusCode(501);
+          client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+          Get(idx);
+          return;
+        }
+        client->file_name = file_name;
       }
 
-      if (data_info.size() == client->req_message_->body_data_.length_) {
-        client->SetReqMethod("GET");
-        client->SetStatusCode(501);
-        client->req_message_->req_url_ = config->error_pages_.find(501)->second;
-        Get(idx);
-        return;
+
+
+
+      size_t size = 0;
+      size_t tmp_idx = idx;
+      const char* cbody_data = client->req_message_->body_data_.data_;
+      std::string body_data;
+      for(; idx < client->req_message_->body_data_.length_; ++idx) {
+        body_data.push_back(cbody_data[idx]);
       }
 
-      std::string content_type =
-          data_info.substr(data_info.find("Content-Type"));
-      content_type = content_type.substr(content_type.find(':') + 2);
+      if (body_data.find(boundary) == std::string::npos) { // 바운더리가 없으면.
+        client->SetStatusCode(100);
+        client->boundary = boundary;
+        if (client->is_first == true) {
+          client->binary_start_idx = tmp_idx + 4;
+          client->binary_size = client->req_message_->body_data_.length_ - data_info.size() - 4;
+        } else {
+          client->binary_start_idx = tmp_idx;
+          client->binary_size = client->req_message_->body_data_.length_;
+        }
+      } else { // 바운더리가 있으면.
+        idx = tmp_idx;
+        for (; strncmp(&cbody_data[idx], boundary.c_str(), boundary.size()); ++idx) {
+          ++size;
+        }
 
-      if (content_type != "image/png" && content_type != "image/jpeg") {
-        client->SetReqMethod("GET");
-        client->SetStatusCode(501);
-        client->req_message_->req_url_ = config->error_pages_.find(501)->second;
-        Get(idx);
-        return;
+
+        if (client->is_first == true) {
+          client->binary_start_idx = tmp_idx + 4;
+        } else {
+          client->binary_start_idx = tmp_idx;
+        }
+        client->binary_size = size;
+        client->res_message_->headers_["Location"] =
+            config->upload_path_ + client->file_name;
+        client->res_message_->headers_["Content-Type"] =
+            "text/html; charset=UTF-8";
+        client->res_message_->headers_["Content-Length"] = "23";
+        client->res_message_->body_data_.data_ =
+            strdup("<h1>Success Upload</h1>");
+        client->res_message_->body_data_.length_ = 23;
+        client->SetStatusCode(201);
+        client->is_remain = false;
       }
 
-      std::string file_name = data_info.substr(data_info.find("filename="));
-      file_name = file_name.substr(file_name.find('"') + 1);
-      file_name = file_name.substr(0, file_name.find('"'));
-
-      if (file_name.size() == 0) {
-        client->SetReqMethod("GET");
-        client->SetStatusCode(501);
-        client->req_message_->req_url_ = config->error_pages_.find(501)->second;
-        Get(idx);
-        return;
+      if (client->is_first == true) {
+        int file_fd = open((config->upload_path_ + client->file_name).c_str(), O_RDWR | O_CREAT | O_TRUNC);
+        fchmod(file_fd, S_IRWXU | S_IRWXG | S_IRWXO);
+        client->SetFileFd(file_fd);
+        EV_SET(&event, file_fd, EVFILT_WRITE, EV_ADD, 0, 0, client);
+        kevent(kq_, &event, 1, NULL, 0, NULL);
+        client->is_first = false;
+      } else {
+        EV_SET(&event, client->GetFileFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+        kevent(kq_, &event, 1, NULL, 0, NULL);
       }
 
-      int size = 0;
-      int tmp_idx = idx;
-      for (; strncmp(&client->req_message_->body_data_.data_[idx],
-                     boundary.c_str(), boundary.size());
-           ++idx) {
-        ++size;
-      }
-      client->binary_start_idx = tmp_idx + 4;
-      client->binary_size = size;
 
-      int file_fd = open((config->upload_path_ + file_name).c_str(),
-                         O_RDWR | O_CREAT | O_TRUNC);
-      fchmod(file_fd, S_IRWXU | S_IRWXG | S_IRWXO);
 
-      client->res_message_->headers_["Location"] =
-          config->upload_path_ + file_name;
-      client->res_message_->headers_["Content-Type"] =
-          "text/html; charset=UTF-8";
-      client->res_message_->headers_["Content-Length"] = "23";
-      client->res_message_->body_data_.data_ =
-          strdup("<h1>Success Upload</h1>");
-      client->res_message_->body_data_.length_ = 23;
-
-      client->SetFileFd(file_fd);
-      client->SetStatusCode(201);
-      EV_SET(&event, file_fd, EVFILT_WRITE, EV_ADD, 0, 0, client);
-      kevent(kq_, &event, 1, NULL, 0, NULL);
 
     } else {
       client->SetReqMethod("GET");
@@ -517,6 +556,9 @@ void Server::Post(int idx) {
     }
   }
 }
+
+
+
 
 void Server::ReadFile(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
@@ -535,6 +577,14 @@ void Server::ReadFile(int idx) {
   EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 }
+
+
+
+
+
+
+
+
 void Server::WriteFile(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int client_fd = client->GetClientFd();
@@ -551,9 +601,16 @@ void Server::WriteFile(int idx) {
   EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
-  EV_SET(&event, file_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+  if (client->is_remain) {
+    EV_SET(&event, file_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, client);
+  } else {
+    EV_SET(&event, file_fd, EVFILT_WRITE, EV_DELETE, 0, 0, client);
+  }
   kevent(kq_, &event, 1, NULL, 0, NULL);
 }
+
+
+
 
 void Server::Send(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
@@ -586,10 +643,12 @@ void Server::Send(int idx) {
   EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
-  EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+  EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
-  if (file_fd != -1) close(file_fd);
+  if (file_fd != -1 && client->is_remain == false){
+    close(file_fd);
+  } 
   if (client->GetStatusCode() == 413) DisConnect(client_fd);
 }
 
@@ -605,4 +664,17 @@ void Server::Pong(int idx) {
 
   EV_SET(&event, client_fd, EVFILT_WRITE, ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
+}
+
+void Server::Continue(int idx) {
+  (void) idx;
+  // struct kevent event;
+  // Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  // int client_fd = client->GetClientFd();
+  // int file_fd = client->GetFileFd();
+
+  // if (client->req_message_->body_data_.data_ == NULL) {
+    
+  // } else {
+  // }
 }

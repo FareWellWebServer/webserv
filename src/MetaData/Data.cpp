@@ -16,6 +16,7 @@ Data::Data(void)
       is_download(false),
       is_working(false),
       is_remain(false),
+      is_first(true),
       file_fd_(-1),
       log_file_fd_(-1),
       binary_start_idx(0),
@@ -67,9 +68,13 @@ void Data::Clear(void) {
   is_directory_list_ = false;
   is_download = false;
   is_working = false;
+  is_first = true;
   file_fd_ = -1;
   binary_start_idx = 0;
   binary_size = 0;
+  post_data_.clear();
+  boundary.clear();
+  file_name.clear();
   pipe_[READ] = -1;
   pipe_[WRITE] = -1;
   if (req_message_ != NULL) {

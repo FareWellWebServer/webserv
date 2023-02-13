@@ -130,6 +130,7 @@ class Data {
   bool is_download;
   bool is_working;
   bool is_remain;
+  bool is_first;
   int file_fd_;
   int log_file_fd_;
   int binary_start_idx;
@@ -145,6 +146,8 @@ class Data {
   // message 구조체들은 요청 들어왔을 때 동적할당해주고, 응답할 때 프리해주면
   // 될듯
   std::string post_data_;
+  std::string boundary;
+  std::string file_name;
   stage e_stage;
 };
 

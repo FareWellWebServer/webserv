@@ -67,7 +67,7 @@ void ReqHandler::RecvFromSocket() {
               << std::endl;
 #endif
   }
-  write(1, buf_, read_len_);
+  // write(1, buf_, read_len_);
 }
 
 int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
@@ -195,6 +195,7 @@ void ReqHandler::ParseEntity(int start_idx) {
 #if DG
       std::cout << "[ReqHandler] There is no entity(body)" << std::endl;
 #endif
+      client_->is_remain = true;
       return;
     }
   }
@@ -213,6 +214,8 @@ void ReqHandler::ParseRecv() {
     return;
   }
   if (client_->is_remain == true) {
+    if (client_->req_message_->body_data_.data_)
+      delete[] client_->req_message_->body_data_.data_;
     client_->req_message_->body_data_.data_ = new char[read_len_];
     memcpy(client_->req_message_->body_data_.data_, buf_, read_len_);
   } else {
@@ -260,7 +263,7 @@ void ReqHandler::ValidateReq() {
   }
 
   std::string req_url = decode(req_msg_->req_url_);
-  std::cout << "decode req_url: " << req_url << std::endl;
+  std::cout << BLUE << "decode req_url: " << req_url << RESET << std::endl;
   size_t last_slash_idx = req_url.find_last_of("/");
   std::string req_location_path = req_url.substr(0, last_slash_idx + 1);
   std::string req_file_path = req_url.substr(last_slash_idx + 1);

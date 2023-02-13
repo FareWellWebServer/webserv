@@ -69,6 +69,7 @@ class Server {
 
   void Get(int idx);
   void Post(int idx);
+  void Continue(int idx);
   void ReadFile(int idx);
   void WriteFile(int idx);
   void Send(int idx);
