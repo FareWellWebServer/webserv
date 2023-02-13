@@ -55,8 +55,6 @@ void Server::Init(void) {
 
 // private
 void Server::Act(void) {
-  logger_.error("error test 222");
-
   int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
   if (n == -1) {
     throw std::runtime_error("Error: kevent()");
