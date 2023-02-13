@@ -78,11 +78,10 @@ void CGIManager::SendToCGI(Data* client, int kq)
     client_->SetPipeWrite(p[1]);
     pid = fork();
     if (pid > 0) {
-        write(p[1], client_->GetReqBodyData(), client_->GetReqBodyLength());
+        close(p[1]);
         struct kevent event;
         EV_SET(&event, p[0], EVFILT_READ, EV_ADD, 0, 0, client_);
         kevent(kq, &event, 1, NULL, 0, NULL);
-        close(p[1]);
     }
     else if (pid == 0) {
         SetCGIEnv(client);
@@ -90,7 +89,12 @@ void CGIManager::SendToCGI(Data* client, int kq)
         dup2(p[0], 0);
         extern char** environ;
         // extern char** __argv;
-        if (execve(client_->GetReqURL().c_str(), NULL, environ) < 0) {
+        // if (execve(client_->GetReqURL().c_str(), NULL, environ) < 0) {
+        char **argv = new char*[3];
+        argv[0] = strdup("python3");
+        argv[1] = strdup("/Users/dongchoi/webserv/asset/cgi-bin/test.py");
+        argv[2] = NULL;
+        if (execve("/usr/bin/python3", argv, environ) < 0) {
             #if CGI
                 std::cout << "[CGI] execve 에러" << std::endl;
             #endif
@@ -109,34 +113,83 @@ void CGIManager::SendToCGI(Data* client, int kq)
  * @brief 이거 하기 전에 반드시 CGIManager.SetData해야함. 이후에 MSGComposer 호출하면 됨
  * @param len : kevent->data
  */
-void CGIManager::GetFromCGI(Data* client, size_t len, int kq)
+char* CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
 {
     SetData(client);
 
+    std::cout << "len : " << len << std::endl;
     char* buf = new char[len];
     read(client_->GetPipeRead(), buf, len);
+    write(2, buf, len);
     struct kevent event;
     EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
     kevent(kq, &event, 1, NULL, 0, NULL);
     close(client_->GetPipeRead());
-    client_->SetMethodEntityLength(len);
-    client_->SetMethodEntityData(buf);
-    char* type = ParseCGIType(buf);
-    client_->SetMethodEntityType(type);
+    // 첫줄 컨텐츠타입 잘 왔는지 확인
+    if (CheckValid(buf) == true) {
+        SetFirstLine();
+        // 헤더 세팅(파싱)
+        // 본문 넣어주기
+        // 본문 길이 설정해주기
+    };
+    // buf delete 해주기
+
+    ParseFirstLine(buf);
+    return (buf);
+
 }
 
-/**
- * @brief 첫줄 보고 타입 뭔지 판단할 수 있게 해주기. 일단 html 만 있음
- * 
- * @param buf CGI에서 받아온 body
- * @return char* MethodEntity->type에 들어갈 type이 동적할당해서 나옴
- */
-char* CGIManager::ParseCGIType(char* buf) {
-    if (strncmp("<!DOCTYPE html>\n", buf, 16) == 0) {
-        return strdup("text/html");
-    }
+bool CGIManager::CheckValid(char* buf) {
+    if (strncmp(buf, "Content-type: text/html\n", 24) == 0)
+        return true;
+    client_->status_code_ == 500;
+    client_->req_message_->req_url_ = client_->config_->error_pages_.find(501)->second;
     #if CGI
-        std::cout << "[CGIManager] ParseCGIType() No type" << std::endl;
+        std::cout << "[CGI] cgi 첫줄이 content-type이 아님. 상태코드 500번으로 설정" << std::endl;
     #endif
-    return NULL;
+    return false;
+}
+
+void CGIManager::SetFirstLine() {
+    client_->res_message_->http_version_ = "HTTP/1.1";
+    client_->res_message_->status_code_ = 200;
+    client_->res_message_->status_text_ = "OK";
+}
+
+void CGIManager::ParseCGIData(char* buf) {
+    std::string body(buf);
+
+    
+}
+
+
+
+
+
+void CGIManager::ParseFirstLine(char* buf) {
+  int64_t curr_idx(0), find_idx(0), end_idx(0);
+  /* 첫 줄 찾기 */
+  find_idx = strcspn(buf, "\n");  // buf 에서 "\n"의 인덱스 찾는 함수
+  end_idx = find_idx;
+
+  char* tmp = new char[end_idx + 1];
+  tmp[end_idx] = '\0';
+  strncpy(tmp, buf, end_idx + 1);
+
+  /* 첫 단어 Version 쪼개기 */
+  find_idx = strcspn(tmp, " ");
+  tmp[find_idx] = '\0';
+  client_->res_message_->http_version_ = tmp;
+
+  /* 두번째 Status code 쪼개기 */
+  curr_idx = find_idx + 1;
+  find_idx = strcspn(&tmp[curr_idx], " ");
+  tmp[find_idx] = '\0';
+  client_->res_message_->status_code_ = atoi(&tmp[curr_idx]);
+  
+  /* 세번째 Status text 쪼개기 */
+  curr_idx = find_idx + 1;
+  tmp[end_idx] = '\0';
+  client_->res_message_->status_text_ = &tmp[curr_idx];
+  delete[] tmp;
 }

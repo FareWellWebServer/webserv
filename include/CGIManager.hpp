@@ -16,10 +16,15 @@ class CGIManager {
         void SetData(Data* client);
         void SetCGIEnv(Data* client); // fork 안에서 해주기
         void SendToCGI(Data* client, int kq);
-        void GetFromCGI(Data* client, size_t len, int kq);
+        char* GetFromCGI(Data* client, int64_t len, int kq);
     private:
         Data* client_;
         char* ParseCGIType(char* buf);
+        void ParseFirstLine(char* buf);
+
+        bool CheckValid(char* buf);
+        void SetFirstLine();
+        void ParseCGIData(char* buf);
 };
 
 #endif
