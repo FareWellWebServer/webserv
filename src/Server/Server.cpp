@@ -586,13 +586,15 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
-  EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, client);
+  EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
   if (file_fd != -1 && client->is_remain == false){
     close(file_fd);
   } 
-  if (client->GetStatusCode() == 413) DisConnect(client_fd);
+  if (client->GetStatusCode() == 413) {
+    DisConnect(client_fd);
+  }
 }
 
 void Server::Pong(int idx) {

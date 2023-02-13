@@ -25,10 +25,10 @@ void Logger::info(std::string msg, Data* data) const {
 
 void Logger::error(std::string msg, Data* data) const {
   const std::string current_time = GetCurrentDate();
-  const std::string log_msg = data != NULL ?
+  const std::string log_msg = data != NULL ? 
      current_time + "\t" + msg + "\n" : 
      current_time + "\t" + msg + "\t" + data->GetReqMethod() + "\tclient fd:\t" + to_string(data->GetClientFd()) + "\n";
-  const std::string error_msg = RED + log_msg + RESET;
+  const std::string error_msg = RED + std::string("[ERROR]\t") +log_msg + RESET;
   struct kevent event;
 
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
