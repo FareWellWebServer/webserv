@@ -29,6 +29,23 @@ bool Config::IsWhiteLine(void) const {
   return false;
 }
 
+bool Config::IsLogPath(void) {
+  std::vector<std::string> vec = Split(line_, " \t", 1);
+  if (vec.size() != 2 || vec[0] != "log_path") {
+    return 0;
+  }
+
+  std::string log_path = vec[1];
+  struct stat sb;
+  if (stat(log_path.c_str(), &sb) != 0) {
+    std::string mkdir = "mkdir ";
+    std::string cmd = mkdir + vec[1];
+    system(cmd.c_str());
+  }
+  log_path_ = log_path;
+  return 1;
+}
+
 bool Config::IsOpenServerBracket(void) const {
   std::vector<std::string> vec = Split(line_, " \t", 1);
   if (vec.size() != 2 || vec[0] != "server" || vec[1] != "{") return false;
@@ -150,8 +167,9 @@ void Config::PrintConfigInfo(const ServerConfigInfo& info) const {
 
 void Config::PrintConfigInfos(void) const {
   for (size_t i = 0; i < server_config_infos_.size(); ++i) {
-    std::cout << BOLDGREEN << "---------- [server config info " << i
+    std::cout << BOLDCYAN << "---------- [server config info " << i
               << "] ----------" << std::endl;
+    std::cout << "log_path: " << log_path_ << std::endl;
     PrintConfigInfo(server_config_infos_[i]);
     std::cout << "--------------------------------------------" << RESET
               << std::endl;

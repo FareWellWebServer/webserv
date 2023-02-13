@@ -22,6 +22,7 @@ class Config {
 
   /* ======================== Getter ======================== */
   std::vector<ServerConfigInfo> GetServerConfigInfos(void);
+  std::string GetLogPath(void);
 
   /* ======================== Parsing Server ======================== */
   void InitServerConfigInfo(ServerConfigInfo &info);
@@ -34,7 +35,6 @@ class Config {
   void ParseBodySize(const value &vec);
   void ParseRoot(const value &vec);
   void ParseUploadPath(const value &vec);
-  void ParseLogPath(const value &vec);
   void ParseTimeout(const value &vec);
   void ParseMethods(const value &vec);
   void ParseErrorPage(const value &vec);
@@ -71,6 +71,7 @@ class Config {
   // Parsing
   bool IsNumber(const std::string &str) const;
   bool IsWhiteLine(void) const;
+  bool IsLogPath(void);
   bool IsOpenServerBracket(void) const;
   bool IsOpenLocationBracket(const value &vec) const;
   bool IsCloseBracket(const value &vec) const;
@@ -91,6 +92,7 @@ class Config {
   int line_num_;
   std::string line_;
 
+  std::string log_path_;
   ServerConfigInfo server_config_info_;
   std::vector<ServerConfigInfo> server_config_infos_;
 };

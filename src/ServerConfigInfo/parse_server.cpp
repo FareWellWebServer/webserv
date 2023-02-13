@@ -58,16 +58,6 @@ void Config::ParseUploadPath(const std::vector<std::string> &vec) {
     ExitConfigParseError();
 }
 
-void Config::ParseLogPath(const std::vector<std::string> &vec) {
-  if (vec.size() != 1) ExitConfigParseError();
-
-  std::string log_path = vec[0];
-  struct stat sb;
-  if (stat(log_path.c_str(), &sb) == 0)
-    server_config_info_.log_path = log_path;
-  else
-    ExitConfigParseError();
-}
 
 void Config::ParseTimeout(const std::vector<std::string> &vec) {
   if (!IsNumber(vec[0])) ExitConfigParseError();
