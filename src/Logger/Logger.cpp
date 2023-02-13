@@ -1,9 +1,9 @@
 #include "../../include/Logger.hpp"
 
-Logger::Logger(int kq) : server_kq_(kq) {
-  const char* file_name = "./log/log.txt";
+Logger::Logger(int kq, const std::string& log_dir_path) : server_kq_(kq) {
+  const std::string file_name = log_dir_path + "log.txt";
 
-  logger_file_fd_ = open(file_name, O_CREAT | O_NONBLOCK | O_APPEND | O_WRONLY);
+  logger_file_fd_ = open(file_name.c_str(), O_CREAT | O_NONBLOCK | O_APPEND | O_RDWR, S_IRWXU);
   if (logger_file_fd_ == -1) {
     throw std::runtime_error("logger error: can't open log file");
   }
@@ -16,7 +16,7 @@ void Logger::info(std::string msg) const {
   const std::string log_msg = current_time + " " + msg + "\n";
   struct kevent event;
 
-  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
+  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
   kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
@@ -26,7 +26,7 @@ void Logger::warn(std::string msg) const {
   const std::string log_msg = YELLOW + current_time + " " + msg + "\n" + RESET;
   struct kevent event;
 
-  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
+  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
   kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
@@ -36,7 +36,7 @@ void Logger::error(std::string msg) const {
   const std::string log_msg = RED + current_time + " " + msg + "\n" + RESET;
   struct kevent event;
 
-  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE, 0, 0,
+  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
          static_cast<void*>(const_cast<char*>(log_msg.c_str())));
   kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
