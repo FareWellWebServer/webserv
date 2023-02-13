@@ -57,7 +57,7 @@ class Server {
 
   void Run(void);
   void Init(void);
-  void prompt(void);
+  void Prompt(void);
 
   // 임의로 public에 나둠 나중에 setter구현해야함
   // server_info를 Method_Processor 호출할 때, 필요하기 때문에

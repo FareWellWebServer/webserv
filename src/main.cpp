@@ -36,5 +36,6 @@ void main_process(int ac, char** av) {
 
   Server server(config);
   server.Init();
+  server.Prompt();
   server.Run();
 }

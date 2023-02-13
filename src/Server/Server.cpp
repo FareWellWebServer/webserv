@@ -50,9 +50,7 @@ void Server::Init(void) {
   }
 }
 
-void Server::prompt(void) {
-  std::cout << "\n-------- [ " BOLDBLUE << "FareWell Web Server Info" << RESET
-            << " ] --------\n"
+void Server::Prompt(void) { std::cout << "\n-------- [ " BOLDBLUE << "FareWell Web Server Info" << RESET << " ] --------\n"
             << std::endl;
 
   std::set<t_listening*>::const_iterator it = servers_.begin();
@@ -168,6 +166,7 @@ void Server::Act(void) {
     client = NULL;
   }
 }
+
 
 void Server::ActCoreLogic(int idx) {
   Data* 
