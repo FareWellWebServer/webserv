@@ -104,14 +104,18 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
   req_msg_->req_url_ = tmp;
+
   size_t pos = req_msg_->req_url_.find("?");
   if (pos != std::string::npos) {
     std::cout << "IN REQ HANDELER FIND ?" << std::endl;
     req_msg_->req_url_.erase(pos, 1);
     req_msg_->is_delete_ = 1;
+    // req_msg_->method_.erase();
+    // req_msg_->method_ = "DELETE";
   } else {
     req_msg_->is_delete_ = 0;
   }
+
   std::cout << "remove ? from req_url : " << req_msg_->req_url_ << std::endl;
   // 중복 slash 제거 EX) ////// -> /
   ReduceSlash(req_msg_->req_url_);
@@ -208,7 +212,6 @@ void ReqHandler::ParseEntity(int start_idx) {
       return;
     }
   }
-
   char* entity = new char[req_msg_->body_data_.length_];
   memcpy(entity, &buf_[start_idx], req_msg_->body_data_.length_);
   req_msg_->body_data_.data_ = entity;
@@ -222,7 +225,7 @@ void ReqHandler::ParseRecv() {
 #endif
     return;
   }
-  std::cout << GREEN << buf_ << RESET << std::endl;
+  std::cout << buf_ << std::endl;
   if (client_->is_remain == true) {
     if (client_->req_message_->body_data_.data_)
       delete[] client_->req_message_->body_data_.data_;
@@ -254,6 +257,11 @@ void ReqHandler::ParseRecv() {
 }
 
 void ReqHandler::ValidateReq() {
+  if (req_msg_->method_ == "GET") {
+    if (req_msg_->req_url_.find("DELETE") != std::string::npos)
+      std::cout << "Change get to delete" << std::endl;
+    req_msg_->method_ = "DELETE";
+  }
   // POST -> body_size 유호성 확인
   // POST인 경우에는 아래의 유호성 검사가 필요가 없다
   if (req_msg_->method_ == "POST") {

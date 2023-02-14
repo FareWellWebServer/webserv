@@ -148,11 +148,7 @@ void Server::ActCoreLogic(int idx) {
     } else {
       Post(idx);
     }
-  }
-  // delete의 경우..
-  else if (client->req_message_->is_delete_ == 1) {
-    std::cout << "IS IN ACT CORE LOGIC" << std::endl;
-    Delete();
+  } else if (client->GetReqMethod() == "DELETE") {
     std::cout << req_handler_->req_msg_->req_url_ << std::endl;
   } else {
     client->SetStatusCode(501);
@@ -336,20 +332,6 @@ void Server::Get(int idx) {
   }
 }
 
-void Server::Delete() {
-  std::string str = "Please DELETE this string";
-  std::size_t pos = req_handler_->req_msg_->req_url_.find("DELETE=");
-
-  if (pos != std::string::npos) {
-    req_handler_->req_msg_->req_url_.erase(pos, 7);
-    std::cout << "IN DELETE FUN" << req_handler_->req_msg_->req_url_
-              << std::endl;
-  } else {
-    std::cout << "The string 'DELETE' was not found in the input string."
-              << std::endl;
-  }
-}
-
 void Server::Post(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   const ServerConfigInfo* config = client->config_;
@@ -529,6 +511,20 @@ void Server::Post(int idx) {
       client->req_message_->req_url_ = config->error_pages_.find(501)->second;
       Get(idx);
     }
+  }
+}
+
+void Server::Delete() {
+  std::string str = "Please DELETE this string";
+  std::size_t pos = req_handler_->req_msg_->req_url_.find("DELETE=");
+
+  if (pos != std::string::npos) {
+    req_handler_->req_msg_->req_url_.erase(pos, 7);
+    std::cout << "IN DELETE FUN" << req_handler_->req_msg_->req_url_
+              << std::endl;
+  } else {
+    std::cout << "The string 'DELETE' was not found in the input string."
+              << std::endl;
   }
 }
 
