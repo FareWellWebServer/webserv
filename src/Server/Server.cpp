@@ -273,7 +273,6 @@ void Server::DisConnect(const int& fd) {
 
 void Server::Get(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  const ServerConfigInfo* config = client->config_;
   t_req_msg* req_msg = client->GetReqMessage();
   struct kevent event;
 
