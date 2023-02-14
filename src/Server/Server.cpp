@@ -127,7 +127,7 @@ void Server::ActCoreLogic(int idx) {
   req_handler_->SetReadLen(events_[idx].data);
   if (events_[idx].data == 0) {
     Pong(idx);
-    std::cout << RED << "Pong! to " << client_fd << "\n" << RESET;
+    DisConnect(client_fd);
     return;
   }
   req_handler_->RecvFromSocket();
@@ -274,7 +274,6 @@ void Server::DisConnect(const int& fd) {
 void Server::Get(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   const ServerConfigInfo* config = client->config_;
-  (void)config;
   t_req_msg* req_msg = client->GetReqMessage();
   struct kevent event;
 
@@ -294,7 +293,6 @@ void Server::Get(int idx) {
     client->res_message_->headers_["Content-Length"] =
         to_string(html_str.size());
 
-    // header 설정 이후 바로 client_fd EVFILT_WRITE ENABLE
 
   } else if (client->cgi_ == true) {
 
@@ -303,7 +301,16 @@ void Server::Get(int idx) {
 
   } else {
     int file_fd = open(req_msg->req_url_.c_str(), O_RDONLY);
-
+    if (file_fd == -1) {
+      client->SetStatusCode(404);
+      client->res_message_->headers_["Content-Type"] = "text/html";
+      client->res_message_->headers_["Content-Length"] = "22";
+      client->res_message_->body_data_.data_ = strdup("<h3>404 Not Found</h3>");
+      client->res_message_->body_data_.length_ = 22;
+      EV_SET(&event, file_fd, EVFILT_READ, EV_ADD, 0, 0, client);
+      kevent(kq_, &event, 1, NULL, 0, NULL);
+      return;
+    }
     std::string file_name =
         req_msg->req_url_.substr(req_msg->req_url_.rfind('/'));
     size_t pos = file_name.rfind('.');
