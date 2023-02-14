@@ -271,7 +271,6 @@ void Server::Get(int idx) {
 
   std::string req_url = req_msg->req_url_;
   std::string file_path;
-
   if (client->is_directory_list_ == true) {
     const std::string html_str = generate_directory_list(req_url);
     char* tmp_html_str = new char[html_str.size()];
@@ -289,8 +288,6 @@ void Server::Get(int idx) {
     // header 설정 이후 바로 client_fd EVFILT_WRITE ENABLE
 
   } else if (client->cgi_ == true) {
-
-
 
     cgi_manager_->SendToCGI(client, kq_);
 
@@ -539,6 +536,11 @@ void Server::ExecuteReadEventFileFd(int idx) {
   kevent(kq_, &event, 1, NULL, 0, NULL);
 }
 
+void Server::ExecuteReadEventPipeFd(int idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  cgi_manager_->GetFromCGI(client, events_[idx].data, kq_);
+}
+
 void Server::ExecuteWriteEventFileFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int client_fd = client->GetClientFd();
@@ -684,6 +686,7 @@ void Server::ExecuteReadEvent(const int& idx) {
               << " == " << client->GetPipeRead() << std::endl;
     #endif
     // TODO: implement ExcuteReadEventPipeFd();
+    ExecuteReadEventPipeFd(idx);
     return;
   }
 }
