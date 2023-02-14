@@ -93,6 +93,15 @@ void Server::Act(void) {
       ExecuteWriteEvent(idx);
       continue;
     }
+
+    if (events_[idx].filter == EVFILT_PROC) {
+      int stat;
+      waitpid(events_[idx].ident, &stat, 0);
+      struct kevent event;
+      EV_SET(&event, (int)events_[idx].ident, EVFILT_PROC, EV_DELETE, NOTE_EXIT, 0, NULL);
+      kevent(kq_, &event, 1, NULL, 0, NULL);
+      continue;
+    }
     
     // /* timeout 발생시 */
     if (events_[idx].filter == EVFILT_TIMER) {
@@ -595,6 +604,8 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   int file_fd = client->GetFileFd();
   const char* response = msg_composer_->GetResponse(client);
   send(client_fd, response, msg_composer_->GetLength(), 0);
+  write(1, response, msg_composer_->GetLength());
+
   delete[] response;
   response = NULL;
 

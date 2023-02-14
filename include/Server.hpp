@@ -1,6 +1,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include <signal.h>
+
 #include <arpa/inet.h> /* htons, htonl, ntohs, ntohl */
 #include <fcntl.h>     /* fcntl */
 #include <netdb.h>     /* getprotobyname */
