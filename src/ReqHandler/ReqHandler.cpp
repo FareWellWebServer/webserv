@@ -19,6 +19,7 @@ void ReqHandler::Clear() {
     delete[] buf_;
     buf_ = NULL;
   }
+  entity_flag_ = 0;
   read_len_ = 0;
   client_ = NULL;
   req_msg_ = NULL;
@@ -218,6 +219,7 @@ void ReqHandler::ParseRecv() {
       delete[] client_->req_message_->body_data_.data_;
     client_->req_message_->body_data_.data_ = new char[read_len_];
     memcpy(client_->req_message_->body_data_.data_, buf_, read_len_);
+    client_->req_message_->body_data_.length_ = read_len_;
   } else {
     if (req_msg_ == NULL) req_msg_ = new t_req_msg;
     memset(&req_msg_->body_data_, 0, sizeof(t_entity));
