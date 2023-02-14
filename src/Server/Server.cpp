@@ -348,6 +348,14 @@ void Server::Post(int idx) {
 
     decoded_string = decode(encoded_string);
 
+    if(decoded_string.find("title") == std::string::npos || decoded_string.find("content") == std::string::npos) {
+      client->SetStatusCode(501);
+      client->SetReqURL(config->error_pages_.find(501)->second);
+      client->is_remain = false;
+      Get(idx);
+      return;
+    }
+
     std::string query = decoded_string;
     int and_pos = query.find('&');
 
@@ -571,6 +579,10 @@ void Server::ExecuteWriteEventClientFd(int idx) {
     client->res_message_->headers_["Connection"] = "close";
   } else {
     client->res_message_->headers_["Connection"] = "keep-alive";
+  }
+
+  if (client->is_download == true) {
+    client->res_message_->headers_["Content-Disposition"] = "attachment; filename=" + client->file_name;
   }
 
   client->res_message_->headers_["Cache-Control"] =

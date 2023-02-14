@@ -153,6 +153,10 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
     req_msg_->body_data_.type_ = strdup(kv_tmp[1].c_str());
     entity_flag_ = 1;
   }
+  if (kv_tmp[0] == "Content-Disposition" && kv_tmp[1] == "attacment") {
+    client_->is_download = true;
+  }
+
   req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
 }
 
