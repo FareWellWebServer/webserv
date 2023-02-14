@@ -1,3 +1,4 @@
+import os
 import sys
 
 def caesar(s):
@@ -10,7 +11,9 @@ def caesar(s):
  
     return "".join(s)
 
-plain_text = sys.argv[1]
+# plain_text = os.getenv("QUERY_STRING", "sadfsadf?origin=1234asb")
+plain_text = "sadfsadf?origin=1234asb"
+res= plain_text.split("?")[1].split("=")[1]
 
 print ("Content-type: text/html")
 print ()
@@ -20,6 +23,7 @@ print ("<head>")
 print ("<title>decoded text</title>")
 print ("</head>")
 print ("<body><h1>")
-print (caesar(plain_text))
+print(res)
+print (caesar(res))
 print ("</h1></body>")
 print ("</html>")

@@ -1,4 +1,5 @@
 import sys
+import os
 
 def caesar(s):
     s = list(s)
@@ -10,6 +11,7 @@ def caesar(s):
  
     return "".join(s)
 
-plain_text = sys.argv[1]
+# plain_text = sys.argv[1]
+plain_text = os.getenv("origin", "hello")
 
 print(caesar(plain_text))

@@ -40,8 +40,7 @@ void CGIManager::SetCGIEnv(Data* client) {
     // .py? 인데, ? 부터 넣어줘야되는가? ? 뒤부터 넣어줘야 하는가?
     std::string url_query = client_->GetReqURL();
     std::string query_string = url_query.substr(url_query.find(".py?") + 1);
-    if (query_string.empty() == true)
-        setenv("QUERY_STRING", value.c_str(), 1);
+    setenv("QUERY_STRING", query_string.c_str(), 1);
 
     /* REMOTE_ADDR */
     // The IP address of the remote host making the request.
@@ -89,9 +88,12 @@ void CGIManager::SendToCGI(Data* client, int kq)
         dup2(p[0], 0);
         extern char** environ;
         // if (execve(client_->GetReqURL().c_str(), NULL, environ) < 0) {
+        //     #if CGI
+        //         std::cout << "[CGI] execve 에러" << std::endl;
+        //     #endif
         char **argv = new char*[3];
         argv[0] = strdup("python3");
-        argv[1] = strdup("/Users/dongchoi/webserv_cgi/cgi/cgitest.py");
+        argv[1] = strdup("/Users/dongchoi/webserv_cgi/cgi/caesar_encode.py");
         argv[2] = NULL;
         if (execve("/usr/bin/python3", argv, environ) < 0) {
             #if CGI
@@ -166,7 +168,6 @@ size_t CGIManager::SetHeaders(std::string& body) {
 		key = body.substr(start_idx, delimiter_idx - start_idx);
 		val = body.substr(delimiter_idx + 1, endline_idx - delimiter_idx - 1);
 		RemoveTabSpace(val);
-        std::cout << "@ " << key << ": " << val << std::endl;
 		client_->res_message_->headers_[key] = val;
         start_idx = endline_idx + 1;
 		if (body[endline_idx + 1] == '\n')

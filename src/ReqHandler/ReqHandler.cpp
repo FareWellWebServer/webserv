@@ -306,6 +306,7 @@ void ReqHandler::ValidateReq() {
     else {
       client_->SetStatusCode(501);
       req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
+      client_->cgi_ = false;
     }
     return;
   }

@@ -1,3 +1,4 @@
+import os
 import sys
 
 def caesar(s):
@@ -10,7 +11,8 @@ def caesar(s):
  
     return "".join(s)
 
-plain_text = sys.argv[1]
+for key, val in os.environ.items():
+    print(key, ": ", val)
 
 print ("Content-type: text/html")
 print ()
