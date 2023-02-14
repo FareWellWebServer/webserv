@@ -297,6 +297,7 @@ void ReqHandler::ValidateReq() {
     if (req_file_path.empty()) {
       client_->SetStatusCode(501);
       req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
+      client_->cgi_ = false;
       return;
     }
     std::string cgi_file_path = req_file_path.substr(0, req_file_path.find('?'));
@@ -318,6 +319,7 @@ void ReqHandler::ValidateReq() {
 
   // location에 리다이랙션이 있는 경우
   if (!loc->redir_path_.empty()) {
+    client_->is_directory_list_ = true;
     client_->SetStatusCode(301);
     req_msg_->req_url_ = loc->redir_path_;
     return;
