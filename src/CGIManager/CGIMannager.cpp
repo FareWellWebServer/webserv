@@ -187,7 +187,7 @@ void CGIManager::SetBodyLength(std::string& body, size_t idx) {
     size_t len(body.length() - (idx) - 1);
     client_->res_message_->body_data_.length_ = len;
     if (len > 0)
-        client_->res_message_->headers_["Content-Lengh"] = to_string(len);
+        client_->res_message_->headers_["Content-Length"] = to_string(len);
 }
 
 void CGIManager::SetBody(char* buf, size_t idx) {
