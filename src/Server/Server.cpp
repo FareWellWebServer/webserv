@@ -605,11 +605,6 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   const char* response = msg_composer_->GetResponse(client);
   send(client_fd, response, msg_composer_->GetLength(), 0);
   write(1, response, msg_composer_->GetLength());
-  
-  if (client->cgi_ == true) {
-    std::cout << "kill" << std::endl;
-    kill(client->cgi_pid_, SIGQUIT);
-  }
 
   delete[] response;
   response = NULL;

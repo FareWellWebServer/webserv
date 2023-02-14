@@ -77,7 +77,6 @@ void CGIManager::SendToCGI(Data* client, int kq)
     client_->SetPipeWrite(p[1]);
     pid = fork();
     if (pid > 0) {
-        client_->cgi_pid_ = pid;
         close(p[1]);
         struct kevent event;
         EV_SET(&event, p[0], EVFILT_READ, EV_ADD, 0, 0, client_);
