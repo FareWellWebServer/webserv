@@ -77,9 +77,12 @@ void CGIManager::SendToCGI(Data* client, int kq)
     client_->SetPipeWrite(p[1]);
     pid = fork();
     if (pid > 0) {
+        client_->cgi_pid_ = pid;
         close(p[1]);
         struct kevent event;
         EV_SET(&event, p[0], EVFILT_READ, EV_ADD, 0, 0, client_);
+        kevent(kq, &event, 1, NULL, 0, NULL);
+        EV_SET(&event, pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, client_);
         kevent(kq, &event, 1, NULL, 0, NULL);
     }
     else if (pid == 0) {
@@ -105,6 +108,7 @@ void CGIManager::SendToCGI(Data* client, int kq)
         #if CGI
             std::cout << "[CGI] fork() 에러" << std::endl;
         #endif
+        // wait(NULL);
     }
     // while(1);
 }
@@ -119,6 +123,7 @@ void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
 {
     SetData(client);
 
+    // client->res_message_->body_data_
     std::cout << "len : " << len << std::endl;
     char* buf = new char[len + 1];
     read(client_->GetPipeRead(), buf, len);
@@ -171,16 +176,16 @@ size_t CGIManager::SetHeaders(std::string& body) {
 		RemoveTabSpace(val);
 		client_->res_message_->headers_[key] = val;
         start_idx = endline_idx + 1;
-		if (body[endline_idx + 1] == '\n')
+		if (body[endline_idx + 1] == '\r')
 			break;
 	}
-    while (body[start_idx] == '\n')
-        start_idx++;
+    // while (body[start_idx] == '\n')
+        start_idx += 2;
     return start_idx;
 }
 
 void CGIManager::SetBodyLength(std::string& body, size_t idx) {
-    size_t len(body.length() - (idx));
+    size_t len(body.length() - (idx) - 1);
     client_->res_message_->body_data_.length_ = len;
     if (len > 0)
         client_->res_message_->headers_["Content-Lengh"] = to_string(len);
@@ -190,4 +195,10 @@ void CGIManager::SetBody(char* buf, size_t idx) {
     if (client_->res_message_->body_data_.length_ != 0)
         client_->res_message_->body_data_.data_ = new char[client_->res_message_->body_data_.length_];
     memcpy(client_->res_message_->body_data_.data_, &buf[idx], client_->res_message_->body_data_.length_);
+    if (client_->res_message_->body_data_.data_[client_->res_message_->body_data_.length_ -1] == '\n')
+    {
+        client_->res_message_->body_data_.data_[client_->res_message_->body_data_.length_ -1] = '\0';
+        client_->res_message_->body_data_.length_--;
+        // client_->res_message_->body_data_.length_--;
+    }
 }
