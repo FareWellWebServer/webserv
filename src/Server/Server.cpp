@@ -1,7 +1,9 @@
 #include "../../include/Server.hpp"
 
 Server::Server(const Config& config)
-    : server_infos_(config.GetServerConfigInfos()), kq_(kqueue()), logger_(Logger(kq_, config.GetLogPath())) {
+    : server_infos_(config.GetServerConfigInfos()),
+      kq_(kqueue()),
+      logger_(Logger(kq_, config.GetLogPath())) {
   clients_ = new ClientMetaData;
   req_handler_ = new ReqHandler;
   msg_composer_ = new MsgComposer;
@@ -38,19 +40,21 @@ void Server::Init(void) {
 
     BindListen(server_infos_[i].host_, server_infos_[i].port_, listenfd);
     EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0,
-            (void*)&server_infos_[i]);
+           (void*)&server_infos_[i]);
     // EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
       throw std::runtime_error("Error: kevent()");
     }
     t_listening* tmp = CreateListening(server_infos_[i].host_,
-                                        server_infos_[i].port_, listenfd);
+                                       server_infos_[i].port_, listenfd);
     servers_.insert(tmp);
     // delete tmp;
   }
 }
 
-void Server::Prompt(void) { std::cout << "\n-------- [ " BOLDBLUE << "FareWell Web Server Info" << RESET << " ] --------\n"
+void Server::Prompt(void) {
+  std::cout << "\n-------- [ " BOLDBLUE << "FareWell Web Server Info" << RESET
+            << " ] --------\n"
             << std::endl;
 
   std::set<t_listening*>::const_iterator it = servers_.begin();
@@ -70,7 +74,6 @@ void Server::Act(void) {
     throw std::runtime_error("Error: kevent()");
   }
   for (int idx = 0; idx < n; ++idx) {
-
     // log file
     if (static_cast<int>(events_[idx].ident) == logger_.GetLogFileFD()) {
       ExcuteLogEvent(idx);
@@ -88,12 +91,12 @@ void Server::Act(void) {
       ExecuteReadEvent(idx);
       continue;
     }
-    
-    if (events_[idx].filter == EVFILT_WRITE) { 
+
+    if (events_[idx].filter == EVFILT_WRITE) {
       ExecuteWriteEvent(idx);
       continue;
     }
-    
+
     // /* timeout 발생시 */
     if (events_[idx].filter == EVFILT_TIMER) {
       ExcuteTimerEvent(idx);
@@ -102,11 +105,8 @@ void Server::Act(void) {
   }
 }
 
-
 void Server::ActCoreLogic(int idx) {
-  Data* 
-  client = reinterpret_cast<Data*>(
-    events_[idx].udata);
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   const ServerConfigInfo* config = client->GetConfig();
   struct kevent event;
   int client_fd = client->GetClientFd();
@@ -133,14 +133,14 @@ void Server::ActCoreLogic(int idx) {
   //   write(1, &client->req_message_->body_data_.data_[i], 1);
 
   // Data* client = clients_->GetDataByFd(events_[idx].ident);
-  if (
-    client->GetStatusCode() == 413) {
+  if (client->GetStatusCode() == 413) {
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
     kevent(kq_, &event, 1, NULL, 0, NULL);
   } else if (client->GetReqMethod() == "GET") {
     Get(idx);
   } else if (client->GetReqMethod() == "POST") {
-    if (client->is_remain == true && client->req_message_->body_data_.data_ == NULL) {
+    if (client->is_remain == true &&
+        client->req_message_->body_data_.data_ == NULL) {
       client->SetStatusCode(100);
       EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
       kevent(kq_, &event, 1, NULL, 0, NULL);
@@ -148,8 +148,12 @@ void Server::ActCoreLogic(int idx) {
     } else {
       Post(idx);
     }
-  } else if (client->GetReqMethod() == "DELETE") {
-
+  }
+  // delete의 경우..
+  else if (client->req_message_->is_delete_ == 1) {
+    std::cout << "IS IN ACT CORE LOGIC" << std::endl;
+    Delete();
+    std::cout << req_handler_->req_msg_->req_url_ << std::endl;
   } else {
     client->SetStatusCode(501);
     client->SetReqURL(config->error_pages_.find(501)->second);
@@ -332,6 +336,20 @@ void Server::Get(int idx) {
   }
 }
 
+void Server::Delete() {
+  std::string str = "Please DELETE this string";
+  std::size_t pos = req_handler_->req_msg_->req_url_.find("DELETE=");
+
+  if (pos != std::string::npos) {
+    req_handler_->req_msg_->req_url_.erase(pos, 7);
+    std::cout << "IN DELETE FUN" << req_handler_->req_msg_->req_url_
+              << std::endl;
+  } else {
+    std::cout << "The string 'DELETE' was not found in the input string."
+              << std::endl;
+  }
+}
+
 void Server::Post(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   const ServerConfigInfo* config = client->config_;
@@ -401,11 +419,12 @@ void Server::Post(int idx) {
         return;
       }
 
-
       std::string data_info;
       size_t idx = 0;
       if (client->is_first) {
-        for (; strncmp(&client->req_message_->body_data_.data_[idx], "\r\n\r\n", 4); ++idx) {
+        for (; strncmp(&client->req_message_->body_data_.data_[idx], "\r\n\r\n",
+                       4);
+             ++idx) {
           data_info.push_back(client->req_message_->body_data_.data_[idx]);
         }
 
@@ -413,7 +432,8 @@ void Server::Post(int idx) {
         if (data_info.size() == client->req_message_->body_data_.length_) {
           client->SetReqMethod("GET");
           client->SetStatusCode(501);
-          client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+          client->req_message_->req_url_ =
+              config->error_pages_.find(501)->second;
           Get(idx);
           return;
         }
@@ -424,7 +444,8 @@ void Server::Post(int idx) {
         if (content_type != "image/png" && content_type != "image/jpeg") {
           client->SetReqMethod("GET");
           client->SetStatusCode(501);
-          client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+          client->req_message_->req_url_ =
+              config->error_pages_.find(501)->second;
           Get(idx);
           return;
         }
@@ -436,7 +457,8 @@ void Server::Post(int idx) {
         if (file_name.size() == 0) {
           client->SetReqMethod("GET");
           client->SetStatusCode(501);
-          client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+          client->req_message_->req_url_ =
+              config->error_pages_.find(501)->second;
           Get(idx);
           return;
         }
@@ -447,23 +469,26 @@ void Server::Post(int idx) {
       size_t tmp_idx = idx;
       const char* cbody_data = client->req_message_->body_data_.data_;
       std::string body_data;
-      for(; idx < client->req_message_->body_data_.length_; ++idx) {
+      for (; idx < client->req_message_->body_data_.length_; ++idx) {
         body_data.push_back(cbody_data[idx]);
       }
 
-      if (body_data.find(boundary) == std::string::npos) { // 바운더리가 없으면.
+      if (body_data.find(boundary) ==
+          std::string::npos) {  // 바운더리가 없으면.
         client->SetStatusCode(100);
         client->boundary = boundary;
         if (client->is_first == true) {
           client->binary_start_idx = tmp_idx + 4;
-          client->binary_size = client->req_message_->body_data_.length_ - data_info.size() - 4;
+          client->binary_size =
+              client->req_message_->body_data_.length_ - data_info.size() - 4;
         } else {
           client->binary_start_idx = tmp_idx;
           client->binary_size = client->req_message_->body_data_.length_;
         }
-      } else { // 바운더리가 있으면.
+      } else {  // 바운더리가 있으면.
         idx = tmp_idx;
-        for (; strncmp(&cbody_data[idx], boundary.c_str(), boundary.size()); ++idx) {
+        for (; strncmp(&cbody_data[idx], boundary.c_str(), boundary.size());
+             ++idx) {
           ++size;
         }
 
@@ -486,14 +511,16 @@ void Server::Post(int idx) {
       }
 
       if (client->is_first == true) {
-        int file_fd = open((config->upload_path_ + client->file_name).c_str(), O_RDWR | O_CREAT | O_TRUNC);
+        int file_fd = open((config->upload_path_ + client->file_name).c_str(),
+                           O_RDWR | O_CREAT | O_TRUNC);
         fchmod(file_fd, S_IRWXU | S_IRWXG | S_IRWXO);
         client->SetFileFd(file_fd);
         EV_SET(&event, file_fd, EVFILT_WRITE, EV_ADD, 0, 0, client);
         kevent(kq_, &event, 1, NULL, 0, NULL);
         client->is_first = false;
       } else {
-        EV_SET(&event, client->GetFileFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+        EV_SET(&event, client->GetFileFd(), EVFILT_WRITE, EV_ENABLE, 0, 0,
+               client);
         kevent(kq_, &event, 1, NULL, 0, NULL);
       }
     } else {
@@ -509,10 +536,10 @@ void Server::ExecuteReadEventFileFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int client_fd = client->GetClientFd();
   int file_fd = client->GetFileFd();
-  #if SERVER
-      std::cout << "[Server] File READ fd : " << events_[idx].ident
-              << " == " << client->GetFileFd() << std::endl;
-  #endif
+#if SERVER
+  std::cout << "[Server] File READ fd : " << events_[idx].ident
+            << " == " << client->GetFileFd() << std::endl;
+#endif
 
   int size = client->event_[idx].data;
   char* buf = new char[size];
@@ -556,10 +583,9 @@ void Server::ExecuteWriteEventFileFd(int idx) {
 
 void Server::ExecuteWriteEventClientFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  #if SERVER
-      std::cout << "[Server] Client Write : " << client->GetClientFd()
-              << std::endl;
-  #endif
+#if SERVER
+  std::cout << "[Server] Client Write : " << client->GetClientFd() << std::endl;
+#endif
   client->res_message_->headers_["Server"] = "farewell_webserv";
 
   if (client->timeout_ == true || client->GetStatusCode() == 413) {
@@ -589,8 +615,7 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
-
-  if (file_fd != -1 && client->is_remain == false){
+  if (file_fd != -1 && client->is_remain == false) {
     EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     kevent(kq_, &event, 1, NULL, 0, NULL);
 
@@ -598,7 +623,7 @@ void Server::ExecuteWriteEventClientFd(int idx) {
     kevent(kq_, &event, 1, NULL, 0, NULL);
 
     close(file_fd);
-  } 
+  }
   if (client->GetStatusCode() == 413) {
     DisConnect(client_fd);
   }
@@ -619,24 +644,24 @@ void Server::Pong(int idx) {
 }
 
 void Server::Continue(int idx) {
-  (void) idx;
+  (void)idx;
   // struct kevent event;
   // Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   // int client_fd = client->GetClientFd();
   // int file_fd = client->GetFileFd();
 
   // if (client->req_message_->body_data_.data_ == NULL) {
-    
+
   // } else {
   // }
 }
 
 void Server::ExecuteReadEventClientFd(const int& idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  #if SERVER
-    std::cout << "[Server] Client READ fd : " << client->GetClientFd()
-      << std::endl;
-  #endif
+#if SERVER
+  std::cout << "[Server] Client READ fd : " << client->GetClientFd()
+            << std::endl;
+#endif
   if (client->is_remain == false) {
     client->Init();
   }
@@ -652,19 +677,19 @@ void Server::ExecuteReadEvent(const int& idx) {
 
   if (event_fd == client->GetClientFd()) {
     ExecuteReadEventClientFd(idx);
-    return ;
+    return;
   }
   /* 내부에서 읽으려고 Open()한 File에 대한 이벤트 */
   if (event_fd == client->GetFileFd()) {
-      ExecuteReadEventFileFd(idx);
-      return;
+    ExecuteReadEventFileFd(idx);
+    return;
   }
   /* CGI에게 반환받는 pipe[READ]에 대한 이벤트 */
   if (event_fd == client->GetPipeRead()) {
-    #if SERVER
-      std::cout << "[Server] Pipe READ fd : " << event_fd
+#if SERVER
+    std::cout << "[Server] Pipe READ fd : " << event_fd
               << " == " << client->GetPipeRead() << std::endl;
-    #endif
+#endif
     // TODO: implement ExcuteReadEventPipeFd();
     return;
   }
@@ -673,7 +698,7 @@ void Server::ExecuteReadEvent(const int& idx) {
 void Server::ExecuteWriteEvent(const int& idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int event_fd = events_[idx].ident;
-  
+
   if (event_fd == client->GetClientFd()) {
     ExecuteWriteEventClientFd(idx);
     if (client->is_remain == false) {
@@ -712,6 +737,6 @@ void Server::ExcuteLogEvent(const int& idx) {
 
   const std::string log_msg = reinterpret_cast<char*>(events_[idx].udata);
   write(logger_.GetLogFileFD(), log_msg.c_str(), log_msg.length());
-  EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DISABLE, 0, 0,  NULL);
+  EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
   kevent(kq_, &event, 1, 0, 0, NULL);
 }

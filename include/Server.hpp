@@ -68,10 +68,11 @@ class Server {
 
   void Get(int idx);
   void Post(int idx);
+  void Delete();
   void Continue(int idx);
   void ExecuteReadEventFileFd(int idx);
   void ExecuteWriteEventFileFd(int idx);
-  void ExecuteWriteEventClientFd(int idx); // Send()를 이거로 바꿈
+  void ExecuteWriteEventClientFd(int idx);  // Send()를 이거로 바꿈
 
   void Pong(int idx);
 

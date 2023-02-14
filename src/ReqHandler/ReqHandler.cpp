@@ -104,6 +104,15 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
   req_msg_->req_url_ = tmp;
+  size_t pos = req_msg_->req_url_.find("?");
+  if (pos != std::string::npos) {
+    std::cout << "IN REQ HANDELER FIND ?" << std::endl;
+    req_msg_->req_url_.erase(pos, 1);
+    req_msg_->is_delete_ = 1;
+  } else {
+    req_msg_->is_delete_ = 0;
+  }
+  std::cout << "remove ? from req_url : " << req_msg_->req_url_ << std::endl;
   // 중복 slash 제거 EX) ////// -> /
   ReduceSlash(req_msg_->req_url_);
 
@@ -213,6 +222,7 @@ void ReqHandler::ParseRecv() {
 #endif
     return;
   }
+  std::cout << GREEN << buf_ << RESET << std::endl;
   if (client_->is_remain == true) {
     if (client_->req_message_->body_data_.data_)
       delete[] client_->req_message_->body_data_.data_;
@@ -228,6 +238,8 @@ void ReqHandler::ParseRecv() {
     idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
     // entity 넣기
     if (entity_flag_ == 1) ParseEntity(idx);
+    std::cout << RED << req_msg_->req_url_ << RESET << std::endl;
+
     ValidateReq();
   }
 

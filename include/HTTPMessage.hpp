@@ -25,6 +25,7 @@ typedef struct s_req_msg {
                           // 아니면 에러.
   std::map<std::string, std::string> headers_;
   t_entity body_data_;
+  bool is_delete_;
 } t_req_msg;
 
 typedef struct s_res_msg {    // 버전, 상태코드, 사유구절

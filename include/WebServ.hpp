@@ -7,11 +7,13 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
 
+#include "CGIManager.hpp"
 #include "ClientMetaData.hpp"
 #include "Color.hpp"
 #include "Config.hpp"
@@ -26,6 +28,5 @@
 #include "ServerConfigInfo.hpp"
 #include "Stage.hpp"
 #include "WebServException.hpp"
-#include "CGIManager.hpp"
 
 #endif
