@@ -595,6 +595,7 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   int file_fd = client->GetFileFd();
   const char* response = msg_composer_->GetResponse(client);
   send(client_fd, response, msg_composer_->GetLength(), 0);
+  write(1, response, msg_composer_->GetLength());
   delete[] response;
   response = NULL;
 

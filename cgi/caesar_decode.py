@@ -11,10 +11,11 @@ def caesar(s):
  
     return "".join(s)
 
-plain_text = os.getenv("origin")
+plain_text = os.getenv("QUERY_STRING")
+res= plain_text.split("?")[1].split("=")[1]
 
-print ("Content-type: text/html")
-print ()
+print ("Content-Type: text/html\r")
+print ("\r")
 print ("<!DOCTYPE html>")
 print ("<html>")
 print ("<head>")
@@ -24,3 +25,5 @@ print ("<body><h1>")
 print (caesar(plain_text))
 print ("</h1></body>")
 print ("</html>")
+
+exit(1)

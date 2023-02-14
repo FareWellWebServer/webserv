@@ -88,9 +88,12 @@ void CGIManager::SendToCGI(Data* client, int kq)
         dup2(p[0], 0);
         extern char** environ;
         // if (execve(client_->GetReqURL().c_str(), NULL, environ) < 0) {
+        //     #if CGI
+        //         std::cout << "[CGI] execve 에러" << std::endl;
+        //     #endif
         char **argv = new char*[3];
         argv[0] = strdup("python3");
-        argv[1] = strdup("/Users/seojin/Desktop/webserv/cgi/caesar_decode.py");
+        argv[1] = strdup("/Users/dongchoi/webserv_cgi/cgi/caesar_encode.py");
         argv[2] = NULL;
         if (execve("/usr/bin/python3", argv, environ) < 0) {
             #if CGI
@@ -121,6 +124,7 @@ void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
     read(client_->GetPipeRead(), buf, len);
     buf[len] = '\0';
     // write(2, buf, len);
+    std::cout << client->status_code_ << std::endl;
     struct kevent event;
     EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
     kevent(kq, &event, 1, NULL, 0, NULL);
@@ -165,7 +169,6 @@ size_t CGIManager::SetHeaders(std::string& body) {
 		key = body.substr(start_idx, delimiter_idx - start_idx);
 		val = body.substr(delimiter_idx + 1, endline_idx - delimiter_idx - 1);
 		RemoveTabSpace(val);
-        std::cout << "@ " << key << ": " << val << std::endl;
 		client_->res_message_->headers_[key] = val;
         start_idx = endline_idx + 1;
 		if (body[endline_idx + 1] == '\n')
@@ -177,7 +180,7 @@ size_t CGIManager::SetHeaders(std::string& body) {
 }
 
 void CGIManager::SetBodyLength(std::string& body, size_t idx) {
-    size_t len(body.length() - (idx + 1));
+    size_t len(body.length() - (idx));
     client_->res_message_->body_data_.length_ = len;
     if (len > 0)
         client_->res_message_->headers_["Content-Lengh"] = to_string(len);
