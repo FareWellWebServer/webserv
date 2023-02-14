@@ -82,16 +82,12 @@ void CGIManager::SendToCGI(Data* client, int kq)
         struct kevent event;
         EV_SET(&event, p[0], EVFILT_READ, EV_ADD, 0, 0, client_);
         kevent(kq, &event, 1, NULL, 0, NULL);
-        #if CGI
-            std::cout << "[CGI] fork() 완료" << std::endl;
-        #endif
     }
     else if (pid == 0) {
         SetCGIEnv(client);
         dup2(p[1], 1);
         dup2(p[0], 0);
         extern char** environ;
-        // extern char** __argv;
         // if (execve(client_->GetReqURL().c_str(), NULL, environ) < 0) {
         char **argv = new char*[3];
         argv[0] = strdup("python3");
@@ -136,17 +132,6 @@ void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
     EV_SET(&event, client->GetClientFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
     kevent(kq, &event, 1, NULL, 0, NULL);
 }
-
-// bool CGIManager::CheckValid(char* buf) {
-//     if (strncmp(buf, "Content-Type: text/html\n", 24) == 0)
-//         return true;
-//     client_->status_code_ = 500;
-//     client_->req_message_->req_url_ = client_->config_->error_pages_.find(501)->second;
-//     #if CGI
-//         std::cout << "[CGI] cgi 첫줄이 content-type이 아님. 상태코드 500번으로 설정" << std::endl;
-//     #endif
-//     return false;
-// }
 
 void CGIManager::SetFirstLine() {
     client_->res_message_->http_version_ = "HTTP/1.1";
