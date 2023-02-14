@@ -292,7 +292,6 @@ void Server::Get(int idx) {
 
 
 
-    cgi_manager_->SetData(client);
     cgi_manager_->SendToCGI(client, kq_);
 
 
