@@ -293,7 +293,8 @@ void Server::Get(int idx) {
     client->res_message_->headers_["Content-Length"] =
         to_string(html_str.size());
 
-
+    EV_SET(&event, client->GetClientFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
   } else if (client->cgi_ == true) {
 
     cgi_manager_->SendToCGI(client, kq_);
