@@ -299,19 +299,19 @@ void ReqHandler::ValidateReq() {
       req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
       return;
     }
+    std::string cgi_file_path = req_file_path.substr(0, req_file_path.find('?'));
     std::vector<std::string>::iterator it =
-        std::find(loc->cgi_path_.begin(), loc->cgi_path_.end(),
-                  loc->root_path_ + req_file_path);
+        std::find(loc->cgi_path_.begin(), loc->cgi_path_.end(), loc->root_path_ + cgi_file_path);
 
     // cgi인데 file_path가 있는 경우
-    if (it != loc->file_path_.end()) {
+    if (it != loc->cgi_path_.end()) {
       client_->SetStatusCode(200);
-      req_msg_->req_url_ = *it;
     }
     // cgi인데 file_path가 없는 경우 -> ~:8080/cgi/not-found.py
     else {
       client_->SetStatusCode(501);
       req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
+      client_->cgi_ = false;
     }
     return;
   }

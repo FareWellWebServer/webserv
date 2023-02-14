@@ -40,8 +40,7 @@ void CGIManager::SetCGIEnv(Data* client) {
     // .py? 인데, ? 부터 넣어줘야되는가? ? 뒤부터 넣어줘야 하는가?
     std::string url_query = client_->GetReqURL();
     std::string query_string = url_query.substr(url_query.find(".py?") + 1);
-    if (query_string.empty() == true)
-        setenv("QUERY_STRING", value.c_str(), 1);
+    setenv("QUERY_STRING", query_string.c_str(), 1);
 
     /* REMOTE_ADDR */
     // The IP address of the remote host making the request.
@@ -91,7 +90,7 @@ void CGIManager::SendToCGI(Data* client, int kq)
         // if (execve(client_->GetReqURL().c_str(), NULL, environ) < 0) {
         char **argv = new char*[3];
         argv[0] = strdup("python3");
-        argv[1] = strdup("/Users/dongchoi/webserv_cgi/cgi/cgitest.py");
+        argv[1] = strdup("/Users/seojin/Desktop/webserv/cgi/caesar_decode.py");
         argv[2] = NULL;
         if (execve("/usr/bin/python3", argv, environ) < 0) {
             #if CGI
@@ -121,7 +120,7 @@ void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
     char* buf = new char[len + 1];
     read(client_->GetPipeRead(), buf, len);
     buf[len] = '\0';
-    write(2, buf, len);
+    // write(2, buf, len);
     struct kevent event;
     EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
     kevent(kq, &event, 1, NULL, 0, NULL);
