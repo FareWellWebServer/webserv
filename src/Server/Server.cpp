@@ -117,7 +117,6 @@ void Server::ActCoreLogic(int idx) {
   req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
   req_handler_->SetReadLen(events_[idx].data);
   if (events_[idx].data == 0) {
-    // DisConnect(events_[idx].ident);
     Pong(idx);
     std::cout << RED << "Pong! to " << client_fd << "\n" << RESET;
     return;
@@ -128,11 +127,6 @@ void Server::ActCoreLogic(int idx) {
   client->SetReqMessage(req_handler_->req_msg_);
   req_handler_->Clear();
 
-  // req body data 출력 for 문
-  // for(size_t i = 0; i < client->req_message_->body_data_.length_; ++i)
-  //   write(1, &client->req_message_->body_data_.data_[i], 1);
-
-  // Data* client = clients_->GetDataByFd(events_[idx].ident);
   if (
     client->GetStatusCode() == 413) {
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
@@ -141,8 +135,7 @@ void Server::ActCoreLogic(int idx) {
     Get(idx);
   } else if (client->GetReqMethod() == "POST") {
     if (client->is_remain == true && client->req_message_->body_data_.data_ == NULL) {
-      client->SetStatusCode(100);
-      EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+      EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
       kevent(kq_, &event, 1, NULL, 0, NULL);
       std::cout << RED << client_fd << " Continue!\n" << RESET;
     } else {
@@ -296,8 +289,15 @@ void Server::Get(int idx) {
     // header 설정 이후 바로 client_fd EVFILT_WRITE ENABLE
 
   } else if (client->cgi_ == true) {
+
+
+
     cgi_manager_->SetData(client);
     cgi_manager_->SendToCGI(client, kq_);
+
+
+
+
   } else {
     int file_fd = open(req_msg->req_url_.c_str(), O_RDONLY);
 
@@ -362,8 +362,12 @@ void Server::Post(int idx) {
     int file_fd = open((config->upload_path_ + title).c_str(),
                        O_WRONLY | O_CREAT | O_TRUNC);
     if (file_fd == -1) {
-      // 오픈에러 처리
+      client->SetStatusCode(501);
+      client->SetReqURL(client->config_->error_pages_.find(501)->second);
+      client->is_remain = false;
       std::cout << RED << "OPEN ERROR\n";
+      Get(idx);
+      return;
     }
     fchmod(file_fd, S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -384,7 +388,7 @@ void Server::Post(int idx) {
 
     EV_SET(&event, file_fd, EVFILT_WRITE, EV_ADD, 0, 0, client);
     kevent(kq_, &event, 1, NULL, 0, NULL);
-
+    client->is_remain = false;
   } else {
     size_t semicolon_pos = content_type.find(';');
     std::string boundary = content_type.substr(semicolon_pos + 1);
@@ -403,10 +407,10 @@ void Server::Post(int idx) {
 
 
       std::string data_info;
-      size_t idx = 0;
+      size_t index = 0;
       if (client->is_first) {
-        for (; strncmp(&client->req_message_->body_data_.data_[idx], "\r\n\r\n", 4); ++idx) {
-          data_info.push_back(client->req_message_->body_data_.data_[idx]);
+        for (; strncmp(&client->req_message_->body_data_.data_[index], "\r\n\r\n", 4); ++index) {
+          data_info.push_back(client->req_message_->body_data_.data_[index]);
         }
 
         /* 바운더리 정보만 오고 뒤에 아무것도 안 올 때 */
@@ -425,6 +429,7 @@ void Server::Post(int idx) {
           client->SetReqMethod("GET");
           client->SetStatusCode(501);
           client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+          client->is_remain = false;
           Get(idx);
           return;
         }
@@ -434,9 +439,9 @@ void Server::Post(int idx) {
         file_name = file_name.substr(0, file_name.find('"'));
 
         if (file_name.size() == 0) {
-          client->SetReqMethod("GET");
           client->SetStatusCode(501);
           client->req_message_->req_url_ = config->error_pages_.find(501)->second;
+          client->is_remain = false;
           Get(idx);
           return;
         }
@@ -444,11 +449,11 @@ void Server::Post(int idx) {
       }
 
       size_t size = 0;
-      size_t tmp_idx = idx;
+      size_t tmp_idx = index;
       const char* cbody_data = client->req_message_->body_data_.data_;
       std::string body_data;
-      for(; idx < client->req_message_->body_data_.length_; ++idx) {
-        body_data.push_back(cbody_data[idx]);
+      for(; index < client->req_message_->body_data_.length_; ++index) {
+        body_data.push_back(cbody_data[index]);
       }
 
       if (body_data.find(boundary) == std::string::npos) { // 바운더리가 없으면.
@@ -462,8 +467,8 @@ void Server::Post(int idx) {
           client->binary_size = client->req_message_->body_data_.length_;
         }
       } else { // 바운더리가 있으면.
-        idx = tmp_idx;
-        for (; strncmp(&cbody_data[idx], boundary.c_str(), boundary.size()); ++idx) {
+        index = tmp_idx;
+        for (; strncmp(&cbody_data[index], boundary.c_str(), boundary.size()); ++index) {
           ++size;
         }
 
@@ -590,7 +595,9 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
 
-  if (file_fd != -1 && client->is_remain == false){
+  std::cout << std::boolalpha;
+  std::cout << client->is_remain << "\n";
+  if (file_fd != -1 && client->is_remain == false) {
     EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     kevent(kq_, &event, 1, NULL, 0, NULL);
 
