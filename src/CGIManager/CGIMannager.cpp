@@ -95,7 +95,7 @@ void CGIManager::SendToCGI(Data* client, int kq)
         //     #endif
         char **argv = new char*[3];
         argv[0] = strdup("python3");
-        argv[1] = strdup("/Users/dongchoi/webserv_cgi/cgi/caesar_encode.py");
+        argv[1] = strdup(("." + client->GetReqURL().substr(0, client->GetReqURL().find('?'))).c_str());
         argv[2] = NULL;
         if (execve("/usr/bin/python3", argv, environ) < 0) {
             #if CGI
@@ -187,7 +187,7 @@ void CGIManager::SetBodyLength(std::string& body, size_t idx) {
     size_t len(body.length() - (idx) - 1);
     client_->res_message_->body_data_.length_ = len;
     if (len > 0)
-        client_->res_message_->headers_["Content-Lengh"] = to_string(len);
+        client_->res_message_->headers_["Content-Length"] = to_string(len);
 }
 
 void CGIManager::SetBody(char* buf, size_t idx) {
@@ -198,6 +198,5 @@ void CGIManager::SetBody(char* buf, size_t idx) {
     {
         client_->res_message_->body_data_.data_[client_->res_message_->body_data_.length_ -1] = '\0';
         client_->res_message_->body_data_.length_--;
-        // client_->res_message_->body_data_.length_--;
     }
 }

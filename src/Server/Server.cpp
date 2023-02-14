@@ -151,7 +151,7 @@ void Server::ActCoreLogic(int idx) {
       Post(idx);
     }
   } else if (client->GetReqMethod() == "DELETE") {
-
+    Delete(idx);
   } else {
     client->SetStatusCode(501);
     client->SetReqURL(config->error_pages_.find(501)->second);
@@ -521,6 +521,35 @@ void Server::Post(int idx) {
   }
 }
 
+
+void Server::Delete(int idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  const ServerConfigInfo* config = client->GetConfig();
+  int client_fd = client->GetClientFd();
+
+  std::string file_name = client->GetReqURL().substr(client->GetReqURL().rfind('/') + 1);
+  int fd = open((config->upload_path_ + file_name).c_str(), O_RDONLY);
+  if (fd == -1) {
+    client->SetStatusCode(200);
+    client->res_message_->body_data_.data_ = strdup("<h3>Not Exist File</h3>");
+    client->res_message_->body_data_.length_ = 23;
+    client->res_message_->headers_["Content-Type"] = "text/html";
+    client->res_message_->headers_["Content-Length"] = "23";
+  } else {
+    unlink((config->upload_path_ + file_name).c_str());
+    close(fd);
+    client->SetStatusCode(200);
+    client->res_message_->body_data_.data_ = strdup("<h3>Success Delete</h3>");
+    client->res_message_->body_data_.length_ = 23;
+    client->res_message_->headers_["Content-Type"] = "text/html";
+    client->res_message_->headers_["Content-Length"] = "23";
+  }
+
+  struct kevent event;
+  EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+  kevent(kq_, &event, 1, NULL, 0, NULL);
+}
+
 void Server::ExecuteReadEventFileFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int client_fd = client->GetClientFd();
@@ -604,7 +633,6 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   int file_fd = client->GetFileFd();
   const char* response = msg_composer_->GetResponse(client);
   send(client_fd, response, msg_composer_->GetLength(), 0);
-  write(1, response, msg_composer_->GetLength());
 
   delete[] response;
   response = NULL;
@@ -617,8 +645,6 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
 
-  std::cout << std::boolalpha;
-  std::cout << client->is_remain << "\n";
   if (file_fd != -1 && client->is_remain == false) {
     EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     kevent(kq_, &event, 1, NULL, 0, NULL);

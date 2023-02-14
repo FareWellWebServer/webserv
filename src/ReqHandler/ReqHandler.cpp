@@ -268,6 +268,9 @@ void ReqHandler::ValidateReq() {
     return;
   }
 
+  if (req_msg_->method_ == "DELETE") {
+    return;
+  }
   std::string req_url = decode(req_msg_->req_url_);
   std::cout << BLUE << "decode req_url: " << req_url << RESET << std::endl;
   size_t last_slash_idx = req_url.find_last_of("/");

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FareWellWebServer</title>
+    <style>
+     
+        body {
+            background-color: black;
+        }
+
+        h1 {
+            text-align: center;
+            color: rgb(200, 200, 200);
+        }
+        .circle {
+            position: absolute;
+            top: 50vh;
+            left: 50vw;
+            width: 12vh;
+            height: 12vh;
+            border-radius: 100%;
+            background-color: lightyellow;
+            transform: translate(-50%, -50%);
+            box-shadow: rgba(253, 253, 254, 0.8) 0px 0px 50px 50px;
+            z-index: -1;
+        }
+
+        .page {
+            font-size: 4vw;
+            color: rgba(24, 24, 24, 0.9);
+        }
+
+        .page:hover {
+            color: rgba(190, 199, 33, 0.9);
+            cursor: pointer;
+            animation: neon 1s ease infinite;
+            -moz-animation: neon 1s ease infinite;
+            -webkit-animation: neon 1s ease infinite;
+        }
+
+        #page1 {
+            position: absolute;
+        }
+
+        #page2 {
+            position: absolute;
+        }
+
+        #page3 {
+            position: absolute;
+        }
+
+        #page4 {
+            position: absolute;
+        }
+
+        #page5 {
+            position: absolute;
+        }
+
+        @keyframes neon {
+  0%,
+  100% {
+    text-shadow: 0 0 1vw #FA1C16, 0 0 3vw #FA1C16, 0 0 10vw #FA1C16, 0 0 10vw #FA1C16, 0 0 .4vw #FED128, .5vw .5vw .1vw #806914;
+    color: #FED128;
+  }
+  50% {
+    text-shadow: 0 0 .5vw #800E0B, 0 0 1.5vw #800E0B, 0 0 5vw #800E0B, 0 0 5vw #800E0B, 0 0 .2vw #800E0B, .5vw .5vw .1vw #40340A;
+    color: #806914;
+  }
+}
+
+    </style>
+</head>
+
+<body>
+    <div class="circle"></div>
+    <a href="index.html">
+        <h1>root</h1>
+    </a>
+
+    <h1>search the page!</h1>
+    <div class="page" id="page1" onclick="tempGuide()">get pages</div>
+    <div class="page" id="page2" onclick="tempGuide()">put pages</div>
+    <div class="page" id="page3" onclick="tempGuide()">post pages</div>
+    <div class="page" id="page4" onclick="tempGuide()">delete pages</div>
+    <div class="page" id="page5" onclick="tempGuide()">error pages</div>
+    <div class="page" id="page6" onclick="tempGuide()">cgi pages</div>
+
+    <script>
+    const circle = document.querySelector(".circle");
+    document.addEventListener("mousemove", (e) => {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        circle.style.left = mouseX + 'px';
+        circle.style.top = mouseY + 'px';
+    })
+    const tempGuide = () => {
+        alert("page redirection is not yet implemented.")
+    }
+    const pagesNum = 6;
+    for (let i = 1; i <= pagesNum; i++) {
+        const tempPage = document.querySelector(`#page${i}`);
+        const tempX = (window.innerWidth * Math.random() * 0.8) + 'px';
+        const tempY =  window.innerHeight * Math.random() + 'px';
+        tempPage.style.left = tempX;
+        tempPage.style.top = tempY; 
+    }
+    </script>
+</body>
+
+</html>
