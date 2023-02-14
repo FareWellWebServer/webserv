@@ -530,7 +530,7 @@ void Server::Delete(int idx) {
   std::string file_name = client->GetReqURL().substr(client->GetReqURL().rfind('/') + 1);
   int fd = open((config->upload_path_ + file_name).c_str(), O_RDONLY);
   if (fd == -1) {
-    client->SetStatusCode(200);
+    client->SetStatusCode(400);
     client->res_message_->body_data_.data_ = strdup("<h3>Not Exist File</h3>");
     client->res_message_->body_data_.length_ = 23;
     client->res_message_->headers_["Content-Type"] = "text/html";
