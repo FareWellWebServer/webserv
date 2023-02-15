@@ -73,24 +73,22 @@ void CGIManager::SendToCGI(Data* client, int kq)
     pid_t pid;
     pipe(p);
 
-    client_->SetPipeRead(p[0]);
-    client_->SetPipeWrite(p[1]);
+    client_->SetPipeRead(p[READ]);
+    client_->SetPipeWrite(p[WRITE]);
     pid = fork();
     if (pid > 0) {
-        close(p[1]);
         struct kevent event;
-
-        EV_SET(&event, p[0], EVFILT_READ, EV_EOF | EV_ADD, 0, 0, client_);
+        EV_SET(&event, p[WRITE], EVFILT_WRITE, EV_ADD, 0, 0, client_);
         kevent(kq, &event, 1, NULL, 0, NULL);
         EV_SET(&event, pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, client_);
         kevent(kq, &event, 1, NULL, 0, NULL);
     }
     else if (pid == 0) {
         SetCGIEnv(client);
-        dup2(p[1], 1);
-        dup2(p[0], 0);
-        close(p[0]);
-        close(p[1]);
+        dup2(p[WRITE], STDOUT_FILENO);
+        dup2(p[READ], STDIN_FILENO);
+        close(p[READ]);
+        close(p[WRITE]);
         extern char** environ;
         char **argv = new char*[3];
         argv[0] = strdup("python3");
@@ -106,9 +104,17 @@ void CGIManager::SendToCGI(Data* client, int kq)
         #if CGI
             std::cout << "[CGI] fork() 에러" << std::endl;
         #endif
-        // wait(NULL);
     }
-    // while(1);
+}
+
+void CGIManager::WriteToCGIPipe(Data* client, int kq) {
+    struct kevent event;
+    EV_SET(&event, client->GetPipeWrite(), EVFILT_WRITE, EV_DELETE, 0, 0, client_);
+    kevent(kq, &event, 1, NULL, 0, NULL);
+    write(client->GetPipeWrite(), client_->GetReqBodyData(), client_->GetReqBodyLength());
+    close(client->GetPipeWrite());
+    EV_SET(&event, client->GetPipeRead(), EVFILT_READ, EV_EOF | EV_ADD, 0, 0, client_);
+    kevent(kq, &event, 1, NULL, 0, NULL);
 }
 
 // kqueue에서 cgi read 발생하면!
@@ -124,7 +130,6 @@ void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
     char* buf = new char[len + 1];
     read(client_->GetPipeRead(), buf, len);
     buf[len] = '\0';
-    std::cout << client->status_code_ << std::endl;
     struct kevent event;
     EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_EOF | EV_DELETE, 0, 0, NULL);
     kevent(kq, &event, 1, NULL, 0, NULL);

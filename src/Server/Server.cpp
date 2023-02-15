@@ -621,6 +621,11 @@ void Server::ExecuteWriteEventFileFd(int idx) {
   }
 }
 
+void Server::ExecuteWriteEventPipeFd(int idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  cgi_manager_->WriteToCGIPipe(client, kq_);
+}
+
 void Server::ExecuteWriteEventClientFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   #if SERVER
@@ -761,8 +766,9 @@ void Server::ExecuteWriteEvent(const int& idx) {
     return;
   }
   /* CGI에게 보내줄 pipe[WRITE]에 대한 이벤트 */
-  if (event_fd == client->GetPipeRead()) {
+  if (event_fd == client->GetPipeWrite()) {
     // TODO: implement ExcuteWriteEventPipeFd();
+    ExecuteWriteEventPipeFd(idx);
     return;
   }
 }

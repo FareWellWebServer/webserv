@@ -76,6 +76,7 @@ class Server {
   void ExecuteReadEventFileFd(int idx);
   void ExecuteReadEventPipeFd(int idx);
   void ExecuteWriteEventFileFd(int idx);
+  void ExecuteWriteEventPipeFd(int idx);
   void ExecuteWriteEventClientFd(int idx); // Send()를 이거로 바꿈
 
   void Pong(int idx);
