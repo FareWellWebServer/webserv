@@ -15,7 +15,7 @@ Logger::~Logger(void) { close(logger_file_fd_); }
 void Logger::info(std::string msg, Data* data) const {
   const std::string current_time = GetCurrentDate();
   const std::string log_msg =
-      data != NULL
+      data == NULL
           ? current_time + "\t" + msg + "\n"
           : current_time + "\t" + msg +
                 "\tserver port: " + to_string(data->GetListenPort()) +
@@ -33,7 +33,7 @@ void Logger::info(std::string msg, Data* data) const {
 void Logger::error(std::string msg, Data* data) const {
   const std::string current_time = GetCurrentDate();
   const std::string log_msg =
-      data != NULL
+      data == NULL
           ? current_time + "\t" + msg + "\n"
           : current_time + "\t" + msg +
                 "\tserver port: " + to_string(data->GetListenPort()) +
