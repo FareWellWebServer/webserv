@@ -747,7 +747,12 @@ void Server::ExecuteWriteEvent(const int& idx) {
   int event_fd = events_[idx].ident;
 
   if (event_fd == client->GetClientFd()) {
-    logger_.info("[farewell_webserv]", client);
+    const int client_status_code = client->GetStatusCode();
+    if (client_status_code >= 200 && client_status_code < 300) {
+      logger_.info("[farewell_webserv]", client);
+    } else {
+      logger_.error("[farewell_webserv]", client);
+    }
     ExecuteWriteEventClientFd(idx);
     if (client->is_remain == false) {
       client->Clear();
