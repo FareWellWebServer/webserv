@@ -131,11 +131,17 @@ class Data {
   bool is_working;
   bool is_remain;
   bool is_first;
+  bool is_loged;
+  bool is_chunked;
+  bool chunked_done;
+  char* chunk_body;
   int file_fd_;
   int log_file_fd_;
   int binary_start_idx;
   int binary_size;
   int pipe_[2];
+  int chunk_size;
+  int currency;
   struct kevent* event_;  // fd(ident), flag들
   const ServerConfigInfo* config_;
   t_req_msg* req_message_;

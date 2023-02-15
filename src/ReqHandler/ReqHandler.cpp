@@ -7,7 +7,7 @@ ReqHandler::~ReqHandler(void) { Clear(); }
 
 void ReqHandler::SetClient(Data* client) {
   client_ = client;
-  if (client_->is_remain == true) {
+  if (client_->is_remain == true || client_->is_chunked) {
     req_msg_ = client->req_message_;
   }
 }
@@ -68,7 +68,7 @@ void ReqHandler::RecvFromSocket() {
               << std::endl;
 #endif
   }
-  // write(1, buf_, read_len_);
+  write(1, buf_, read_len_);
 }
 
 int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
@@ -149,12 +149,15 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
     req_msg_->body_data_.length_ = atoi(kv_tmp[1].c_str());
     entity_flag_ = 1;
   }
-  if (kv_tmp[0] == "Content-type") {
+  if (kv_tmp[0] == "Content-Type") {
     req_msg_->body_data_.type_ = strdup(kv_tmp[1].c_str());
     entity_flag_ = 1;
   }
   if (kv_tmp[0] == "Content-Disposition" && kv_tmp[1] == "attacment") {
     client_->is_download = true;
+  }
+  if (kv_tmp[0] == "Transfer-Encoding" && kv_tmp[1] == "chunked") {
+    client_->is_chunked = true;
   }
 
   req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
@@ -204,10 +207,17 @@ void ReqHandler::ParseEntity(int start_idx) {
       return;
     }
   }
-
-  char* entity = new char[req_msg_->body_data_.length_];
-  memcpy(entity, &buf_[start_idx], req_msg_->body_data_.length_);
-  req_msg_->body_data_.data_ = entity;
+  char* entity;
+  if (client_->is_chunked) {
+    entity = new char[read_len_ - start_idx];
+    memcpy(entity, &buf_[start_idx], read_len_ - start_idx);
+    req_msg_->body_data_.length_ = read_len_ - start_idx;
+    req_msg_->body_data_.data_ = entity;
+  } else {
+    entity = new char[req_msg_->body_data_.length_];
+    memcpy(entity, &buf_[start_idx], req_msg_->body_data_.length_);
+    req_msg_->body_data_.data_ = entity;
+  }
 }
 
 void ReqHandler::ParseRecv() {
@@ -218,7 +228,7 @@ void ReqHandler::ParseRecv() {
 #endif
     return;
   }
-  if (client_->is_remain == true) {
+  if (client_->is_remain == true || client_->is_chunked == true) {
     if (client_->req_message_->body_data_.data_)
       delete[] client_->req_message_->body_data_.data_;
     client_->req_message_->body_data_.data_ = new char[read_len_];

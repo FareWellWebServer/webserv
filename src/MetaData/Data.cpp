@@ -17,10 +17,16 @@ Data::Data(void)
       is_working(false),
       is_remain(false),
       is_first(true),
+      is_loged(false),
+      is_chunked(false),
+      chunked_done(false),
+      chunk_body(NULL),
       file_fd_(-1),
       log_file_fd_(-1),
       binary_start_idx(0),
       binary_size(0),
+      chunk_size(-1),
+      currency(-1),
       event_(NULL),
       config_(NULL),
       req_message_(NULL),
@@ -69,6 +75,9 @@ void Data::Clear(void) {
   is_download = false;
   is_working = false;
   is_first = true;
+  is_chunked = false;
+  chunk_size = -1;
+  currency = -1;
   file_fd_ = -1;
   binary_start_idx = 0;
   binary_size = 0;
