@@ -6,6 +6,7 @@ Server::Server(const Config& config)
   req_handler_ = new ReqHandler;
   msg_composer_ = new MsgComposer;
   cgi_manager_ = new CGIManager;
+  session_ = new Session;
 }
 
 Server::~Server(void) {
@@ -14,6 +15,7 @@ Server::~Server(void) {
   delete clients_;
   delete req_handler_;
   delete msg_composer_;
+  delete session_;
 }
 
 void Server::Run(void) {
@@ -135,6 +137,14 @@ void Server::ActCoreLogic(int idx) {
 
   client->SetReqMessage(req_handler_->req_msg_);
   req_handler_->Clear();
+
+  // Session TODO
+  if (session_->IsValidCookie(client) == false) {
+    session_->SetCookie(client);
+  } else {
+    client->res_message_->headers_["Set-Cookie"] = client->req_message_->headers_["Cookie"];
+  }
+    
 
   if (
     client->GetStatusCode() == 413) {
