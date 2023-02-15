@@ -108,11 +108,13 @@ void CGIManager::SendToCGI(Data* client, int kq)
 }
 
 void CGIManager::WriteToCGIPipe(Data* client, int kq) {
+    write(client->GetPipeWrite(), client_->GetReqBodyData(), client_->GetReqBodyLength());
     struct kevent event;
     EV_SET(&event, client->GetPipeWrite(), EVFILT_WRITE, EV_DELETE, 0, 0, client_);
     kevent(kq, &event, 1, NULL, 0, NULL);
-    write(client->GetPipeWrite(), client_->GetReqBodyData(), client_->GetReqBodyLength());
-    close(client->GetPipeWrite());
+    // if (client->is_chunked == false || 
+    // (client->is_chunked == true && strncmp(client_->GetReqBodyData(), "0\r\n", 3) == 0))
+        close(client->GetPipeWrite());
     EV_SET(&event, client->GetPipeRead(), EVFILT_READ, EV_EOF | EV_ADD, 0, 0, client_);
     kevent(kq, &event, 1, NULL, 0, NULL);
 }
