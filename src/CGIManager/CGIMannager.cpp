@@ -79,20 +79,21 @@ void CGIManager::SendToCGI(Data* client, int kq)
     if (pid > 0) {
         close(p[1]);
         struct kevent event;
-        EV_SET(&event, p[0], EVFILT_READ, EV_ADD, 0, 0, client_);
+
+        EV_SET(&event, p[0], EVFILT_READ, EV_EOF | EV_ADD, 0, 0, client_);
         kevent(kq, &event, 1, NULL, 0, NULL);
         EV_SET(&event, pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, client_);
         kevent(kq, &event, 1, NULL, 0, NULL);
+        std::cout << "parent" << std::endl;
     }
     else if (pid == 0) {
+        std::cout << "child" << std::endl;
         SetCGIEnv(client);
         dup2(p[1], 1);
         dup2(p[0], 0);
+        close(p[0]);
+        close(p[1]);
         extern char** environ;
-        // if (execve(client_->GetReqURL().c_str(), NULL, environ) < 0) {
-        //     #if CGI
-        //         std::cout << "[CGI] execve 에러" << std::endl;
-        //     #endif
         char **argv = new char*[3];
         argv[0] = strdup("python3");
         argv[1] = strdup(("." + client->GetReqURL().substr(0, client->GetReqURL().find('?'))).c_str());
@@ -130,7 +131,7 @@ void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
     // write(2, buf, len);
     std::cout << client->status_code_ << std::endl;
     struct kevent event;
-    EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_EOF | EV_DELETE, 0, 0, NULL);
     kevent(kq, &event, 1, NULL, 0, NULL);
     close(client_->GetPipeRead());
     ParseCGIData(buf);
