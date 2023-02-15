@@ -84,10 +84,8 @@ void CGIManager::SendToCGI(Data* client, int kq)
         kevent(kq, &event, 1, NULL, 0, NULL);
         EV_SET(&event, pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, client_);
         kevent(kq, &event, 1, NULL, 0, NULL);
-        std::cout << "parent" << std::endl;
     }
     else if (pid == 0) {
-        std::cout << "child" << std::endl;
         SetCGIEnv(client);
         dup2(p[1], 1);
         dup2(p[0], 0);
@@ -123,12 +121,9 @@ void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
 {
     SetData(client);
 
-    // client->res_message_->body_data_
-    std::cout << "len : " << len << std::endl;
     char* buf = new char[len + 1];
     read(client_->GetPipeRead(), buf, len);
     buf[len] = '\0';
-    // write(2, buf, len);
     std::cout << client->status_code_ << std::endl;
     struct kevent event;
     EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_EOF | EV_DELETE, 0, 0, NULL);
