@@ -3,7 +3,8 @@
 Logger::Logger(int kq, const std::string& log_dir_path) : server_kq_(kq) {
   const std::string file_name = log_dir_path + "log.txt";
 
-  logger_file_fd_ = open(file_name.c_str(), O_CREAT | O_NONBLOCK | O_APPEND | O_RDWR, S_IRWXU);
+  logger_file_fd_ = open(file_name.c_str(),
+                         O_CREAT | O_NONBLOCK | O_APPEND | O_RDWR, S_IRWXU);
   if (logger_file_fd_ == -1) {
     throw std::runtime_error("logger error: can't open log file");
   }
@@ -13,9 +14,14 @@ Logger::~Logger(void) { close(logger_file_fd_); }
 
 void Logger::info(std::string msg, Data* data) const {
   const std::string current_time = GetCurrentDate();
-  const std::string log_msg = data != NULL ?
-     current_time + "\t" + msg + "\n" : 
-     current_time + "\t" + msg + "\t" + data->GetReqMethod() + "\tclient fd:\t" + to_string(data->GetClientFd()) + "\n";
+  const std::string log_msg =
+      data != NULL
+          ? current_time + "\t" + msg + "\n"
+          : current_time + "\t" + msg +
+                "\tserver port: " + to_string(data->GetListenPort()) +
+                "\tclient name: " + data->GetClientName() +
+                "\tclient port: " + data->GetClientPort() +
+                "\tstatus code: " + to_string(data->GetStatusCode()) + "\n";
   struct kevent event;
 
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
@@ -25,10 +31,16 @@ void Logger::info(std::string msg, Data* data) const {
 
 void Logger::error(std::string msg, Data* data) const {
   const std::string current_time = GetCurrentDate();
-  const std::string log_msg = data != NULL ? 
-     current_time + "\t" + msg + "\n" : 
-     current_time + "\t" + msg + "\t" + data->GetReqMethod() + "\tclient fd:\t" + to_string(data->GetClientFd()) + "\n";
-  const std::string error_msg = RED + std::string("[ERROR]\t") +log_msg + RESET;
+  const std::string log_msg =
+      data != NULL
+          ? current_time + "\t" + msg + "\n"
+          : current_time + "\t" + msg +
+                "\tserver port: " + to_string(data->GetListenPort()) +
+                "\tclient name: " + data->GetClientName() +
+                "\tclient port: " + data->GetClientPort() +
+                "\tstatus code: " + to_string(data->GetStatusCode()) + "\n";
+  const std::string error_msg =
+      RED + std::string("[ERROR]\t") + log_msg + RESET;
   struct kevent event;
 
   EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
