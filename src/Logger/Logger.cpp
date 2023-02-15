@@ -21,6 +21,7 @@ void Logger::info(std::string msg, Data* data) const {
                 "\tserver port: " + to_string(data->GetListenPort()) +
                 "\tclient name: " + data->GetClientName() +
                 "\tclient port: " + data->GetClientPort() +
+                "\tmethod: " + data->GetReqMethod() +
                 "\tstatus code: " + to_string(data->GetStatusCode()) + "\n";
   struct kevent event;
 
@@ -38,7 +39,8 @@ void Logger::error(std::string msg, Data* data) const {
                 "\tserver port: " + to_string(data->GetListenPort()) +
                 "\tclient name: " + data->GetClientName() +
                 "\tclient port: " + data->GetClientPort() +
-                "\tstatus code: " + to_string(data->GetStatusCode()) + "\n";
+                "\tmethod: " + data->GetReqMethod() +
+                "\tstatus code:" + to_string(data->GetStatusCode()) + "\n";
   const std::string error_msg =
       RED + std::string("[ERROR]\t") + log_msg + RESET;
   struct kevent event;
