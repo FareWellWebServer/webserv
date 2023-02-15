@@ -105,7 +105,7 @@ class Server {
   void ExecuteReadEventClientFd(const int& idx);
   void ExecuteWriteEvent(const int& idx);
   void ExcuteTimerEvent(const int& idx);
-  void ExcuteLogEvent(const int& idx);
+  void ExecuteLogEvent(const int& idx);
 };
 
 #endif
