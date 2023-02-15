@@ -712,8 +712,9 @@ void Server::ExecuteReadEventClientFd(const int& idx) {
   if (client->is_remain == false) {
     client->Init();
   }
-  if (events_[idx].flags == EV_EOF)
+  if (events_[idx].flags == EV_EOF){
     std::cout << RED << "FUCK\n" << RESET;
+  }
   else
     ActCoreLogic(idx);
 }
@@ -732,7 +733,7 @@ void Server::ExecuteReadEvent(const int& idx) {
       return;
   }
   /* CGI에게 반환받는 pipe[READ]에 대한 이벤트 */
-  if (event_fd == client->GetPipeRead()) {
+  if (event_fd == client->GetPipeRead() && events_[idx].filter & EV_EOF) {
     #if SERVER
       std::cout << "[Server] Pipe READ fd : " << event_fd
               << " == " << client->GetPipeRead() << std::endl;
