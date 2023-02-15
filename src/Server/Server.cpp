@@ -747,6 +747,7 @@ void Server::ExecuteWriteEvent(const int& idx) {
   int event_fd = events_[idx].ident;
 
   if (event_fd == client->GetClientFd()) {
+    logger_.info("[farewell_webserv]", client);
     ExecuteWriteEventClientFd(idx);
     if (client->is_remain == false) {
       client->Clear();
