@@ -27,6 +27,7 @@
 #include "ReqHandler.hpp"
 #include "ResHandler.hpp"
 #include "ServerConfigInfo.hpp"
+#include "Session.hpp"
 #include "Utils.hpp"
 
 #define MAXLINE 1000000
@@ -89,6 +90,8 @@ class Server {
   ReqHandler* req_handler_;
   MsgComposer* msg_composer_;
   CGIManager* cgi_manager_;
+  Session* session_;
+
 
   void Act(void);
   void AcceptNewClient(int idx);

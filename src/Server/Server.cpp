@@ -8,6 +8,7 @@ Server::Server(const Config& config)
   req_handler_ = new ReqHandler;
   msg_composer_ = new MsgComposer;
   cgi_manager_ = new CGIManager;
+  session_ = new Session;
 }
 
 Server::~Server(void) {
@@ -16,6 +17,7 @@ Server::~Server(void) {
   delete clients_;
   delete req_handler_;
   delete msg_composer_;
+  delete session_;
 }
 
 void Server::Run(void) {
@@ -136,6 +138,13 @@ void Server::ActCoreLogic(int idx) {
 
   client->SetReqMessage(req_handler_->req_msg_);
   req_handler_->Clear();
+
+  if (session_->IsValidCookie(client) == false) {
+    session_->SetCookie(client);
+  } else {
+    client->res_message_->headers_["Set-Cookie"] =
+        client->req_message_->headers_["Cookie"];
+  }
 
   if (client->GetStatusCode() == 413) {
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
@@ -711,9 +720,9 @@ void Server::ExecuteReadEventClientFd(const int& idx) {
   if (client->is_remain == false) {
     client->Init();
   }
-  if (events_[idx].flags == EV_EOF)
+  if (events_[idx].flags == EV_EOF) {
     std::cout << RED << "FUCK\n" << RESET;
-  else
+  } else
     ActCoreLogic(idx);
 }
 
@@ -731,7 +740,7 @@ void Server::ExecuteReadEvent(const int& idx) {
     return;
   }
   /* CGI에게 반환받는 pipe[READ]에 대한 이벤트 */
-  if (event_fd == client->GetPipeRead()) {
+  if (event_fd == client->GetPipeRead() && events_[idx].filter & EV_EOF) {
 #if SERVER
     std::cout << "[Server] Pipe READ fd : " << event_fd
               << " == " << client->GetPipeRead() << std::endl;
