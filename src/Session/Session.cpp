@@ -1,47 +1,39 @@
-#include "../include/Session.hpp"
+#include "../../include/Session.hpp"
 
 void Session::SetCookie(Data* client) {
+    srand(time(NULL));
     int cookie_id(rand());
-    while (cookie.find(cookie_id) == cookie.end())
+    while (cookie_.find(cookie_id) != cookie_.end())
         cookie_id = rand();
-    cookie[cookie_id] = GetCurrentTime();
+    cookie_[cookie_id] = GetCurrentTime();
     client->res_message_->headers_["Set-Cookie"] = std::string("id=") + to_string(cookie_id);
+    // client->req_message_->headers_["Cookie"] = std::string("id=") + to_string(cookie_id);
 }
 
-time Session::GetCurrentTime() {
-    time_t timer(time(NULL));
-    struct tm* t(localtime(&timer));
-    time current_time(0);
-    current_time += t->tm_sec;
-    current_time += t->tm_min * 100;
-    current_time += t->tm_hour * 10000;
-    current_time += t->tm_mday * 1000000;
-    current_time += t->tm_mon * 100000000;
-    current_time += t->tm_year * 1000000000000;
+time_t Session::GetCurrentTime() {
+    time_t current_time(time(NULL));
     return current_time;
 }
 
 /* 유효하면 쿠키 전용 html 페이지
     유효하지 않으면 밖에서 SetCookie 해주기
 */
-bool Session::IsValidCookie(Data* client, int cookie_id) {
-    std::string client_cookie(client->req_message_->headers_["Cookie"]);
-    if (client_cookie.empty())
+bool Session::IsValidCookie(Data* client) { //Cookie : id=12392193721
+    typedef std::map<std::string, std::string> key_val_t;
+    key_val_t::iterator cookid_id = client->req_message_->headers_.find("Cookie");
+    if (cookid_id == client->req_message_->headers_.end()) {
         return false;
-    std::string client_cookie_id(client_cookie.substr(client_cookie.find("=") + 1));
-    int client_cookie_id_int(atoi(client_cookie_id.c_str()));
-    time client_time = cookie[client_cookie_id_int];
-    time timeout(0);
-    timeout += TIMEOUT_SEC;
-    timeout += TIMEOUT_MIN * 100;
-    timeout += TIMEOUT_HOUR * 10000;
-    timeout += TIMEOUT_DAY * 1000000;
-    timeout += TIMEOUT_MON * 100000000;
-    timeout += TIMEOUT_YEAR * 1000000000000;
-    if (GetCurrentTime() - client_time < timeout)
+    }
+
+    // std::map<int, time_t> cookie_;
+    std::string client_cookie(cookid_id->second.substr(3));
+    cookie_t::iterator time_it = cookie_.find(atoi(client_cookie.c_str()));
+    if (difftime(GetCurrentTime(), time_it->second) < TIMEOUT_SEC) {
+        cookie_[time_it->first] = GetCurrentTime();
         return true;
+    }
     else {
-        cookie.erase(client_cookie_id_int);
+        cookie_.erase(time_it);
         return false;
     }
 }
