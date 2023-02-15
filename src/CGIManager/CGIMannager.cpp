@@ -71,11 +71,17 @@ void CGIManager::SendToCGI(Data* client, int kq)
     SetData(client);
     int p[2];
     pid_t pid;
-    pipe(p);
 
-    client_->SetPipeRead(p[READ]);
-    client_->SetPipeWrite(p[WRITE]);
-    pid = fork();
+    // if (!client->is_chunked || (client->is_chunked && client->is_first)) {
+        pipe(p);
+        client_->SetPipeRead(p[READ]);
+        client_->SetPipeWrite(p[WRITE]);
+        pid = fork();
+    // } else {
+    //     pid = 1;
+    //     p[READ] = client_->GetPipeRead();
+    //     p[WRITE] = client_->GetPipeWrite();
+    // }
     if (pid > 0) {
         struct kevent event;
         EV_SET(&event, p[WRITE], EVFILT_WRITE, EV_ADD, 0, 0, client_);
