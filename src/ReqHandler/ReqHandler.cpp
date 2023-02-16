@@ -35,7 +35,6 @@ ssize_t ReqHandler::RecvFromSocket() {
               << client_->GetClientFd() << std::endl;
 #endif
   }
-
   return recv_return;
 }
 

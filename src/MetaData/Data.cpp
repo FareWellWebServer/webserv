@@ -30,10 +30,9 @@ Data::Data(void)
       event_(NULL),
       config_(NULL),
       req_message_(NULL),
-      res_message_(NULL),
-      method_entity_(NULL) {
-  pipe_[0] = (-1);
-  pipe_[1] = (-1);
+      res_message_(NULL) {
+  pipe_[0] = -1;
+  pipe_[1] = -1;
 }
 
 Data::~Data(void) {
@@ -60,8 +59,6 @@ void Data::Init(void) {
   res_message_->body_data_.data_ = NULL;
   res_message_->body_data_.type_ = NULL;
   res_message_->body_data_.length_ = 0;
-  method_entity_ = new t_entity;
-  memset(method_entity_, 0, sizeof(t_entity));
 }
 
 /**
@@ -78,7 +75,10 @@ void Data::Clear(void) {
   is_chunked = false;
   chunk_size = -1;
   currency = -1;
-  file_fd_ = -1;
+  if (file_fd_ != -1) {
+    close(file_fd_);
+    file_fd_ = -1;
+  }
   binary_start_idx = 0;
   binary_size = 0;
   post_data_.clear();
@@ -109,18 +109,6 @@ void Data::Clear(void) {
     }
     delete res_message_;
     res_message_ = NULL;
-  }
-  if (method_entity_ != NULL) {
-    if (method_entity_->data_ != NULL) {
-      delete method_entity_->data_;
-      method_entity_->data_ = NULL;
-    }
-    if (method_entity_->type_ != NULL) {
-      delete method_entity_->type_;
-      method_entity_->type_ = NULL;
-    }
-    delete method_entity_;
-    method_entity_ = NULL;
   }
 }
 
@@ -219,11 +207,6 @@ size_t Data::GetReqBodyLength(void) const {
 
 void Data::SetReqMessage(t_req_msg* req_message) {
   req_message_ = req_message;
-  // SetReqMethod(req_message_->method_);  //string
-  // SetReqURL(req_message_->req_url_); //string
-  // SetReqProtocol(req_message_->protocol_); //string
-  // SetReqHeaders(req_message_->headers_); //map<string, string>
-  // SetReqBody(&req_message_->body_data_);
 }
 
 void Data::SetReqMethod(std::string req_message_method) {
@@ -272,12 +255,6 @@ std::string Data::GetResStatusText(void) const {
   return res_message_->status_text_;
 }
 
-/**
- * @brief Request Header의 키값 넣고, 그에 해당하는 value 반환
- *
- * @param key
- * @return std::string, 못찾으면 빈문자열
- */
 std::string Data::GetResHeaderByKey(std::string& key) const {
   return res_message_->headers_[key];
 }
@@ -335,31 +312,3 @@ void Data::SetResBodyType(char* res_body_type) {
 void Data::SetResBodyLength(size_t res_body_length) {
   res_message_->body_data_.length_ = res_body_length;
 }
-
-//////////* Method Entity Getter() *//////////
-
-t_entity* Data::GetMethodEntity(void) const { return method_entity_; }
-
-char* Data::GetMethodEntityData(void) const { return method_entity_->data_; }
-
-size_t Data::GetMethodEntityLength(void) const {
-  return method_entity_->length_;
-}
-
-char* Data::GetMethodEntityType(void) const { return method_entity_->type_; }
-
-//////////* Method Entity Setter() *//////////
-
-void Data::SetMethodEntity(t_entity* entity) {
-  SetMethodEntityData(entity->data_);
-  SetMethodEntityLength(entity->length_);
-  SetMethodEntityType(entity->type_);
-}
-
-void Data::SetMethodEntityData(char* data) { method_entity_->data_ = data; }
-
-void Data::SetMethodEntityLength(size_t length) {
-  method_entity_->length_ = length;
-}
-
-void Data::SetMethodEntityType(char* type) { method_entity_->type_ = type; }

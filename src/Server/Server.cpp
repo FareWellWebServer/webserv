@@ -344,8 +344,6 @@ void Server::Get(int idx) {
             "ext/plain; charset=UTF-8";
       } else if (file_extention == "py") {
         client->res_message_->headers_["Content-Type"] = "text/x-python";
-      } else {
-        // 지원하지 않는 타입.
       }
     }
 
@@ -608,8 +606,11 @@ void Server::ExecuteReadEventFileFd(int idx) {
   struct kevent event;
   EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
-  close(file_fd);
   if (read_return < 0) {
+    #if SERVER
+  std::cout << "[Server] File READ error : " << events_[idx].ident
+            << " == " << client->GetFileFd() << std::endl;
+  #endif
     client->status_code_ = 500;
     client->req_message_->req_url_ = 
     client->config_->error_pages_.find(500)->second;
@@ -634,6 +635,9 @@ void Server::ExecuteReadEventPipeFd(int idx) {
 
 void Server::ExecuteWriteEventFileFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  #if SERVER
+  std::cout << "[Server] File Fd Write : " << client->GetClientFd() << std::endl;
+#endif
   int client_fd = client->GetClientFd();
   int file_fd = client->GetFileFd();
 
@@ -703,6 +707,10 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   struct kevent event;
   const char* response = msg_composer_->GetResponse(client);
   if (send(client_fd, response, msg_composer_->GetLength(), 0) < 1) {
+    #if SERVER
+    std::cout << "[send] ExecuteWriteEventClientFd send return -1. socket : "
+              << client_fd << std::endl;
+    #endif
     DisConnect(client_fd);
     delete[] response;
     response = NULL;
@@ -846,7 +854,6 @@ void Server::ExecuteReadEvent(const int& idx) {
     std::cout << "[Server] Pipe READ fd : " << event_fd
               << " == " << client->GetPipeRead() << std::endl;
 #endif
-    // TODO: implement ExcuteReadEventPipeFd();
     ExecuteReadEventPipeFd(idx);
     return;
   }
@@ -865,6 +872,9 @@ void Server::ExecuteWriteEvent(const int& idx) {
     }
     ExecuteWriteEventClientFd(idx);
     if (client->is_remain == false && (client->is_chunked == false || client->GetReqMethod() == "GET")) {
+      if (client->file_fd_ > 0) {
+        close(client->file_fd_);
+      }
       client->Clear();
     }
     return;
@@ -876,7 +886,6 @@ void Server::ExecuteWriteEvent(const int& idx) {
   }
   /* CGI에게 보내줄 pipe[WRITE]에 대한 이벤트 */
   if (event_fd == client->GetPipeWrite()) {
-    // TODO: implement ExcuteWriteEventPipeFd();
     ExecuteWriteEventPipeFd(idx);
     return;
   }

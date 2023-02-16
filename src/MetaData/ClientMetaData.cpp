@@ -34,10 +34,12 @@ void ClientMetaData::SetCurrentFd(const fd& client_fd) {
 
 void ClientMetaData::AddData(const int& listen_fd, const int& client_fd,
                             const int& host_port, char* client_name, char* client_port) {
-  Data* new_data = new Data;
+  if (datas_.find(client_fd) != datas_.end()) {
+    DeleteByFd(client_fd); 
+  }
 
+  Data* new_data = new Data;
   InitializeData(new_data);
-	
   new_data->litsen_fd_ = listen_fd;
   new_data->client_fd_ = client_fd;
   new_data->listen_port_ = host_port;
@@ -74,12 +76,16 @@ void ClientMetaData::SetPipeFd(int pipe[2]) {
   datas_[current_fd_]->pipe_[WRITE] = pipe[WRITE];
 }
 
-
 void ClientMetaData::DeleteByFd(const int& client_fd) {
   ValidCheckToAccessDataByFd(client_fd);
   datas_[client_fd]->Clear();
 	delete datas_[client_fd];
   datas_.erase(client_fd);
+  struct kevent event[3];
+  EV_SET(&event[0], client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+  EV_SET(&event[1], client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+  EV_SET(&event[2], client_fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+  kevent(3, event, 3, NULL, 0, NULL);
 }
 
 void ClientMetaData::SetReqMessage(t_req_msg* req_message)
@@ -93,12 +99,6 @@ void ClientMetaData::SetReqMessageByFd(t_req_msg* req_message, int fd)
   ValidCheckToAccessDataByFd(fd);
   datas_[fd]->req_message_ = req_message;
 }
-
-// void ClientMetaData::SetResEntity(t_entity* res_enetity)
-// {
-//   ValidCheckToAccessData();
-//   datas_[current_fd_]->res_message_ = res_enetity;
-// }
 
 Data* ClientMetaData::GetData() {
   ValidCheckToAccessData();
@@ -115,16 +115,6 @@ t_req_msg* ClientMetaData::GetReqMsgByFd(int fd)
 	ValidCheckToAccessDataByFd(fd);
 	return datas_[fd]->req_message_;
 }
-
-// struct HTTPMessage* ClientMetaData::GetReqHeader() {
-//   ValidCheckToAccessData();
-//   return datas_[current_fd_].req_message_;
-// }
-
-// struct HTTPMessage* ClientMetaData::GetResHeader() {
-//   ValidCheckToAccessData();
-//   return datas_[current_fd_].res_message_;
-// }
 
 ServerConfigInfo* ClientMetaData::GetConfig() {
   ValidCheckToAccessData();
@@ -150,24 +140,3 @@ int ClientMetaData::GetStatusCode() {
   ValidCheckToAccessData();
   return datas_[current_fd_]->status_code_;
 }
-
-// std::vector<std::string> ClientMetaData::GetMethods() {
-//   ValidCheckToAccessData();
-//   return datas_[current_fd_].req_message_.getMethod();
-// }
-
-// bool ClientMetaData::FindMethods(std::string method) {
-//   ValidCheckToAccessData();
-//   if (std::find(GetMethods().begin(), GetMethods().end(), method) ==
-//       GetMethods().end())
-//     return false;
-//   else
-//     return true;
-// }
-
-// char* ClientMetaData::GetURL() {
-//   ValidCheckToAccessData();
-//   return datas_[current_fd_].req_message_.getURL();
-// }
-
-
