@@ -133,7 +133,10 @@ void Server::ActCoreLogic(int idx) {
     DisConnect(client_fd);
     return;
   }
-  req_handler_->RecvFromSocket();
+  if (req_handler_->RecvFromSocket() < 1) {
+    DisConnect(client_fd);
+    return ;
+  }
   req_handler_->ParseRecv();
 
   client->SetReqMessage(req_handler_->req_msg_);
@@ -587,20 +590,35 @@ void Server::ExecuteReadEventFileFd(int idx) {
 
   int size = client->event_[idx].data;
   char* buf = new char[size];
-  read(file_fd, buf, size);
-
-  client->res_message_->headers_["Content-Length"] = to_string(size);
-  client->res_message_->body_data_.data_ = buf;
-  client->res_message_->body_data_.length_ = size;
+  int read_return = read(file_fd, buf, size);
 
   struct kevent event;
+  EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, client);
+  kevent(kq_, &event, 1, NULL, 0, NULL);
+  close(file_fd);
+  if (read_return < 0) {
+    client->status_code_ = 500;
+    client->req_message_->req_url_ = 
+    client->config_->error_pages_.find(500)->second;
+    delete[] buf;
+    std::cout << "readren : " << read_return << std::endl;
+    Get(idx);
+    return ;
+  }
+  client->res_message_->body_data_.data_ = buf;
+  client->res_message_->body_data_.length_ = size;
+  client->res_message_->headers_["Content-Length"] = to_string(size);
+
   EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 }
 
 void Server::ExecuteReadEventPipeFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  cgi_manager_->GetFromCGI(client, events_[idx].data, kq_);
+  if (cgi_manager_->GetFromCGI(client, events_[idx].data, kq_) == false) {
+    client->cgi_ = false;
+    Get(idx);
+  }
 }
 
 void Server::ExecuteWriteEventFileFd(int idx) {
@@ -657,13 +675,21 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   msg_composer_->InitResMsg(client);
   int client_fd = client->GetClientFd();
   int file_fd = client->GetFileFd();
+  struct kevent event;
   const char* response = msg_composer_->GetResponse(client);
-  send(client_fd, response, msg_composer_->GetLength(), 0);
+  if (send(client_fd, response, msg_composer_->GetLength(), 0) < 1) {
+    DisConnect(client_fd);
+    delete[] response;
+    response = NULL;
+    EV_SET(&event, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
+    return ;
+  }
 
   delete[] response;
   response = NULL;
 
-  struct kevent event;
+  // struct kevent event;
   EV_SET(&event, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
@@ -696,19 +722,6 @@ void Server::Pong(int idx) {
 
   EV_SET(&event, client_fd, EVFILT_WRITE, ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
-}
-
-void Server::Continue(int idx) {
-  (void)idx;
-  // struct kevent event;
-  // Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  // int client_fd = client->GetClientFd();
-  // int file_fd = client->GetFileFd();
-
-  // if (client->req_message_->body_data_.data_ == NULL) {
-
-  // } else {
-  // }
 }
 
 void Server::ExecuteReadEventClientFd(const int& idx) {
@@ -795,10 +808,13 @@ void Server::ExcuteTimerEvent(const int& idx) {
 }
 
 void Server::ExecuteLogEvent(const int& idx) {
+  char *str = reinterpret_cast<char*>(events_[idx].udata);
   struct kevent event;
 
-  const std::string log_msg = reinterpret_cast<char*>(events_[idx].udata);
-  write(logger_.GetLogFileFD(), log_msg.c_str(), log_msg.length());
-  EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+  if (write(logger_.GetLogFileFD(), str, strlen(str)) < 0)
+    std::cerr << "Log File error" << std::endl;
+  EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
   kevent(kq_, &event, 1, 0, 0, NULL);
+  delete[] str;
+
 }

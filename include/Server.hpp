@@ -72,7 +72,6 @@ class Server {
   void Get(int idx);
   void Post(int idx);
   void Delete(int idx);
-  void Continue(int idx);
   void ExecuteReadEventFileFd(int idx);
   void ExecuteReadEventPipeFd(int idx);
   void ExecuteWriteEventFileFd(int idx);
