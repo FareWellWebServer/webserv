@@ -25,7 +25,6 @@
 #include "ClientMetaData.hpp"
 #include "MsgComposer.hpp"
 #include "ReqHandler.hpp"
-#include "ResHandler.hpp"
 #include "ServerConfigInfo.hpp"
 #include "Session.hpp"
 #include "Utils.hpp"

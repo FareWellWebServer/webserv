@@ -5,8 +5,8 @@ RH_D_NAME = D_Req_handle
 CXX = c++
 
 # Compiler flags
-# CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic -D SERVER=1 -D REQ_HANDLER=1 -D RES_HANDLER=1 -D CONFIG=1 -D CGI=1
-CXXFLAGS = -g3 -std=c++98 -Wall -Wextra -Werror -pedantic -D SERVER=1 -D REQ_HANDLER=1 -D RES_HANDLER=1 -D CONFIG=1 -D CGI=1
+CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
+# CXXFLAGS = -g3 -std=c++98 -Wall -Wextra -Werror -pedantic -D SERVER=1 -D REQ_HANDLER=1 -D RES_HANDLER=1 -D CONFIG=1 -D CGI=1
 #  CXXFLAGS = -g3 -fsanitize=address -D DG=1
 
 
@@ -17,15 +17,12 @@ YELLOW = \033[33m
 RESET = \033[0m
 
 SERVER_SRC	+= ./src/CGIManager/CGIMannager.cpp
-SERVER_SRC	+= ./src/gnl/GetNextLine.cpp
-SERVER_SRC	+= ./src/gnl/GetNextLineUtils.cpp
 SERVER_SRC	+= ./src/Logger/Logger.cpp
 SERVER_SRC	+= ./src/MetaData/ClientMetaData.cpp
 SERVER_SRC	+= ./src/MetaData/Data.cpp
 SERVER_SRC	+= ./src/MsgComposer/MsgComposer.cpp
 SERVER_SRC	+= ./src/ReqHandler/reqhandler_utils.cpp
 SERVER_SRC	+= ./src/ReqHandler/ReqHandler.cpp
-SERVER_SRC	+= ./src/ResHandler/ResHandler.cpp
 SERVER_SRC	+= ./src/Server/Server.cpp
 SERVER_SRC	+= ./src/ServerConfigInfo/Config.cpp
 SERVER_SRC	+= ./src/ServerConfigInfo/parse_location.cpp

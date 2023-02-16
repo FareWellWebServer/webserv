@@ -38,10 +38,10 @@ ssize_t ReqHandler::RecvFromSocket() {
   return recv_return;
 }
 
-int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
+int64_t ReqHandler::ParseFirstLine() {
   int64_t curr_idx(0), find_idx(0), end_idx(0);
   /* 첫 줄 찾기 */
-  find_idx = strcspn(buf_, "\n");  // buf 에서 "\n"의 인덱스 찾는 함수
+  find_idx = strcspn(buf_, "\n");
   while (find_idx != read_len_ && buf_[find_idx - 1] != '\r')
     find_idx += strcspn(&buf_[find_idx + 1], "\n");
   end_idx = find_idx;
@@ -53,7 +53,6 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   find_idx = strcspn(buf_, " ");
   char* tmp = new char[end_idx + 1];
   if (find_idx >= end_idx) {
-    // client_->SetStatusCode(400); // bad request
     return (read_len_);
   }
   strncpy(tmp, buf_, find_idx);
@@ -66,21 +65,17 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   // 두번 째 URL 쪼개기
   find_idx = strcspn(&buf_[curr_idx + 1], " ");
   if (find_idx >= end_idx) {
-    // client_->SetStatusCode(400); // bad request
     return (read_len_);
   }
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
   tmp[find_idx] = '\0';
   req_msg_->req_url_ = tmp;
-  // 중복 slash 제거 EX) ////// -> /
   ReduceSlash(req_msg_->req_url_);
 
   curr_idx += find_idx;
 
-  /* 버전확인 406 Not Acceptable */
   find_idx = strcspn(&buf_[curr_idx + 1], "\r");
   if (find_idx >= end_idx) {
-    // client_->SetStatusCode(400); // bad request
     return (read_len_);
   }
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
@@ -88,10 +83,9 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
 
   req_msg_->protocol_ = tmp;
   RemoveTabSpace(req_msg_->protocol_);
+  //TODO : 프로토콜 체크 필요
   if (req_msg_->protocol_ != "HTTP/1.1") {
-    // client_->SetStatusCode(400); // bad request
     std::cout << "INVALID PROTOCOL" << std::endl;
-    // TODO : ERROR처리 필요
     return (read_len_);
   }
 
@@ -143,7 +137,6 @@ int64_t ReqHandler::ParseHeaders(int start_idx) {
     }
   }
   int64_t curr_idx(start_idx), end_idx(start_idx);
-  // buf_에서 한줄씩 찾아서 key-value로 만들어서 넣어주기
   int i(0);
 
   while (start_idx + i < read_len_) {
@@ -168,10 +161,8 @@ void ReqHandler::ParseEntity(int start_idx) {
   start_idx += 1;
   while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
     start_idx++;
-    // TODO : read_len은 임의 지정값이라 실제 데이터의 길이를 반영하지
-    // 못할것으로 생각되어 read로 읽어온 byte로 봐야하지 않나..
     if (start_idx == read_len_) {
-#if DG
+#if REQ_HANDLER
       std::cout << "[ReqHandler] There is no entity(body)" << std::endl;
 #endif
       client_->is_remain = true;
@@ -193,7 +184,7 @@ void ReqHandler::ParseEntity(int start_idx) {
 
 void ReqHandler::ParseRecv() {
   if (buf_ == NULL) {
-#if DG
+#if REQ_HANDLER
     std::cout << "[ReqHandler] Parse error. Need buf_. call RecvFromSocket()"
               << std::endl;
 #endif
@@ -220,11 +211,12 @@ void ReqHandler::ParseRecv() {
     ValidateReq();
   }
 
-  // request 유효성 검사 -> body_size, method
+#if REQ_HANDLER
   std::cout << BLUE << "original req_url: " << req_msg_->req_url_ << std::endl;
   std::cout << "method: " << req_msg_->method_ << std::endl;
   std::cout << "status code: " << client_->status_code_ << std::endl;
   std::cout << "served req_url: " << req_msg_->req_url_ << RESET << std::endl;
+#endif
 
   delete[] buf_;
   buf_ = NULL;
@@ -258,7 +250,9 @@ void ReqHandler::ValidateReq() {
   }
 
   std::string req_url = decode(req_msg_->req_url_);
+#if REQ_HANDLER
   std::cout << BLUE << "decode req_url: " << req_url << RESET << std::endl;
+#endif
   size_t last_slash_idx = req_url.find_last_of("/");
   std::string req_location_path = req_url.substr(0, last_slash_idx + 1);
   std::string req_file_path = req_url.substr(last_slash_idx + 1);

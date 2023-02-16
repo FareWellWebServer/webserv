@@ -3,7 +3,6 @@
 
 #include <sstream>
 #include "Data.hpp"
-#include "Stage.hpp"
 
 class MsgComposer {
  public:

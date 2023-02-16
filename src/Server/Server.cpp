@@ -200,9 +200,10 @@ void Server::AcceptNewClient(int idx) {
   clients_->AddData(events_[idx].ident, connfd, config->port_, host, port);
   clients_->SetEvent(&events_[idx]);
   clients_->SetConfig();
+#if SERVER
   std::cout << "Connected to (" << host << ", " << port
             << "). socket : " << connfd << std::endl;
-
+#endif
   /* event setting */
   EV_SET(&event[0], connfd, EVFILT_READ, EV_ADD, 0, 0, clients_->GetData());
   EV_SET(&event[1], connfd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0,

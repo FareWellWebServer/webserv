@@ -6,7 +6,6 @@
 
 #include "HTTPMessage.hpp"
 #include "ServerConfigInfo.hpp"
-#include "Stage.hpp"
 
 #define READ 0
 #define WRITE 1
@@ -126,7 +125,6 @@ class Data {
   std::string post_data_;
   std::string boundary;
   std::string file_name;
-  stage e_stage;
 };
 
 #endif
