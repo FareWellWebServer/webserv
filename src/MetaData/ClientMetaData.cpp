@@ -34,6 +34,10 @@ void ClientMetaData::SetCurrentFd(const fd& client_fd) {
 
 void ClientMetaData::AddData(const int& listen_fd, const int& client_fd,
                             const int& host_port, char* client_name, char* client_port) {
+  if (datas_.find(client_fd) != datas_.end()) {
+    DeleteByFd(client_fd); 
+  }
+
   Data* new_data = new Data;
 
   InitializeData(new_data);
@@ -80,6 +84,11 @@ void ClientMetaData::DeleteByFd(const int& client_fd) {
   datas_[client_fd]->Clear();
 	delete datas_[client_fd];
   datas_.erase(client_fd);
+  struct kevent event[3];
+  EV_SET(&event[0], client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+  EV_SET(&event[1], client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+  EV_SET(&event[2], client_fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+  kevent(3, event, 3, NULL, 0, NULL);
 }
 
 void ClientMetaData::SetReqMessage(t_req_msg* req_message)

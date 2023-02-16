@@ -132,21 +132,21 @@ void Server::ActCoreLogic(int idx) {
     DisConnect(client_fd);
     return;
   }
-  if (req_handler_->RecvFromSocket() < 1) {
-    DisConnect(client_fd);
-    return ;
-  }
+  // if (req_handler_->RecvFromSocket() < 1) {
+  //   DisConnect(client_fd);
+  //   return ;
+  // }
   req_handler_->ParseRecv();
 
   client->SetReqMessage(req_handler_->req_msg_);
   req_handler_->Clear();
 
-  if (session_->IsValidCookie(client) == false) {
-    session_->SetCookie(client);
-  } else {
-    client->res_message_->headers_["Set-Cookie"] =
-        client->req_message_->headers_["Cookie"];
-  }
+  // if (session_->IsValidCookie(client) == false) {
+  //   session_->SetCookie(client);
+  // } else {
+  //   client->res_message_->headers_["Set-Cookie"] =
+  //       client->req_message_->headers_["Cookie"];
+  // }
 
   if (client->GetStatusCode() == 413 || client->GetStatusCode() == 400) {
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
