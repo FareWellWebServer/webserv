@@ -40,7 +40,7 @@ class Data {
   int GetLogFileFd() const;
   int GetPipeWrite() const;
   int GetPipeRead() const;
-  const ServerConfigInfo* GetConfig() const;
+  ServerConfigInfo* GetConfig() const;
 
   /* 멤버변수 Setter() .cpp: 110 ~ 154 */
   void SetListenFd(int listen_fd);
@@ -131,13 +131,19 @@ class Data {
   bool is_working;
   bool is_remain;
   bool is_first;
+  bool is_loged;
+  bool is_chunked;
+  bool chunked_done;
+  char* chunk_body;
   int file_fd_;
   int log_file_fd_;
   int binary_start_idx;
   int binary_size;
   int pipe_[2];
+  int chunk_size;
+  int currency;
   struct kevent* event_;  // fd(ident), flag들
-  const ServerConfigInfo* config_;
+  ServerConfigInfo* config_;
   t_req_msg* req_message_;
   t_res_msg* res_message_;   // ResHandler 에게 보내줄 내용 정리
 

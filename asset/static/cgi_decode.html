@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FareWellWebServer</title>
+  <style>
+    input {
+      margin-top: 1em;
+    }
+    img {
+      align-items: center;
+    }
+    #text {
+      width: 42vw;
+    }
+  </style>
+</head>
+
+<body style="text-align: center">
+  <h1>Caesar Cipher</h1>
+    <form action = "../../cgi/caesar_decode.py" method = "get">
+      <input id="text" type = "text" name = "origin" placeholder="input you want to decode">
+      </br>
+    <input type = "submit" value = "Submit" />
+    </form>
+    <img src="./caesar.png">
+    </body>
+</body>
+
+</html>
+
