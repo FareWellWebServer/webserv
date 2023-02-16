@@ -72,16 +72,16 @@ void CGIManager::SendToCGI(Data* client, int kq)
     int p[2];
     pid_t pid;
 
-    // if (!client->is_chunked || (client->is_chunked && client->is_first)) {
+    if (!client->is_chunked || (client->is_chunked && client->is_first)) {
         pipe(p);
         client_->SetPipeRead(p[READ]);
         client_->SetPipeWrite(p[WRITE]);
         pid = fork();
-    // } else {
-    //     pid = 1;
-    //     p[READ] = client_->GetPipeRead();
-    //     p[WRITE] = client_->GetPipeWrite();
-    // }
+    } else {
+        pid = 1;
+        p[READ] = client_->GetPipeRead();
+        p[WRITE] = client_->GetPipeWrite();
+    }
     if (pid > 0) {
         struct kevent event;
         EV_SET(&event, p[WRITE], EVFILT_WRITE, EV_ADD, 0, 0, client_);
@@ -121,26 +121,24 @@ bool CGIManager::WriteToCGIPipe(Data* client, int kq) {
     if (write_return < 0) {
         close(client->GetPipeWrite());
         close(client->GetPipeRead());
+        client_->SetPipeRead(-1);
+        client_->SetPipeWrite(-1);
         client->status_code_ = 500;
         client->req_message_->req_url_ = 
         client->config_->error_pages_.find(500)->second;
         client->cgi_ = false;
         return false;
     }
-    // if (client->is_chunked == false || 
-    // (client->is_chunked == true && strncmp(client_->GetReqBodyData(), "0\r\n", 3) == 0))
+    if (client->is_chunked == false || 
+    (client->is_chunked == true && strncmp(client_->GetReqBodyData(), "0\r\n", 3) == 0)) {
         close(client->GetPipeWrite());
+        client_->SetPipeWrite(-1);
+    }
     EV_SET(&event, client->GetPipeRead(), EVFILT_READ, EV_EOF | EV_ADD, 0, 0, client_);
     kevent(kq, &event, 1, NULL, 0, NULL);
     return true;
 }
 
-// kqueue에서 cgi read 발생하면!
-// 이거 하고 응답메시지 보내주면될듯 
-/**
- * @brief 이거 하기 전에 반드시 CGIManager.SetData해야함. 이후에 MSGComposer 호출하면 됨
- * @param len : kevent->data
- */
 bool CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
 {
     SetData(client);
@@ -172,7 +170,6 @@ bool CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
 void CGIManager::SetFirstLine() {
     client_->res_message_->http_version_ = "HTTP/1.1";
     client_->res_message_->status_code_ = 200;
-    // status_taxt 는 비어있는 상태 MSGComposer에서 하기
 }
 
 void CGIManager::ParseCGIData(char* buf) {
@@ -187,9 +184,9 @@ void CGIManager::ParseCGIData(char* buf) {
     SetBody(buf, idx);
     // 첫줄 컨텐츠타입 잘 왔는지 확인. 없으면 CGI 에러
     if (client_->res_message_->headers_.find("Content-Type") == client_->res_message_->headers_.end())
-        client_->status_code_ = 501; // 상태코드 이거 맞는지 확인 필요
+        client_->status_code_ = 501;
     else
-        SetFirstLine(); // 첫줄 세팅
+        SetFirstLine();
 }
 
 size_t CGIManager::SetHeaders(std::string& body) {
@@ -207,8 +204,7 @@ size_t CGIManager::SetHeaders(std::string& body) {
 		if (body[endline_idx + 1] == '\r')
 			break;
 	}
-    // while (body[start_idx] == '\n')
-        start_idx += 2;
+    start_idx += 2;
     return start_idx;
 }
 
