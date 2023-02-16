@@ -56,7 +56,9 @@ void Logger::PrintAllLogMsg(void) {
   std::vector<std::string>::iterator it = log_msg_buffer_.begin();
   for (; it != log_msg_buffer_.end(); ++it)
   {
-    write(logger_file_fd_, it->c_str(), it->size());
+    if (write(logger_file_fd_, it->c_str(), it->size() < 0)) {
+      std::cerr << "Log File error" << std::endl;
+    }
   }
   log_msg_buffer_.clear();
 }
