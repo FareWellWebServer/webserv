@@ -126,7 +126,6 @@ void Server::ActCoreLogic(int idx) {
   req_handler_->SetReadLen(events_[idx].data);
   if (events_[idx].data == 0) {
     Pong(idx);
-    std::cout << RED << "Pong\n" << RESET;
     DisConnect(client_fd);
     return;
   }
@@ -345,7 +344,7 @@ void Server::Get(int idx) {
 
 void Server::Post(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  const ServerConfigInfo* config = client->config_;
+  ServerConfigInfo* config = client->config_;
   t_req_msg* req_msg = client->GetReqMessage();
   struct kevent event;
 
@@ -406,6 +405,7 @@ void Server::Post(int idx) {
     client->res_message_->body_data_.length_ = down_link.size();
     client->res_message_->headers_["Content-Type"] = "text/html; charset=UTF-8";
     client->res_message_->headers_["Content-Length"] = to_string(down_link.size());
+    config->locations_.find("/download")->second.file_path_.push_back(config->locations_.find("/download")->second.root_path_ + title);
 
     client->SetStatusCode(201);
     client->SetFileFd(file_fd);
@@ -504,12 +504,18 @@ void Server::Post(int idx) {
         client->binary_size = size;
         client->res_message_->headers_["Location"] =
             config->upload_path_ + client->file_name;
-        client->res_message_->headers_["Content-Type"] =
-            "text/html; charset=UTF-8";
-        client->res_message_->headers_["Content-Length"] = "23";
-        client->res_message_->body_data_.data_ =
-            strdup("<h1>Success Upload</h1>");
-        client->res_message_->body_data_.length_ = 23;
+
+        std::string upload_path = config->upload_path_;
+        upload_path = upload_path.substr(1);
+        std::string down_link = "<a href=\"http://127.0.0.1:" + to_string(config->port_) + "/download/" + client->file_name + "\" download>" + client->file_name + "</a>";
+        client->res_message_->body_data_.data_ = strdup(down_link.c_str());
+        client->res_message_->body_data_.length_ = down_link.size();
+        client->res_message_->headers_["Content-Type"] = "text/html; charset=UTF-8";
+        client->res_message_->headers_["Content-Length"] = to_string(down_link.size());
+
+        // download 로케이션 없으면  seg fault 에러 뜸
+        config->locations_.find("/download")->second.file_path_.push_back(config->locations_.find("/download")->second.root_path_ + client->file_name);
+
         client->SetStatusCode(201);
         client->is_remain = false;
       }
@@ -537,7 +543,7 @@ void Server::Post(int idx) {
 
 void Server::Delete(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  const ServerConfigInfo* config = client->GetConfig();
+  ServerConfigInfo* config = client->GetConfig();
   int client_fd = client->GetClientFd();
 
   std::string file_name = client->GetReqURL().substr(client->GetReqURL().rfind('/') + 1);

@@ -150,7 +150,7 @@ int Data::GetPipeWrite(void) const { return pipe_[WRITE]; }
 
 int Data::GetPipeRead(void) const { return pipe_[READ]; }
 
-const ServerConfigInfo* Data::GetConfig() const { return config_; }
+ServerConfigInfo* Data::GetConfig() const { return config_; }
 
 ///////////  * 멤버변수 Setter() *  ///////////
 

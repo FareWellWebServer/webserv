@@ -68,7 +68,7 @@ void ReqHandler::RecvFromSocket() {
               << std::endl;
 #endif
   }
-  write(1, buf_, read_len_);
+  // write(1, buf_, read_len_);
 }
 
 int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
@@ -260,6 +260,10 @@ void ReqHandler::ParseRecv() {
 void ReqHandler::ValidateReq() {
   // POST -> body_size 유호성 확인
   // POST인 경우에는 아래의 유호성 검사가 필요가 없다
+  if (req_msg_->method_ == "DELETE") {
+    return;
+  }
+
   if (req_msg_->method_ == "POST") {
     if (client_->config_->body_size_ <
         static_cast<int>(req_msg_->body_data_.length_)) {
@@ -278,15 +282,15 @@ void ReqHandler::ValidateReq() {
     return;
   }
 
-  if (req_msg_->method_ == "DELETE") {
-    return;
-  }
   std::string req_url = decode(req_msg_->req_url_);
   std::cout << BLUE << "decode req_url: " << req_url << RESET << std::endl;
   size_t last_slash_idx = req_url.find_last_of("/");
   std::string req_location_path = req_url.substr(0, last_slash_idx + 1);
   std::string req_file_path = req_url.substr(last_slash_idx + 1);
 
+  if(req_location_path == "/download/") {
+    client_->is_download = true;
+  }
   // location이 없는 경우
   t_location* loc = client_->config_->GetCurrentLocation(req_location_path);
   if (!loc) {
