@@ -398,10 +398,15 @@ void Server::Post(int idx) {
     encoded_title = encoded_title.substr(equal_pos + 1, and_pos - equal_pos);
     client->res_message_->headers_["Location"] =
         config->upload_path_ + encoded_title;
+
+    std::string upload_path = config->upload_path_;
+    upload_path = upload_path.substr(1);
+    std::string down_link = "<a href=\"http://127.0.0.1:" + to_string(config->port_) + "/download/" + title + "\" download>" + title + "</a>";
+    client->res_message_->body_data_.data_ = strdup(down_link.c_str());
+    client->res_message_->body_data_.length_ = down_link.size();
     client->res_message_->headers_["Content-Type"] = "text/html; charset=UTF-8";
-    client->res_message_->headers_["Content-Length"] = "23";
-    client->res_message_->body_data_.data_ = strdup("<h1>Success Upload</h1>");
-    client->res_message_->body_data_.length_ = 23;
+    client->res_message_->headers_["Content-Length"] = to_string(down_link.size());
+
     client->SetStatusCode(201);
     client->SetFileFd(file_fd);
 
