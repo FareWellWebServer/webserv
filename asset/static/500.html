@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FareWellWebServer</title>
+  <style>
+    body {
+      background-image: url(http://127.0.0.1:8080/wallpapertip.jpg);
+    }
+
+    h1 {
+      text-align: center;
+      text-shadow: 4px 30px 3px rgb(42, 42, 42);
+      font-size: 8vw;
+      color: rgb(61, 9, 9);
+    }
+
+    .describe_wrapper {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-evenly;
+    }
+
+    .ghost1 {
+      height: 42vh;
+      position: absolute;
+    }
+
+    .ghost2 {
+      height: 42vh;
+      position: absolute;
+    }
+
+    #number {
+      transform-origin: top left;
+      animation: rotation 10s ease forwards alternate;
+    }
+
+    #error {
+      animation: drop_error 1s ease forwards;
+    }
+
+    #not {
+      transform-origin: top left;
+      animation: rotation 4s ease forwards alternate;
+    }
+
+    #page {
+      transform-origin: top right;
+      animation: rotation-reverse 2s ease forwards alternate;
+    }
+
+    #implemented {
+      animation: drop 1s ease forwards;
+    }
+
+    @keyframes rotation {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(45deg);
+      }
+    }
+
+    @keyframes rotation-reverse {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(-42deg);
+      }
+    }
+
+    @keyframes drop {
+      from {
+        transform: translate(0px);
+      }
+
+      to {
+        transform: translateY(60vh);
+      }
+    }
+
+    @keyframes drop_error {
+      from {
+        transform: translate(0px);
+      }
+
+      to {
+        transform: translate(-22vw, 75vh);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="describe_wrapper">
+    <h1 id="number">500</h1>
+    <h1 id="error">ERROR</h1>
+    <h1 id="page">PAGE</h1>
+  </div>
+  <div class="describe_wrapper">
+    <h1 id="not">SERVER</h1>
+    <h1 id="implemented">ERROR</h1>
+  </div>
+  <img class="ghost1" src="http://127.0.0.1:8080/ghost.png" />
+  <img class="ghost2" src="http://127.0.0.1:8080/ghost.png" />
+  <script>
+    const change_ghost_location = () => {
+      const ghostTotalNum = 2;
+      for (let i = 1; i <= ghostTotalNum; i++) {
+        const ghost = document.querySelector(`.ghost${i}`);
+        const tempX = window.innerWidth * Math.random() * 0.8 + "px";
+        const tempY = window.innerHeight * Math.random() * 0.8 + "px";
+        ghost.style.left = tempX;
+        ghost.style.top = tempY;
+        ghost.style.visibility = Math.random() > 0.1 ? "visible" : "hidden";
+      }
+    };
+    setInterval(change_ghost_location, 1500);
+  </script>
+</body>
+
+</html>
