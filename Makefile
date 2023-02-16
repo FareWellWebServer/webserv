@@ -16,14 +16,32 @@ GREEN = \033[32m
 YELLOW = \033[33m
 RESET = \033[0m
 
-SERVER_SRC	=	$(wildcard ./src/*.cpp) $(wildcard ./src/*/*.cpp)
+SERVER_SRC	+= ./src/CGIManager/CGIMannager.cpp
+SERVER_SRC	+= ./src/gnl/GetNextLine.cpp
+SERVER_SRC	+= ./src/gnl/GetNextLineUtils.cpp
+SERVER_SRC	+= ./src/Logger/Logger.cpp
+SERVER_SRC	+= ./src/MetaData/ClientMetaData.cpp
+SERVER_SRC	+= ./src/MetaData/Data.cpp
+SERVER_SRC	+= ./src/MsgComposer/MsgComposer.cpp
+SERVER_SRC	+= ./src/ReqHandler/reqhandler_utils.cpp
+SERVER_SRC	+= ./src/ReqHandler/ReqHandler.cpp
+SERVER_SRC	+= ./src/ResHandler/ResHandler.cpp
+SERVER_SRC	+= ./src/Server/Server.cpp
+SERVER_SRC	+= ./src/ServerConfigInfo/Config.cpp
+SERVER_SRC	+= ./src/ServerConfigInfo/parse_location.cpp
+SERVER_SRC	+= ./src/ServerConfigInfo/parse_server.cpp
+SERVER_SRC	+= ./src/ServerConfigInfo/ServerConfigInfo.cpp
+SERVER_SRC	+= ./src/ServerConfigInfo/utils.cpp
+SERVER_SRC	+= ./src/Session/Session.cpp
+SERVER_SRC	+= ./src/Utils/decode.cpp
+SERVER_SRC	+= ./src/Utils/directory_list.cpp
+SERVER_SRC	+= ./src/Utils/ErrorHandler.cpp
+SERVER_SRC	+= ./src/Utils/time.cpp
+SERVER_SRC	+= ./src/Utils/tostring.cpp
+SERVER_SRC	+= ./src/Utils/WebServException.cpp
+SERVER_SRC	+= ./src/main.cpp
+
 SERVER_OBJ	=	$(SERVER_SRC:.cpp=.o)
-
-REQHANDLE_SRC = $(wildcard ./src/ReqHandler/*.cpp) $(wildcard ./src/gnl/*.cpp) ./src/rq_main.cpp
-REQHANDLE_OBJ = $(REQHANDLE_SRC:.cpp=.o)
-
-REQHANDLE_D_SRC = ./src/rq_main.cpp ./src/test_req.cpp
-REQHANDLE_D_OBJ = $(REQHANDLE_D_SRC:.cpp=.o)
 
 # Default target
 all: server
@@ -34,15 +52,6 @@ server: $(SERVER_OBJ)
 	@$(CXX) $(CXXFLAGS) $(SERVER_OBJ) -o $(NAME)
 	@echo "$(GREEN)Done.$(RESET)"
 
-rp: $(REQHANDLE_OBJ)
-	@echo "$(YELLOW)Req_Handle_Building $@...$(RESET)"
-	@$(CXX) $(CXXFLAGS) $(REQHANDLE_OBJ) -o $(RH_NAME)
-	@echo "$(GREEN)Done.$(RESET)"
-
-dp: $(REQHANDLE_D_OBJ)
-	@echo "$(YELLOW)Req_Handle_Building $@...$(RESET)"
-	@$(CXX) $(CXXFLAGS) $(REQHANDLE_D_OBJ) -o $(RH_D_NAME)
-	@echo "$(GREEN)Done.$(RESET)"
 # Clean up
 clean:
 	@echo "$(YELLOW)Cleaning up...$(RESET)"
