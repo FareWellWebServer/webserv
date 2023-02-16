@@ -77,7 +77,7 @@ void Server::Act(void) {
   for (int idx = 0; idx < n; ++idx) {
     // log file
     if (static_cast<int>(events_[idx].ident) == logger_.GetLogFileFD()) {
-      ExecuteLogEvent(idx);
+      ExecuteLogEvent();
       continue;
     };
 
@@ -896,13 +896,10 @@ void Server::ExecuteTimerEvent(const int& idx) {
   }
 }
 
-void Server::ExecuteLogEvent(const int& idx) {
-  char *str = reinterpret_cast<char*>(events_[idx].udata);
-  struct kevent event;
 
-  if (write(logger_.GetLogFileFD(), str, strlen(str)) < 0)
-    std::cerr << "Log File error" << std::endl;
+void Server::ExecuteLogEvent(void) {
+  logger_.PrintAllLogMsg();
+  struct kevent event;
   EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
   kevent(kq_, &event, 1, 0, 0, NULL);
-  delete[] str;
 }

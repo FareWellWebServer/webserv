@@ -12,7 +12,7 @@ Logger::Logger(int kq, const std::string& log_dir_path) : server_kq_(kq) {
 
 Logger::~Logger(void) { close(logger_file_fd_); }
 
-void Logger::info(std::string msg, Data* data) const {
+void Logger::info(std::string msg, Data* data) {
   const std::string current_time = GetCurrentDate();
   const std::string log_msg =
       data == NULL
@@ -24,16 +24,13 @@ void Logger::info(std::string msg, Data* data) const {
                 "\tmethod: " + data->GetReqMethod() +
                 "\tstatus code: " + to_string(data->GetStatusCode()) + "\n";
   struct kevent event;
-  char *log_str = new char[log_msg.size() + 1];
-  log_str[log_msg.size()] = '\0';
-  for(size_t i = 0; i < log_msg.size(); ++i) {
-    log_str[i] = log_msg.at(i);
-  }
-  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ADD, 0, 0, log_str);
+
+  log_msg_buffer_.push_back(log_msg);
+  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
   kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
 
-void Logger::error(std::string msg, Data* data) const {
+void Logger::error(std::string msg, Data* data) {
   const std::string current_time = GetCurrentDate();
   const std::string log_msg =
       data == NULL
@@ -46,14 +43,22 @@ void Logger::error(std::string msg, Data* data) const {
                 "\tstatus code:" + to_string(data->GetStatusCode()) + "\n";
   const std::string error_msg =
       RED + std::string("[ERROR]\t") + log_msg + RESET;
-  char *err_str = new char[error_msg.size() + 1];
-  err_str[error_msg.size()] = '\0';
-  for(size_t i = 0; i < error_msg.size(); ++i) {
-    err_str[i] = error_msg.at(i);
-  }
   struct kevent event;
-  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ADD, 0, 0, err_str);
+
+  log_msg_buffer_.push_back(error_msg);
+  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
   kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
 
 fd Logger::GetLogFileFD(void) const { return logger_file_fd_; }
+
+void Logger::PrintAllLogMsg(void) {
+  while (!log_msg_buffer_.empty()) {
+    std::vector<std::string>::iterator it = log_msg_buffer_.begin();
+    if (write(logger_file_fd_, it->c_str(), it->size()) < 0) {
+      std::cerr << "Log File error" << std::endl;
+    }
+    log_msg_buffer_.erase(it);
+  }
+  log_msg_buffer_.clear();
+}
