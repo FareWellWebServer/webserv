@@ -28,12 +28,15 @@ bool Session::IsValidCookie(Data* client) { //Cookie : id=12392193721
     // std::map<int, time_t> cookie_;
     std::string client_cookie(cookid_id->second.substr(3));
     cookie_t::iterator time_it = cookie_.find(atoi(client_cookie.c_str()));
-    if (difftime(GetCurrentTime(), time_it->second) < TIMEOUT_SEC) {
-        cookie_[time_it->first] = GetCurrentTime();
-        return true;
+    if (time_it != cookie_.end()){
+        if (difftime(GetCurrentTime(), time_it->second) < TIMEOUT_SEC) {
+            cookie_[time_it->first] = GetCurrentTime();
+            return true;
+        }
+        else {
+            cookie_.erase(time_it);
+            return false;
+        }
     }
-    else {
-        cookie_.erase(time_it);
-        return false;
-    }
+    return false;
 }

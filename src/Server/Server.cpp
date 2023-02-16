@@ -874,10 +874,11 @@ void Server::ExecuteTimerEvent(const int& idx) {
 }
 
 void Server::ExecuteLogEvent(const int& idx) {
+  char *str = (char*)(events_[idx].udata);
   struct kevent event;
 
-  const std::string log_msg = reinterpret_cast<char*>(events_[idx].udata);
-  write(logger_.GetLogFileFD(), log_msg.c_str(), log_msg.length());
-  EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+  write(logger_.GetLogFileFD(), str, strlen(str));
+  EV_SET(&event, logger_.GetLogFileFD(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
   kevent(kq_, &event, 1, 0, 0, NULL);
+  delete[] str;
 }
