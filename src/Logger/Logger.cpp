@@ -53,12 +53,13 @@ void Logger::error(std::string msg, Data* data) {
 fd Logger::GetLogFileFD(void) const { return logger_file_fd_; }
 
 void Logger::PrintAllLogMsg(void) {
-  std::vector<std::string>::iterator it = log_msg_buffer_.begin();
-  for (; it != log_msg_buffer_.end(); ++it)
-  {
-    if (write(logger_file_fd_, it->c_str(), it->size() < 0)) {
+  while (!log_msg_buffer_.empty()) {
+    std::vector<std::string>::iterator it = log_msg_buffer_.begin();
+    if (write(logger_file_fd_, it->c_str(), it->size()) < 0) {
       std::cerr << "Log File error" << std::endl;
     }
+    log_msg_buffer_.erase(it);
+
   }
   log_msg_buffer_.clear();
 }
