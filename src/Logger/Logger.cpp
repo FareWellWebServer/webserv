@@ -59,7 +59,6 @@ void Logger::PrintAllLogMsg(void) {
       std::cerr << "Log File error" << std::endl;
     }
     log_msg_buffer_.erase(it);
-
   }
   log_msg_buffer_.clear();
 }
