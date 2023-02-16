@@ -27,6 +27,7 @@
 #include "ReqHandler.hpp"
 #include "ResHandler.hpp"
 #include "ServerConfigInfo.hpp"
+#include "Session.hpp"
 #include "Utils.hpp"
 
 #define MAXLINE 1000000
@@ -75,6 +76,7 @@ class Server {
   void ExecuteReadEventFileFd(int idx);
   void ExecuteReadEventPipeFd(int idx);
   void ExecuteWriteEventFileFd(int idx);
+  void ExecuteWriteEventPipeFd(int idx);
   void ExecuteWriteEventClientFd(int idx); // Send()를 이거로 바꿈
 
   void Pong(int idx);
@@ -89,6 +91,8 @@ class Server {
   ReqHandler* req_handler_;
   MsgComposer* msg_composer_;
   CGIManager* cgi_manager_;
+  Session* session_;
+
 
   void Act(void);
   void AcceptNewClient(int idx);

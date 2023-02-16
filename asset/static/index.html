@@ -83,12 +83,12 @@
     </a>
 
     <h1>search the page!</h1>
-    <div class="page" id="page1" onclick="tempGuide()">get pages</div>
-    <div class="page" id="page2" onclick="tempGuide()">put pages</div>
-    <div class="page" id="page3" onclick="tempGuide()">post pages</div>
-    <div class="page" id="page4" onclick="tempGuide()">delete pages</div>
-    <div class="page" id="page5" onclick="tempGuide()">error pages</div>
-    <div class="page" id="page6" onclick="tempGuide()">cgi pages</div>
+    <div class="page" id="page1" OnClick="location.href ='http://127.0.0.1:8080/'" style="cursor:pointer;" >get pages</div>
+    <div class="page" id="page2" OnClick="location.href ='http://127.0.0.1:8080/post/post.html'" style="cursor:pointer;" >post pages</div>
+    <div class="page" id="page3" OnClick="location.href ='http://127.0.0.1:8080/404.html'" style="cursor:pointer;" >error pages</div>
+    <div class="page" id="page4" OnClick="location.href ='http://127.0.0.1:8080/cgi.html'" style="cursor:pointer;" >cgi pages - encode</div>
+    <div class="page" id="page5" OnClick="location.href ='http://127.0.0.1:8080/cgi_decode.html'" style="cursor:pointer;" >cgi pages - decode</div>
+
 
     <script>
     const circle = document.querySelector(".circle");
@@ -101,7 +101,7 @@
     const tempGuide = () => {
         alert("page redirection is not yet implemented.")
     }
-    const pagesNum = 6;
+    const pagesNum = 4;
     for (let i = 1; i <= pagesNum; i++) {
         const tempPage = document.querySelector(`#page${i}`);
         const tempX = (window.innerWidth * Math.random() * 0.8) + 'px';

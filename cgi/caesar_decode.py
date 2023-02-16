@@ -12,7 +12,7 @@ def caesar(s):
     return "".join(s)
 
 plain_text = os.getenv("QUERY_STRING")
-res= plain_text.split("?")[1].split("=")[1]
+res = plain_text.split("?")[1].split("=")[1]
 
 print ("Content-Type: text/html\r")
 print ("\r")
@@ -22,7 +22,7 @@ print ("<head>")
 print ("<title>decoded text</title>")
 print ("</head>")
 print ("<body><h1>")
-print (caesar(plain_text))
+print (caesar(res))
 print ("</h1></body>")
 print ("</html>")
 

@@ -243,7 +243,9 @@ void ReqHandler::ParseRecv() {
     // 헤더 파싱
     idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
     // entity 넣기
-    if (entity_flag_ == 1) ParseEntity(idx);
+    if (entity_flag_ == 1) {
+      ParseEntity(idx);
+    }
     ValidateReq();
   }
 
