@@ -18,8 +18,8 @@ class CGIManager {
         void SetData(Data* client);
         void SetCGIEnv(Data* client); // fork 안에서 해주기
         void SendToCGI(Data* client, int kq);
-        void WriteToCGIPipe(Data* client, int kq);
-        void GetFromCGI(Data* client, int64_t len, int kq);
+        bool WriteToCGIPipe(Data* client, int kq);
+        bool GetFromCGI(Data* client, int64_t len, int kq);
     private:
         Data* client_;
         char* ParseCGIType(char* buf);
