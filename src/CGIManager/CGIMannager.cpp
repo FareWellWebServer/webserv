@@ -113,16 +113,26 @@ void CGIManager::SendToCGI(Data* client, int kq)
     }
 }
 
-void CGIManager::WriteToCGIPipe(Data* client, int kq) {
-    write(client->GetPipeWrite(), client_->GetReqBodyData(), client_->GetReqBodyLength());
+bool CGIManager::WriteToCGIPipe(Data* client, int kq) {
+    int write_return = write(client->GetPipeWrite(), client_->GetReqBodyData(), client_->GetReqBodyLength());
     struct kevent event;
     EV_SET(&event, client->GetPipeWrite(), EVFILT_WRITE, EV_DELETE, 0, 0, client_);
     kevent(kq, &event, 1, NULL, 0, NULL);
+    if (write_return < 0) {
+        close(client->GetPipeWrite());
+        close(client->GetPipeRead());
+        client->status_code_ = 500;
+        client->req_message_->req_url_ = 
+        client->config_->error_pages_.find(500)->second;
+        client->cgi_ = false;
+        return false;
+    }
     // if (client->is_chunked == false || 
     // (client->is_chunked == true && strncmp(client_->GetReqBodyData(), "0\r\n", 3) == 0))
         close(client->GetPipeWrite());
     EV_SET(&event, client->GetPipeRead(), EVFILT_READ, EV_EOF | EV_ADD, 0, 0, client_);
     kevent(kq, &event, 1, NULL, 0, NULL);
+    return true;
 }
 
 // kqueue에서 cgi read 발생하면!
@@ -131,22 +141,32 @@ void CGIManager::WriteToCGIPipe(Data* client, int kq) {
  * @brief 이거 하기 전에 반드시 CGIManager.SetData해야함. 이후에 MSGComposer 호출하면 됨
  * @param len : kevent->data
  */
-void CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
+bool CGIManager::GetFromCGI(Data* client, int64_t len, int kq)
 {
     SetData(client);
 
     char* buf = new char[len + 1];
-    read(client_->GetPipeRead(), buf, len);
+    int read_return = read(client_->GetPipeRead(), buf, len);
     buf[len] = '\0';
     struct kevent event;
     EV_SET(&event, client_->GetPipeRead(), EVFILT_READ, EV_EOF | EV_DELETE, 0, 0, NULL);
     kevent(kq, &event, 1, NULL, 0, NULL);
     close(client_->GetPipeRead());
-    ParseCGIData(buf);
-    delete[] buf;
-
-    EV_SET(&event, client->GetClientFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
-    kevent(kq, &event, 1, NULL, 0, NULL);
+    if (read_return < 0) {
+        client->status_code_ = 500;
+        client->req_message_->req_url_ = 
+        client_->config_->error_pages_.find(500)->second;
+        delete[] buf;
+        client->cgi_ = false;
+        return false;
+    }
+    else {
+        ParseCGIData(buf);
+        EV_SET(&event, client->GetClientFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+        kevent(kq, &event, 1, NULL, 0, NULL);
+        delete[] buf;
+        return true;
+    }
 }
 
 void CGIManager::SetFirstLine() {
