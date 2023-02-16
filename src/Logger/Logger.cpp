@@ -24,9 +24,12 @@ void Logger::info(std::string msg, Data* data) const {
                 "\tmethod: " + data->GetReqMethod() +
                 "\tstatus code: " + to_string(data->GetStatusCode()) + "\n";
   struct kevent event;
-
-  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
-         static_cast<void*>(const_cast<char*>(log_msg.c_str())));
+  char *log_str = new char[log_msg.size() + 1];
+  log_str[log_msg.size()] = '\0';
+  for(size_t i = 0; i < log_msg.size(); ++i) {
+    log_str[i] = log_msg.at(i);
+  }
+  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ADD, 0, 0, log_str);
   kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
 
@@ -43,10 +46,13 @@ void Logger::error(std::string msg, Data* data) const {
                 "\tstatus code:" + to_string(data->GetStatusCode()) + "\n";
   const std::string error_msg =
       RED + std::string("[ERROR]\t") + log_msg + RESET;
+  char *err_str = new char[error_msg.size() + 1];
+  err_str[error_msg.size()] = '\0';
+  for(size_t i = 0; i < error_msg.size(); ++i) {
+    err_str[i] = error_msg.at(i);
+  }
   struct kevent event;
-
-  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ENABLE | EV_ADD, 0, 0,
-         static_cast<void*>(const_cast<char*>(error_msg.c_str())));
+  EV_SET(&event, logger_file_fd_, EVFILT_WRITE, EV_ADD, 0, 0, err_str);
   kevent(server_kq_, &event, 1, NULL, 0, NULL);
 }
 
