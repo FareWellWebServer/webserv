@@ -23,34 +23,9 @@ void ReqHandler::Clear() {
   read_len_ = 0;
   client_ = NULL;
   req_msg_ = NULL;
-
-  // req_msg_는 ClientMetaData가 가지고 있어야하니 여기서 할당해제하면 안될 듯.
-  // if (req_msg_ != NULL) {
-  //   delete req_msg_;
-  //   req_msg_ = NULL;
-  // }
 }
 
-// void ReqHandler::SetReadLen(int64_t len) { read_len_ = len; }
-
-void ReqHandler::SetBuf(int fd) {
-  int byte = 0;
-  buf_ = new char[read_len_ * sizeof(char)];
-  byte = read(fd, buf_, read_len_);
-  if (byte < 0) {
-    std::cout << "ERROR IN SET BUF" << std::endl;
-  }
-}
-
-void ReqHandler::RecvFromSocket() {
-  if (client_ == NULL || read_len_ == 0) {
-#if REQ_HANDLER
-    std::cout << " [ReqHandler] Recv error. Need client data. call SetClient() "
-              << "or SetReadLen() " << &client_ << read_len_ << std::endl;
-#endif
-    return;
-  }
-
+ssize_t ReqHandler::RecvFromSocket() {
   ssize_t recv_return(0);
   buf_ = new char[sizeof(char) * read_len_];
   recv_return = recv(client_->GetClientFd(), buf_, read_len_, 0);
@@ -59,16 +34,9 @@ void ReqHandler::RecvFromSocket() {
     std::cout << "[ReqHandler] recv return -1. socket : "
               << client_->GetClientFd() << std::endl;
 #endif
-    // EV_SET;
-    // return ; ?? 어디로 돌아가야되지
-  } else if (recv_return != read_len_) {
-#if REQ_HANDLER
-    std::cout << "[ReqHandler] recv return != kevent->data : \
-    loss data?"
-              << std::endl;
-#endif
   }
-  write(1, buf_, read_len_);
+
+  return recv_return;
 }
 
 int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
