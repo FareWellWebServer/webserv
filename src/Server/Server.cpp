@@ -138,7 +138,6 @@ void Server::ActCoreLogic(int idx) {
   client->SetReqMessage(req_handler_->req_msg_);
   req_handler_->Clear();
 
-
   if (session_->IsValidCookie(client) == false) {
     session_->SetCookie(client);
   } else {
@@ -146,20 +145,20 @@ void Server::ActCoreLogic(int idx) {
         client->req_message_->headers_["Cookie"];
   }
 
-  if (client->GetStatusCode() == 413) {
+  if (client->GetStatusCode() == 413 || client->GetStatusCode() == 400) {
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
     kevent(kq_, &event, 1, NULL, 0, NULL);
   } else if (client->GetReqMethod() == "GET") {
     Get(idx);
   } else if (client->GetReqMethod() == "POST") {
-    if (client->is_remain == true &&
+    if (client->is_chunked == true) {
+      HandleChunkedData(idx);
+    } else if (client->is_remain == true &&
         client->req_message_->body_data_.data_ == NULL) {
       EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
       kevent(kq_, &event, 1, NULL, 0, NULL);
       std::cout << RED << client_fd << " Continue!\n" << RESET;
-    } else if (client->is_chunked == true) {
-      HandleChunkedData(idx);
-    } else {
+    }  else {
       Post(idx);
     }
   } else if (client->GetReqMethod() == "DELETE") {
@@ -638,7 +637,7 @@ void Server::ExecuteWriteEventFileFd(int idx) {
 
   struct kevent event;
 
-  if (client->is_remain) {
+  if (client->is_remain == true || client->is_chunked == true) {
     EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
     kevent(kq_, &event, 1, NULL, 0, NULL);
     EV_SET(&event, file_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, client);
@@ -663,7 +662,7 @@ void Server::ExecuteWriteEventClientFd(int idx) {
 #endif
   client->res_message_->headers_["Server"] = "farewell_webserv";
 
-  if (client->timeout_ == true || client->GetStatusCode() == 413) {
+  if (client->timeout_ == true || client->GetStatusCode() == 413 || client->GetStatusCode() == 400) {
     client->res_message_->headers_["Connection"] = "close";
   } else {
     client->res_message_->headers_["Connection"] = "keep-alive";
@@ -707,7 +706,7 @@ void Server::ExecuteWriteEventClientFd(int idx) {
 
     close(file_fd);
   }
-  if (client->GetStatusCode() == 413) {
+  if (client->timeout_ == true || client->GetStatusCode() == 413 || client->GetStatusCode() == 400) {
     DisConnect(client_fd);
   }
 }
@@ -749,7 +748,6 @@ void Server::HandleChunkedData(int idx) {
   }
 
   char* body_data = new char[client->req_message_->body_data_.length_];
-  std::cout << client->req_message_->body_data_.length_ << "\n";
   int current_size = client->currency;
   int body_size = 0;
   size_t i = 0;
@@ -769,6 +767,7 @@ void Server::HandleChunkedData(int idx) {
       kevent(kq_, &event, 1, NULL, 0, NULL);
       client->SetStatusCode(204);
       client->chunked_done = true;
+      client->is_remain = false;
       break;
     }
     body_data[body_size] = client->req_message_->body_data_.data_[i];

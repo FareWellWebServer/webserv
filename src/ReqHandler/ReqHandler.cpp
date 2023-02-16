@@ -68,7 +68,7 @@ void ReqHandler::RecvFromSocket() {
               << std::endl;
 #endif
   }
-  // write(1, buf_, read_len_);
+  write(1, buf_, read_len_);
 }
 
 int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
@@ -159,6 +159,10 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
   if (kv_tmp[0] == "Transfer-Encoding" && kv_tmp[1] == "chunked") {
     client_->is_chunked = true;
   }
+  if (kv_tmp[0] == "Transfer-Encoding" && kv_tmp[1] != "chunked") {
+    client_->SetStatusCode(400);
+  }
+
 
   req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
 }
@@ -277,7 +281,9 @@ void ReqHandler::ValidateReq() {
       req_msg_->method_ = "GET";
       client_->SetStatusCode(413);
       // req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
-    } else {
+    } else if (client_->GetStatusCode() == 400) {
+      return;
+    }else {
       client_->SetStatusCode(200);
       req_msg_->req_url_.clear();
     }
