@@ -344,6 +344,8 @@ void Server::Get(int idx) {
             "ext/plain; charset=UTF-8";
       } else if (file_extention == "py") {
         client->res_message_->headers_["Content-Type"] = "text/x-python";
+      } else if (file_extention == "ico") {
+        client->res_message_->headers_["Content-Type"] = "image/x-icon";
       }
     }
 
