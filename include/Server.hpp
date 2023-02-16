@@ -72,7 +72,7 @@ class Server {
   void Get(int idx);
   void Post(int idx);
   void Delete(int idx);
-  void Continue(int idx);
+  void HandleChunkedData(int idx);
   void ExecuteReadEventFileFd(int idx);
   void ExecuteReadEventPipeFd(int idx);
   void ExecuteWriteEventFileFd(int idx);
@@ -108,7 +108,7 @@ class Server {
   void ExecuteReadEvent(const int& idx);
   void ExecuteReadEventClientFd(const int& idx);
   void ExecuteWriteEvent(const int& idx);
-  void ExcuteTimerEvent(const int& idx);
+  void ExecuteTimerEvent(const int& idx);
   void ExecuteLogEvent(const int& idx);
 };
 

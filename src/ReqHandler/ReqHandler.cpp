@@ -7,7 +7,7 @@ ReqHandler::~ReqHandler(void) { Clear(); }
 
 void ReqHandler::SetClient(Data* client) {
   client_ = client;
-  if (client_->is_remain == true) {
+  if (client_->is_remain == true || client_->is_chunked) {
     req_msg_ = client->req_message_;
   }
 }
@@ -149,12 +149,15 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
     req_msg_->body_data_.length_ = atoi(kv_tmp[1].c_str());
     entity_flag_ = 1;
   }
-  if (kv_tmp[0] == "Content-type") {
+  if (kv_tmp[0] == "Content-Type") {
     req_msg_->body_data_.type_ = strdup(kv_tmp[1].c_str());
     entity_flag_ = 1;
   }
   if (kv_tmp[0] == "Content-Disposition" && kv_tmp[1] == "attacment") {
     client_->is_download = true;
+  }
+  if (kv_tmp[0] == "Transfer-Encoding" && kv_tmp[1] == "chunked") {
+    client_->is_chunked = true;
   }
 
   req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
@@ -204,10 +207,17 @@ void ReqHandler::ParseEntity(int start_idx) {
       return;
     }
   }
-
-  char* entity = new char[req_msg_->body_data_.length_];
-  memcpy(entity, &buf_[start_idx], req_msg_->body_data_.length_);
-  req_msg_->body_data_.data_ = entity;
+  char* entity;
+  if (client_->is_chunked) {
+    entity = new char[read_len_ - start_idx];
+    memcpy(entity, &buf_[start_idx], read_len_ - start_idx);
+    req_msg_->body_data_.length_ = read_len_ - start_idx;
+    req_msg_->body_data_.data_ = entity;
+  } else {
+    entity = new char[req_msg_->body_data_.length_];
+    memcpy(entity, &buf_[start_idx], req_msg_->body_data_.length_);
+    req_msg_->body_data_.data_ = entity;
+  }
 }
 
 void ReqHandler::ParseRecv() {
@@ -218,7 +228,7 @@ void ReqHandler::ParseRecv() {
 #endif
     return;
   }
-  if (client_->is_remain == true) {
+  if (client_->is_remain == true || client_->is_chunked == true) {
     if (client_->req_message_->body_data_.data_)
       delete[] client_->req_message_->body_data_.data_;
     client_->req_message_->body_data_.data_ = new char[read_len_];
@@ -252,6 +262,10 @@ void ReqHandler::ParseRecv() {
 void ReqHandler::ValidateReq() {
   // POST -> body_size 유호성 확인
   // POST인 경우에는 아래의 유호성 검사가 필요가 없다
+  if (req_msg_->method_ == "DELETE") {
+    return;
+  }
+
   if (req_msg_->method_ == "POST") {
     if (client_->config_->body_size_ <
         static_cast<int>(req_msg_->body_data_.length_)) {
@@ -270,15 +284,15 @@ void ReqHandler::ValidateReq() {
     return;
   }
 
-  if (req_msg_->method_ == "DELETE") {
-    return;
-  }
   std::string req_url = decode(req_msg_->req_url_);
   std::cout << BLUE << "decode req_url: " << req_url << RESET << std::endl;
   size_t last_slash_idx = req_url.find_last_of("/");
   std::string req_location_path = req_url.substr(0, last_slash_idx + 1);
   std::string req_file_path = req_url.substr(last_slash_idx + 1);
 
+  if(req_location_path == "/download/") {
+    client_->is_download = true;
+  }
   // location이 없는 경우
   t_location* loc = client_->config_->GetCurrentLocation(req_location_path);
   if (!loc) {

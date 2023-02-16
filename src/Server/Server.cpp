@@ -50,7 +50,6 @@ void Server::Init(void) {
     t_listening* tmp = CreateListening(server_infos_[i].host_,
                                        server_infos_[i].port_, listenfd);
     servers_.insert(tmp);
-    // delete tmp;
   }
 }
 
@@ -111,7 +110,7 @@ void Server::Act(void) {
 
     // /* timeout 발생시 */
     if (events_[idx].filter == EVFILT_TIMER) {
-      ExcuteTimerEvent(idx);
+      ExecuteTimerEvent(idx);
       continue;
     }
   }
@@ -139,6 +138,7 @@ void Server::ActCoreLogic(int idx) {
   client->SetReqMessage(req_handler_->req_msg_);
   req_handler_->Clear();
 
+
   if (session_->IsValidCookie(client) == false) {
     session_->SetCookie(client);
   } else {
@@ -157,6 +157,8 @@ void Server::ActCoreLogic(int idx) {
       EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
       kevent(kq_, &event, 1, NULL, 0, NULL);
       std::cout << RED << client_fd << " Continue!\n" << RESET;
+    } else if (client->is_chunked == true) {
+      HandleChunkedData(idx);
     } else {
       Post(idx);
     }
@@ -353,7 +355,7 @@ void Server::Get(int idx) {
 
 void Server::Post(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  const ServerConfigInfo* config = client->config_;
+  ServerConfigInfo* config = client->config_;
   t_req_msg* req_msg = client->GetReqMessage();
   struct kevent event;
 
@@ -407,10 +409,16 @@ void Server::Post(int idx) {
     encoded_title = encoded_title.substr(equal_pos + 1, and_pos - equal_pos);
     client->res_message_->headers_["Location"] =
         config->upload_path_ + encoded_title;
+
+    std::string upload_path = config->upload_path_;
+    upload_path = upload_path.substr(1);
+    std::string down_link = "<a href=\"http://127.0.0.1:" + to_string(config->port_) + "/download/" + title + "\" download>" + title + "</a>";
+    client->res_message_->body_data_.data_ = strdup(down_link.c_str());
+    client->res_message_->body_data_.length_ = down_link.size();
     client->res_message_->headers_["Content-Type"] = "text/html; charset=UTF-8";
-    client->res_message_->headers_["Content-Length"] = "23";
-    client->res_message_->body_data_.data_ = strdup("<h1>Success Upload</h1>");
-    client->res_message_->body_data_.length_ = 23;
+    client->res_message_->headers_["Content-Length"] = to_string(down_link.size());
+    config->locations_.find("/download")->second.file_path_.push_back(config->locations_.find("/download")->second.root_path_ + title);
+
     client->SetStatusCode(201);
     client->SetFileFd(file_fd);
 
@@ -515,12 +523,18 @@ void Server::Post(int idx) {
         client->binary_size = size;
         client->res_message_->headers_["Location"] =
             config->upload_path_ + client->file_name;
-        client->res_message_->headers_["Content-Type"] =
-            "text/html; charset=UTF-8";
-        client->res_message_->headers_["Content-Length"] = "23";
-        client->res_message_->body_data_.data_ =
-            strdup("<h1>Success Upload</h1>");
-        client->res_message_->body_data_.length_ = 23;
+
+        std::string upload_path = config->upload_path_;
+        upload_path = upload_path.substr(1);
+        std::string down_link = "<a href=\"http://127.0.0.1:" + to_string(config->port_) + "/download/" + client->file_name + "\" download>" + client->file_name + "</a>";
+        client->res_message_->body_data_.data_ = strdup(down_link.c_str());
+        client->res_message_->body_data_.length_ = down_link.size();
+        client->res_message_->headers_["Content-Type"] = "text/html; charset=UTF-8";
+        client->res_message_->headers_["Content-Length"] = to_string(down_link.size());
+
+        // download 로케이션 없으면  seg fault 에러 뜸
+        config->locations_.find("/download")->second.file_path_.push_back(config->locations_.find("/download")->second.root_path_ + client->file_name);
+
         client->SetStatusCode(201);
         client->is_remain = false;
       }
@@ -549,7 +563,7 @@ void Server::Post(int idx) {
 
 void Server::Delete(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  const ServerConfigInfo* config = client->GetConfig();
+  ServerConfigInfo* config = client->GetConfig();
   int client_fd = client->GetClientFd();
 
   std::string file_name =
@@ -608,9 +622,16 @@ void Server::ExecuteWriteEventFileFd(int idx) {
   int client_fd = client->GetClientFd();
   int file_fd = client->GetFileFd();
 
-  if (client->binary_size == 0)
+  if (client->is_chunked == true) {
+    write(file_fd, client->chunk_body, client->binary_size);
+    delete client->chunk_body;
+    client->chunk_body = NULL;
+    if (client->chunked_done == true) {
+      client->is_chunked = false;
+    }
+  } else if (client->binary_size == 0) {
     write(file_fd, client->post_data_.c_str(), client->post_data_.size());
-  else
+  } else
     write(file_fd,
           &client->req_message_->body_data_.data_[client->binary_start_idx],
           client->binary_size);
@@ -675,7 +696,9 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
   kevent(kq_, &event, 1, NULL, 0, NULL);
 
-  if (file_fd != -1 && client->is_remain == false) {
+
+  if (file_fd != -1 && client->is_remain == false && client->is_chunked == false) {
+
     EV_SET(&event, file_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     kevent(kq_, &event, 1, NULL, 0, NULL);
 
@@ -703,26 +726,76 @@ void Server::Pong(int idx) {
   kevent(kq_, &event, 1, NULL, 0, NULL);
 }
 
-void Server::Continue(int idx) {
-  (void)idx;
-  // struct kevent event;
-  // Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  // int client_fd = client->GetClientFd();
-  // int file_fd = client->GetFileFd();
 
-  // if (client->req_message_->body_data_.data_ == NULL) {
+void Server::HandleChunkedData(int idx) {
+  Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  const ServerConfigInfo* config = client->GetConfig();
+  struct kevent event;
+  int client_fd = client->GetClientFd();
 
-  // } else {
-  // }
+  if (client->req_message_->body_data_.data_ == NULL) {
+    client->SetStatusCode(100);
+    EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+    kevent(kq_, &event, 1, NULL, 0, NULL);
+    return;
+  }
+
+  if (client->is_first == true) {
+    client->file_name = "chunked_file.html";
+    int file_fd = open((config->upload_path_ + client->file_name).c_str(), O_RDWR | O_CREAT | O_TRUNC);
+    fchmod(file_fd, S_IRWXU | S_IRWXG | S_IRWXO);
+    client->SetFileFd(file_fd);
+    client->is_first = false;
+  }
+
+  char* body_data = new char[client->req_message_->body_data_.length_];
+  std::cout << client->req_message_->body_data_.length_ << "\n";
+  int current_size = client->currency;
+  int body_size = 0;
+  size_t i = 0;
+  for(; i < client->req_message_->body_data_.length_; ++i) {
+    if (client->chunk_size == -1) {
+      int size = 0;
+      while (strncmp(&client->req_message_->body_data_.data_[i], "\r\n", 2)) {
+        size = (16 * size) + (client->req_message_->body_data_.data_[i] >= 'a' ? client->req_message_->body_data_.data_[i] - 87 : client->req_message_->body_data_.data_[i] - 48);
+        ++i;
+      }
+      client->chunk_size = size;
+      current_size = 0;
+      i += 2;
+    }
+    if (client->chunk_size == 0) {
+      EV_SET(&event, client->GetFileFd(), EVFILT_WRITE, EV_ENABLE, 0, 0, client);
+      kevent(kq_, &event, 1, NULL, 0, NULL);
+      client->SetStatusCode(204);
+      client->chunked_done = true;
+      break;
+    }
+    body_data[body_size] = client->req_message_->body_data_.data_[i];
+    ++current_size;
+    ++body_size;
+
+    if (current_size == client->chunk_size) {
+      client->chunk_size = -1;
+      i += 2;
+    }
+  }
+  client->currency = current_size;
+  client->chunk_body = body_data;
+  client->binary_size = body_size;
+  EV_SET(&event, client->GetFileFd(), EVFILT_WRITE, EV_ADD, 0, 0, client);
+  kevent(kq_, &event, 1, NULL, 0, NULL);
+
 }
+
 
 void Server::ExecuteReadEventClientFd(const int& idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-#if SERVER
-  std::cout << "[Server] Client READ fd : " << client->GetClientFd()
-            << std::endl;
-#endif
-  if (client->is_remain == false) {
+  #if SERVER
+    std::cout << "[Server] Client READ fd : " << client->GetClientFd()
+      << std::endl;
+  #endif
+  if (client->is_remain == false && client->is_chunked == false) {
     client->Init();
   }
   if (events_[idx].flags == EV_EOF) {
@@ -768,7 +841,7 @@ void Server::ExecuteWriteEvent(const int& idx) {
       logger_.error("[farewell_webserv]", client);
     }
     ExecuteWriteEventClientFd(idx);
-    if (client->is_remain == false) {
+    if (client->is_remain == false && (client->is_chunked == false || client->GetReqMethod() == "GET")) {
       client->Clear();
     }
     return;
@@ -786,7 +859,7 @@ void Server::ExecuteWriteEvent(const int& idx) {
   }
 }
 
-void Server::ExcuteTimerEvent(const int& idx) {
+void Server::ExecuteTimerEvent(const int& idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int event_fd = events_[idx].ident;
 
