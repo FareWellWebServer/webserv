@@ -615,7 +615,6 @@ void Server::ExecuteReadEventFileFd(int idx) {
     client->req_message_->req_url_ = 
     client->config_->error_pages_.find(500)->second;
     delete[] buf;
-    std::cout << "readren : " << read_return << std::endl;
     Get(idx);
     return ;
   }
@@ -670,7 +669,9 @@ void Server::ExecuteWriteEventFileFd(int idx) {
 
 void Server::ExecuteWriteEventPipeFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
-  cgi_manager_->WriteToCGIPipe(client, kq_);
+  if (cgi_manager_->WriteToCGIPipe(client, kq_) == false) {
+    Get(idx);
+  }
 }
 
 void Server::ExecuteWriteEventClientFd(int idx) {

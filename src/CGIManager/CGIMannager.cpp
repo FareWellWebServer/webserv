@@ -113,16 +113,26 @@ void CGIManager::SendToCGI(Data* client, int kq)
     }
 }
 
-void CGIManager::WriteToCGIPipe(Data* client, int kq) {
-    write(client->GetPipeWrite(), client_->GetReqBodyData(), client_->GetReqBodyLength());
+bool CGIManager::WriteToCGIPipe(Data* client, int kq) {
+    int write_return = write(client->GetPipeWrite(), client_->GetReqBodyData(), client_->GetReqBodyLength());
     struct kevent event;
     EV_SET(&event, client->GetPipeWrite(), EVFILT_WRITE, EV_DELETE, 0, 0, client_);
     kevent(kq, &event, 1, NULL, 0, NULL);
+    if (write_return < 0) {
+        close(client->GetPipeWrite());
+        close(client->GetPipeRead());
+        client->status_code_ = 500;
+        client->req_message_->req_url_ = 
+        client->config_->error_pages_.find(500)->second;
+        client->cgi_ = false;
+        return false;
+    }
     // if (client->is_chunked == false || 
     // (client->is_chunked == true && strncmp(client_->GetReqBodyData(), "0\r\n", 3) == 0))
         close(client->GetPipeWrite());
     EV_SET(&event, client->GetPipeRead(), EVFILT_READ, EV_EOF | EV_ADD, 0, 0, client_);
     kevent(kq, &event, 1, NULL, 0, NULL);
+    return true;
 }
 
 // kqueue에서 cgi read 발생하면!
