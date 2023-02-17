@@ -114,13 +114,20 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
   }
   if (kv_tmp[0] == "Content-Length") {
     req_msg_->body_data_.length_ = atoi(kv_tmp[1].c_str());
+    if (req_msg_->body_data_.length_ < 1) {
+      client_->SetStatusCode(400);
+      req_msg_->body_data_.data_ = strdup("<h3>400 Bad Request</h3>");
+      req_msg_->body_data_.length_ = 24;
+      client_->res_message_->headers_["Content-Type"] = "text/html";
+      client_->res_message_->headers_["Content-Length"] = "24";
+    }
     entity_flag_ = 1;
   }
   if (kv_tmp[0] == "Content-Type") {
     req_msg_->body_data_.type_ = strdup(kv_tmp[1].c_str());
     entity_flag_ = 1;
   }
-  if (kv_tmp[0] == "Content-Disposition" && kv_tmp[1] == "attacment") {
+  if (kv_tmp[0] == "Content-Disposition" && kv_tmp[1] == "attachment") {
     client_->is_download = true;
   }
   if (kv_tmp[0] == "Transfer-Encoding" && kv_tmp[1] == "chunked") {
@@ -129,7 +136,6 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
   if (kv_tmp[0] == "Transfer-Encoding" && kv_tmp[1] != "chunked") {
     client_->SetStatusCode(400);
   }
-
 
   req_msg_->headers_[kv_tmp[0]] = kv_tmp[1];
 }
@@ -222,10 +228,11 @@ void ReqHandler::ParseRecv() {
   }
 
   // request 유효성 검사 -> body_size, method
-  // std::cout << BLUE << "original req_url: " << req_msg_->req_url_ << std::endl;
-  // std::cout << "method: " << req_msg_->method_ << std::endl;
+  // std::cout << BLUE << "original req_url: " << req_msg_->req_url_ <<
+  // std::endl; std::cout << "method: " << req_msg_->method_ << std::endl;
   // std::cout << "status code: " << client_->status_code_ << std::endl;
-  // std::cout << "served req_url: " << req_msg_->req_url_ << RESET << std::endl;
+  // std::cout << "served req_url: " << req_msg_->req_url_ << RESET <<
+  // std::endl;
 
   delete[] buf_;
   buf_ = NULL;
@@ -251,7 +258,7 @@ void ReqHandler::ValidateReq() {
       // req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
     } else if (client_->GetStatusCode() == 400) {
       return;
-    }else {
+    } else {
       client_->SetStatusCode(200);
       req_msg_->req_url_.clear();
     }
@@ -264,7 +271,7 @@ void ReqHandler::ValidateReq() {
   std::string req_location_path = req_url.substr(0, last_slash_idx + 1);
   std::string req_file_path = req_url.substr(last_slash_idx + 1);
 
-  if(req_location_path == "/download/") {
+  if (req_location_path == "/download/") {
     client_->is_download = true;
   }
   // location이 없는 경우
@@ -293,9 +300,11 @@ void ReqHandler::ValidateReq() {
       client_->cgi_ = false;
       return;
     }
-    std::string cgi_file_path = req_file_path.substr(0, req_file_path.find('?'));
+    std::string cgi_file_path =
+        req_file_path.substr(0, req_file_path.find('?'));
     std::vector<std::string>::iterator it =
-        std::find(loc->cgi_path_.begin(), loc->cgi_path_.end(), loc->root_path_ + cgi_file_path);
+        std::find(loc->cgi_path_.begin(), loc->cgi_path_.end(),
+                  loc->root_path_ + cgi_file_path);
 
     // cgi인데 file_path가 있는 경우
     if (it != loc->cgi_path_.end()) {

@@ -53,7 +53,7 @@ Data::~Data(void) {
  *
  */
 void Data::Init(void) {
-	is_working = true;
+  is_working = true;
   req_message_ = NULL;
   res_message_ = new t_res_msg;
   res_message_->body_data_.data_ = NULL;
@@ -206,9 +206,7 @@ size_t Data::GetReqBodyLength(void) const {
 }
 //////////* Request Message Setter() *//////////
 
-void Data::SetReqMessage(t_req_msg* req_message) {
-  req_message_ = req_message;
-}
+void Data::SetReqMessage(t_req_msg* req_message) { req_message_ = req_message; }
 
 void Data::SetReqMethod(std::string req_message_method) {
   if (req_message_ != NULL) req_message_->method_ = req_message_method;

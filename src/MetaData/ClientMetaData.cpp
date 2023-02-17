@@ -33,9 +33,10 @@ void ClientMetaData::SetCurrentFd(const fd& client_fd) {
 }
 
 void ClientMetaData::AddData(const int& listen_fd, const int& client_fd,
-                            const int& host_port, char* client_name, char* client_port) {
+                             const int& host_port, char* client_name,
+                             char* client_port) {
   if (datas_.find(client_fd) != datas_.end()) {
-    DeleteByFd(client_fd); 
+    DeleteByFd(client_fd);
   }
 
   Data* new_data = new Data;
@@ -59,8 +60,7 @@ void ClientMetaData::SetEventByFd(struct kevent* event, int fd) {
 
 void ClientMetaData::SetConfig() {
   ValidCheckToAccessData();
-  if (datas_[current_fd_]->event_ == NULL)
-    return ;
+  if (datas_[current_fd_]->event_ == NULL) return;
   datas_[current_fd_]->config_ =
       reinterpret_cast<ServerConfigInfo*>(datas_[current_fd_]->event_->udata);
 }
@@ -79,7 +79,7 @@ void ClientMetaData::SetPipeFd(int pipe[2]) {
 void ClientMetaData::DeleteByFd(const int& client_fd) {
   ValidCheckToAccessDataByFd(client_fd);
   datas_[client_fd]->Clear();
-	delete datas_[client_fd];
+  delete datas_[client_fd];
   datas_.erase(client_fd);
   struct kevent event[3];
   EV_SET(&event[0], client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
@@ -88,14 +88,12 @@ void ClientMetaData::DeleteByFd(const int& client_fd) {
   kevent(3, event, 3, NULL, 0, NULL);
 }
 
-void ClientMetaData::SetReqMessage(t_req_msg* req_message)
-{
+void ClientMetaData::SetReqMessage(t_req_msg* req_message) {
   ValidCheckToAccessData();
   datas_[current_fd_]->req_message_ = req_message;
 }
 
-void ClientMetaData::SetReqMessageByFd(t_req_msg* req_message, int fd)
-{
+void ClientMetaData::SetReqMessageByFd(t_req_msg* req_message, int fd) {
   ValidCheckToAccessDataByFd(fd);
   datas_[fd]->req_message_ = req_message;
 }
@@ -106,19 +104,19 @@ Data* ClientMetaData::GetData() {
 }
 
 Data* ClientMetaData::GetDataByFd(int fd) {
-	ValidCheckToAccessDataByFd(fd);
-	return datas_[fd];
+  ValidCheckToAccessDataByFd(fd);
+  return datas_[fd];
 }
 
-t_req_msg* ClientMetaData::GetReqMsgByFd(int fd)
-{
-	ValidCheckToAccessDataByFd(fd);
-	return datas_[fd]->req_message_;
+t_req_msg* ClientMetaData::GetReqMsgByFd(int fd) {
+  ValidCheckToAccessDataByFd(fd);
+  return datas_[fd]->req_message_;
 }
 
 ServerConfigInfo* ClientMetaData::GetConfig() {
   ValidCheckToAccessData();
-  return reinterpret_cast<ServerConfigInfo*>(datas_[current_fd_]->event_->udata);
+  return reinterpret_cast<ServerConfigInfo*>(
+      datas_[current_fd_]->event_->udata);
 }
 
 int ClientMetaData::GetPort() {

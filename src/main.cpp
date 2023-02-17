@@ -13,7 +13,7 @@ int main(int ac, char** av) {
 #endif
   try {
     if (ac > 2) {
-     throw std::runtime_error("[Config Error] few argument");
+      throw std::runtime_error("[Config Error] few argument");
     }
     main_process(ac, av);
   } catch (const WebServException& custom_error) {
@@ -29,9 +29,9 @@ void main_process(int ac, char** av) {
   const char* file_path = (ac == 1) ? "config/default.config" : av[1];
   Config config(file_path);
   config.Parse();
-  #if DG
-    config.PrintConfigInfos();
-  #endif
+#if DG
+  config.PrintConfigInfos();
+#endif
   config.CheckValidation();
 
   Server server(config);

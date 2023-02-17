@@ -47,15 +47,14 @@ MsgComposer::~MsgComposer(void) {}
 
 void MsgComposer::SetStatusText(void) {
   if (status_infos_.count(client_->res_message_->status_code_) == 1) {
-    client_->res_message_->status_text_ = status_infos_[client_->res_message_->status_code_];
+    client_->res_message_->status_text_ =
+        status_infos_[client_->res_message_->status_code_];
   } else {
     client_->res_message_->status_text_ = "Unknown Status Code Error";
   }
 }
 
-void MsgComposer::SetData(Data* client) {
-  client_ = client;
-}
+void MsgComposer::SetData(Data* client) { client_ = client; }
 
 void MsgComposer::InitResMsg(Data* client) {
   SetData(client);
@@ -72,8 +71,8 @@ const char* MsgComposer::GetResponse(Data* client) {
   // first line 채우기
   ss << client_->res_message_->status_code_;
   ss >> status_code;
-  std::string str = client_->res_message_->http_version_ + " " + status_code + " " +
-                    client_->res_message_->status_text_ + "\r\n";
+  std::string str = client_->res_message_->http_version_ + " " + status_code +
+                    " " + client_->res_message_->status_text_ + "\r\n";
 
   // headers 채우기
   if (!client_->res_message_->headers_.empty()) {
