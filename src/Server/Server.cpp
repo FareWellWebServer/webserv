@@ -601,7 +601,7 @@ void Server::Delete(int idx) {
     client->res_message_->headers_["Content-Length"] = "23";
   } else {
     unlink((config->upload_path_ + file_name).c_str());
-    close(fd);
+    client->SetFileFd(fd);
     client->SetStatusCode(200);
     client->res_message_->body_data_.data_ = strdup("<h3>Success Delete</h3>");
     client->res_message_->body_data_.length_ = 23;
