@@ -1,6 +1,5 @@
 NAME = farewell_webserv
-RH_NAME = Req_handle
-RH_D_NAME = D_Req_handle
+SHELL = bash
 # Compiler
 CXX = c++
 
@@ -46,7 +45,7 @@ all: server
 
 # Build the server executable
 server: $(SERVER_OBJ)
-	@echo "$(YELLOW)Building $@...$(RESET)"
+	@./build.sh
 	@$(CXX) $(CXXFLAGS) $(SERVER_OBJ) -o $(NAME)
 	@echo "$(GREEN)Done.$(RESET)"
 
