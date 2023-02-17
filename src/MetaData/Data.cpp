@@ -73,6 +73,7 @@ void Data::Clear(void) {
   is_working = false;
   is_first = true;
   is_chunked = false;
+  is_remain = false;
   chunk_size = -1;
   currency = -1;
   if (file_fd_ != -1) {

@@ -128,6 +128,7 @@ void Server::ActCoreLogic(int idx) {
   req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
   req_handler_->SetReadLen(events_[idx].data);
   if (events_[idx].data == 0) {
+    std::cout << RED << "PONG!\n" << RESET;
     Pong(idx);
     DisConnect(client_fd);
     return;
@@ -160,7 +161,6 @@ void Server::ActCoreLogic(int idx) {
         client->req_message_->body_data_.data_ == NULL) {
       EV_SET(&event, client_fd, EVFILT_READ, EV_ENABLE, 0, 0, client);
       kevent(kq_, &event, 1, NULL, 0, NULL);
-      std::cout << RED << client_fd << " Continue!\n" << RESET;
     }  else {
       Post(idx);
     }
@@ -511,6 +511,7 @@ void Server::Post(int idx) {
           client->binary_start_idx = tmp_idx;
           client->binary_size = client->req_message_->body_data_.length_;
         }
+        client->is_remain = true;
       } else {  // 바운더리가 있으면.
         index = tmp_idx;
         for (; strncmp(&cbody_data[index], boundary.c_str(), boundary.size());
@@ -682,16 +683,20 @@ void Server::ExecuteWriteEventPipeFd(int idx) {
 
 void Server::ExecuteWriteEventClientFd(int idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
+  ServerConfigInfo* config = client->GetConfig();
 #if SERVER
   std::cout << "[Server] Client Write : " << client->GetClientFd() << std::endl;
 #endif
-  client->res_message_->headers_["Server"] = "farewell_webserv";
+  client->res_message_->headers_["Server"] = config->server_name_;
+  client->res_message_->headers_["Date"] = GetCurrentDate();
 
   if (client->timeout_ == true || client->GetStatusCode() == 413 || client->GetStatusCode() == 400) {
     client->res_message_->headers_["Connection"] = "close";
   } else {
     client->res_message_->headers_["Connection"] = "keep-alive";
   }
+
+
 
   if (client->is_download == true) {
     client->res_message_->headers_["Content-Disposition"] =
@@ -776,7 +781,7 @@ void Server::HandleChunkedData(int idx) {
   }
 
   if (client->is_first == true) {
-    client->file_name = "chunked_file.html";
+    client->file_name = "chunked_data_file";
     int file_fd = open((config->upload_path_ + client->file_name).c_str(), O_RDWR | O_CREAT | O_TRUNC);
     fchmod(file_fd, S_IRWXU | S_IRWXG | S_IRWXO);
     client->SetFileFd(file_fd);
@@ -898,14 +903,17 @@ void Server::ExecuteTimerEvent(const int& idx) {
   Data* client = reinterpret_cast<Data*>(events_[idx].udata);
   int event_fd = events_[idx].ident;
 
+  if (client->is_remain == true) {
+    DisConnect(event_fd);
+    return;
+  }
+
   if (client->is_working == true) {
     client->timeout_ = true;
-  } else {
-    std::cout << RED << "[Server] Client fd : " << client->GetClientFd()
-              << " Time Out!\n"
-              << RESET;
-    DisConnect(event_fd);
+    return;
   }
+
+  DisConnect(event_fd);
 }
 
 
