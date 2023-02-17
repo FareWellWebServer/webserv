@@ -20,7 +20,7 @@ MsgComposer::MsgComposer() : client_(NULL) {
   status_infos_.insert(std::make_pair(400, "Bad Request"));
   status_infos_.insert(std::make_pair(401, "Unauthorized"));
   status_infos_.insert(std::make_pair(402, "Payment Required"));
-  status_infos_.insert(std::make_pair(403, "Payment Required"));
+  status_infos_.insert(std::make_pair(403, "Forbidden"));
   status_infos_.insert(std::make_pair(404, "Not Found"));
   status_infos_.insert(std::make_pair(405, "Method Not Allowed"));
   status_infos_.insert(std::make_pair(406, "Not Acceptable"));

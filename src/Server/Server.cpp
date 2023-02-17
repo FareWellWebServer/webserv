@@ -71,6 +71,9 @@ void Server::Prompt(void) {
 // private
 void Server::Act(void) {
   int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
+  #if SERVER
+    std::cout << "////////// [Server] event count : " << n << " //////////" << std::endl;
+  #endif
   if (n == -1) {
     throw std::runtime_error("Error: kevent()");
   }
@@ -82,23 +85,23 @@ void Server::Act(void) {
     };
 
     /* listen port로 새로운 connect 요청이 들어옴 */
-    if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ) {
+    if (IsListenFd(events_[idx].ident) && events_[idx].filter & EVFILT_READ) {
       AcceptNewClient(idx);
       continue;
     }
 
     /* accept 된 port로 request 요청메세지 들어옴 */
-    if (events_[idx].filter == EVFILT_READ) {
+    if (events_[idx].filter & EVFILT_READ) {
       ExecuteReadEvent(idx);
       continue;
     }
 
-    if (events_[idx].filter == EVFILT_WRITE) {
+    if (events_[idx].filter & EVFILT_WRITE) {
       ExecuteWriteEvent(idx);
       continue;
     }
 
-    if (events_[idx].filter == EVFILT_PROC) {
+    if (events_[idx].filter & EVFILT_PROC) {
       int stat;
       waitpid(events_[idx].ident, &stat, 0);
       struct kevent event;
@@ -109,7 +112,7 @@ void Server::Act(void) {
     }
 
     // /* timeout 발생시 */
-    if (events_[idx].filter == EVFILT_TIMER) {
+    if (events_[idx].filter & EVFILT_TIMER) {
       ExecuteTimerEvent(idx);
       continue;
     }
@@ -128,9 +131,11 @@ void Server::ActCoreLogic(int idx) {
   req_handler_->SetClient(clients_->GetDataByFd(events_[idx].ident));
   req_handler_->SetReadLen(events_[idx].data);
   if (events_[idx].data == 0) {
+    #if SERVER
+      std::cout << "[Server] pong fd : " << client_fd << std::endl;
+    #endif
     std::cout << RED << "PONG!\n" << RESET;
     Pong(idx);
-    DisConnect(client_fd);
     return;
   }
   if (req_handler_->RecvFromSocket() < 1) {
@@ -205,7 +210,7 @@ void Server::AcceptNewClient(int idx) {
             << "). socket : " << connfd << std::endl;
 #endif
   /* event setting */
-  EV_SET(&event[0], connfd, EVFILT_READ, EV_ADD, 0, 0, clients_->GetData());
+  EV_SET(&event[0], connfd, EVFILT_READ, EV_EOF | EV_ADD, 0, 0, clients_->GetData());
   EV_SET(&event[1], connfd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0,
          clients_->GetData());
   EV_SET(&event[2], connfd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS,
@@ -837,8 +842,11 @@ void Server::ExecuteReadEventClientFd(const int& idx) {
   if (client->is_remain == false && client->is_chunked == false) {
     client->Init();
   }
-  if (events_[idx].flags == EV_EOF) {
-    std::cout << RED << "FUCK\n" << RESET;
+  if (events_[idx].flags & EV_EOF) {
+    DisConnect(events_[idx].ident);
+  #if SERVER
+    std::cout << "[Server] eof fd : " << events_[idx].ident << std::endl;
+  #endif
   } else
     ActCoreLogic(idx);
 }
@@ -857,7 +865,7 @@ void Server::ExecuteReadEvent(const int& idx) {
     return;
   }
   /* CGI에게 반환받는 pipe[READ]에 대한 이벤트 */
-  if (event_fd == client->GetPipeRead() && events_[idx].filter & EV_EOF) {
+  if (event_fd == client->GetPipeRead() && events_[idx].flags & EV_EOF) {
 #if SERVER
     std::cout << "[Server] Pipe READ fd : " << event_fd
               << " == " << client->GetPipeRead() << std::endl;
