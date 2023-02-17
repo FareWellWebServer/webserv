@@ -5,16 +5,9 @@ CXX = c++
 
 # Compiler flags
 # CXXFLAGS = -std=c++98 -Wall -Wextra -Werror -pedantic
-# CXXFLAGS = -g3 -std=c++98 -Wall -Wextra -Werror -pedantic -D SERVER=1 -D REQ_HANDLER=1 -D RES_HANDLER=1 -D CONFIG=1 -D CGI=1
-CXXFLAGS = -g3 -std=c++98 -Wall -Wextra -Werror -pedantic
+CXXFLAGS = -g3 -std=c++98 -Wall -Wextra -Werror -pedantic -D SERVER=1 -D REQ_HANDLER=1 -D RES_HANDLER=1 -D CONFIG=1 -D CGI=1
+# CXXFLAGS = -g3 -std=c++98 -Wall -Wextra -Werror -pedantic
 #  CXXFLAGS = -g3 -fsanitize=address -D DG=1
-
-
-
-# Colors
-GREEN = \033[32m
-YELLOW = \033[33m
-RESET = \033[0m
 
 SERVER_SRC	+= ./src/CGIManager/CGIMannager.cpp
 SERVER_SRC	+= ./src/Logger/Logger.cpp
@@ -38,7 +31,6 @@ SERVER_SRC	+= ./src/Utils/tostring.cpp
 SERVER_SRC	+= ./src/Utils/WebServException.cpp
 SERVER_SRC	+= ./src/main.cpp
 
-SERVER_OBJ	=	$(SERVER_SRC:.cpp=.o)
 
 # Default target
 all: server
@@ -46,15 +38,14 @@ all: server
 # Build the server executable
 server: $(SERVER_OBJ)
 	@./build.sh
-	@$(CXX) $(CXXFLAGS) $(SERVER_OBJ) -o $(NAME)
+	@$(CXX) $(CXXFLAGS) $(SERVER_SRC) -o $(NAME)
 	@echo "$(GREEN)Done.$(RESET)"
 
 # Clean up
 clean:
-	@echo "$(YELLOW)Cleaning up...$(RESET)"
 	@rm -rf $(SERVER_OBJ)
 	@rm -rf $(REQHANDLE_OBJ)
-	@echo "$(GREEN)Done.$(RESET)"
+	@echo "clean Done."
 
 fclean:
 	make clean
