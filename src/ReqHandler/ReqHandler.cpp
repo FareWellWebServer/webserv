@@ -80,7 +80,7 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   /* 버전확인 406 Not Acceptable */
   find_idx = strcspn(&buf_[curr_idx + 1], "\r");
   if (find_idx >= end_idx) {
-    // client_->SetStatusCode(400); // bad request
+    client_->SetStatusCode(400);  // bad request
     return (read_len_);
   }
   strncpy(tmp, &buf_[curr_idx + 1], find_idx);
@@ -89,9 +89,10 @@ int64_t ReqHandler::ParseFirstLine() {  // end_idx = '\n'
   req_msg_->protocol_ = tmp;
   RemoveTabSpace(req_msg_->protocol_);
   if (req_msg_->protocol_ != "HTTP/1.1") {
-    // client_->SetStatusCode(400); // bad request
+    client_->SetStatusCode(505);  // invalid protocol
+#if REQ_HANDLER
     std::cout << "INVALID PROTOCOL" << std::endl;
-    // TODO : ERROR처리 필요
+#endif
     return (read_len_);
   }
 
@@ -174,8 +175,6 @@ void ReqHandler::ParseEntity(int start_idx) {
   start_idx += 1;
   while (buf_[start_idx] == '\r' || buf_[start_idx] == '\n') {
     start_idx++;
-    // TODO : read_len은 임의 지정값이라 실제 데이터의 길이를 반영하지
-    // 못할것으로 생각되어 read로 읽어온 byte로 봐야하지 않나..
     if (start_idx == read_len_) {
 #if REQ_HANDLER
       std::cout << "[ReqHandler] There is no entity(body)" << std::endl;
@@ -197,47 +196,6 @@ void ReqHandler::ParseEntity(int start_idx) {
   }
 }
 
-void ReqHandler::ParseRecv() {
-  if (buf_ == NULL) {
-#if DG
-    std::cout << "[ReqHandler] Parse error. Need buf_. call RecvFromSocket()"
-              << std::endl;
-#endif
-    return;
-  }
-
-  if (client_->is_remain == true || client_->is_chunked == true) {
-    if (client_->req_message_->body_data_.data_)
-      delete[] client_->req_message_->body_data_.data_;
-    client_->req_message_->body_data_.data_ = new char[read_len_];
-    memcpy(client_->req_message_->body_data_.data_, buf_, read_len_);
-    client_->req_message_->body_data_.length_ = read_len_;
-  } else {
-    if (req_msg_ == NULL) req_msg_ = new t_req_msg;
-    memset(&req_msg_->body_data_, 0, sizeof(t_entity));
-    int64_t idx(0);
-    // 첫줄 파싱
-    idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
-    // 헤더 파싱
-    idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
-    // entity 넣기
-    if (entity_flag_ == 1) {
-      ParseEntity(idx);
-    }
-    ValidateReq();
-  }
-
-  // request 유효성 검사 -> body_size, method
-  // std::cout << BLUE << "original req_url: " << req_msg_->req_url_ <<
-  // std::endl; std::cout << "method: " << req_msg_->method_ << std::endl;
-  // std::cout << "status code: " << client_->status_code_ << std::endl;
-  // std::cout << "served req_url: " << req_msg_->req_url_ << RESET <<
-  // std::endl;
-
-  delete[] buf_;
-  buf_ = NULL;
-}
-
 void ReqHandler::ValidateReq() {
   // POST -> body_size 유호성 확인
   // POST인 경우에는 아래의 유호성 검사가 필요가 없다
@@ -255,7 +213,6 @@ void ReqHandler::ValidateReq() {
 
       req_msg_->method_ = "GET";
       client_->SetStatusCode(413);
-      // req_msg_->req_url_ = client_->config_->error_pages_.find(501)->second;
     } else if (client_->GetStatusCode() == 400) {
       return;
     } else {
@@ -370,4 +327,37 @@ void ReqHandler::ValidateReq() {
   }
 
   return;
+}
+
+void ReqHandler::ParseRecv() {
+  if (buf_ == NULL) {
+#if REQ_HANDLER
+    std::cout << "[ReqHandler] Parse error. Need buf_. call RecvFromSocket()"
+              << std::endl;
+#endif
+    return;
+  }
+
+  if (client_->is_remain == true || client_->is_chunked == true) {
+    if (client_->req_message_->body_data_.data_)
+      delete[] client_->req_message_->body_data_.data_;
+    client_->req_message_->body_data_.data_ = new char[read_len_];
+    memcpy(client_->req_message_->body_data_.data_, buf_, read_len_);
+    client_->req_message_->body_data_.length_ = read_len_;
+  } else {
+    if (req_msg_ == NULL) req_msg_ = new t_req_msg;
+    memset(&req_msg_->body_data_, 0, sizeof(t_entity));
+    int64_t idx(0);
+    // 첫줄 파싱
+    idx = ParseFirstLine();  // buf[idx] = 첫줄의 \n
+    // 헤더 파싱
+    idx = ParseHeaders(idx);  // buf[idx] = 마지막 헤더줄의 /r
+    // entity 넣기
+    if (entity_flag_ == 1) {
+      ParseEntity(idx);
+    }
+    ValidateReq();
+  }
+  delete[] buf_;
+  buf_ = NULL;
 }

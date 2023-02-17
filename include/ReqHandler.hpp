@@ -11,7 +11,7 @@
 class ReqHandler {
  public:
   ReqHandler(void);
-  ~ReqHandler(void);  // buf 확인하고 해제
+  ~ReqHandler(void);
   void SetClient(Data* client);
   void SetReadLen(int64_t kevent_data);
   ssize_t RecvFromSocket(void);
@@ -22,7 +22,7 @@ class ReqHandler {
   int entity_flag_;
 
  private:
-  char* buf_;  // 동적할당 / 해제
+  char* buf_;
   Data* client_;
   int64_t read_len_;
   int64_t ParseFirstLine();
