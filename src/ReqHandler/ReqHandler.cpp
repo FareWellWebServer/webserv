@@ -283,7 +283,6 @@ void ReqHandler::ValidateReq() {
 
   // location에 리다이랙션이 있는 경우
   if (!loc->redir_path_.empty()) {
-    client_->is_directory_list_ = true;
     client_->SetStatusCode(301);
     req_msg_->req_url_ = loc->redir_path_;
     return;
