@@ -70,13 +70,11 @@ server: $(SERVER_OBJ)
 # Clean up
 clean:
 	@rm -rf $(SERVER_OBJ)
-	@rm -rf $(REQHANDLE_OBJ)
 	@echo "clean Done."
 
 fclean:
 	make clean
 	@rm -f $(NAME)
-	@rm -f $(RH_NAME)
 
 re:
 	make fclean
