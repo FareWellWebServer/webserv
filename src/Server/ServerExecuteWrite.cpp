@@ -67,7 +67,8 @@ void Server::ExecuteWriteEventClientFd(int idx) {
   const char* response = msg_composer_->GetResponse(client);
   if (send(client_fd, response, msg_composer_->GetLength(), 0) < 1) {
 #if SERVER
-    std::cout << "[send] ExecuteWriteEventClientFd send return -1. socket : "
+    std::cout << "[send] ExecuteWriteEventClientFd send return -1. socket :
+                 "
               << client_fd << std::endl;
 #endif
     DisConnect(client_fd);

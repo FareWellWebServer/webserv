@@ -47,29 +47,29 @@ void Server::Act(void) {
     };
 
     /* listen port로 새로운 connect 요청이 들어옴 */
-    if (IsListenFd(events_[idx].ident) && events_[idx].filter & EVFILT_READ) {
+    if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ) {
       AcceptNewClient(idx);
       continue;
     }
 
     /* accept 된 port로 request 요청메세지 들어옴 */
-    if (events_[idx].filter & EVFILT_READ) {
+    if (events_[idx].filter == EVFILT_READ) {
       ExecuteReadEvent(idx);
       continue;
     }
 
-    if (events_[idx].filter & EVFILT_WRITE) {
+    if (events_[idx].filter == EVFILT_WRITE) {
       ExecuteWriteEvent(idx);
       continue;
     }
 
-    if (events_[idx].filter & EVFILT_PROC) {
+    if (events_[idx].filter == EVFILT_PROC) {
       ExecuteProcessEvent(idx);
       continue;
     }
 
     // /* timeout 발생시 */
-    if (events_[idx].filter & EVFILT_TIMER) {
+    if (events_[idx].filter == EVFILT_TIMER) {
       ExecuteTimerEvent(idx);
       continue;
     }

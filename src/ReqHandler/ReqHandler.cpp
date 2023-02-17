@@ -35,6 +35,10 @@ ssize_t ReqHandler::RecvFromSocket() {
               << client_->GetClientFd() << std::endl;
 #endif
   }
+
+#if REQ_HANDLER
+  write(1, buf_, read_len_);
+#endif
   return recv_return;
 }
 
@@ -117,8 +121,9 @@ void ReqHandler::ParseHeadersSetKeyValue(char* line) {
     req_msg_->body_data_.length_ = atoi(kv_tmp[1].c_str());
     if (req_msg_->body_data_.length_ < 1) {
       client_->SetStatusCode(400);
-      req_msg_->body_data_.data_ = strdup("<h3>400 Bad Request</h3>");
-      req_msg_->body_data_.length_ = 24;
+      client_->res_message_->body_data_.data_ =
+          strdup("<h3>400 Bad Request</h3>");
+      client_->res_message_->body_data_.length_ = 24;
       client_->res_message_->headers_["Content-Type"] = "text/html";
       client_->res_message_->headers_["Content-Length"] = "24";
     }
